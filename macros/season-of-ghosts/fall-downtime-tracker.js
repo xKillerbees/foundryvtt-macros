@@ -713,17 +713,22 @@ class Tracker {
     /* Which sources are still worth a PC's second activity, and what they can
        roll. Skill names only — the DCs stay on the GM's side of the screen,
        as do the point totals each source is worth. */
+    /* Two stacked lines per source rather than three columns: the chat sidebar
+       is narrow enough that a skills column gets squeezed under its minimum
+       width and the browser starts breaking words mid-syllable. */
     const research = Object.entries(RESEARCH).map(([key, src]) => {
       const left = src.max - this.s.research[key];
       const spent = left <= 0;
       return `<tr>
-        <td style="padding:3px 8px 3px 0;border-top:1px solid rgba(0,0,0,.1);font-weight:600;white-space:nowrap;
+        <td style="padding:4px 8px 0 0;border-top:1px solid rgba(0,0,0,.1);font-weight:600;
                    color:${spent ? D.muted : D.ink}">${src.label}</td>
-        <td style="padding:3px 8px 3px 0;border-top:1px solid rgba(0,0,0,.1);color:${spent ? D.muted : D.ink}">
-          ${skillsOnly(src.skills)}</td>
-        <td style="padding:3px 0;border-top:1px solid rgba(0,0,0,.1);text-align:right;white-space:nowrap;
-                   color:${spent ? D.muted : "#5d3654"};font-weight:${spent ? 400 : 600}">
-          ${spent ? "nothing left to learn" : `${left} more`}</td>
+        <td style="padding:4px 0 0;border-top:1px solid rgba(0,0,0,.1);text-align:right;white-space:nowrap;
+                   vertical-align:top;color:${spent ? D.muted : "#5d3654"};font-weight:${spent ? 400 : 600}">
+          ${spent ? "exhausted" : `${left} more`}</td>
+      </tr>
+      <tr>
+        <td colspan="2" style="padding:0 0 4px;font-size:11px;line-height:1.3;
+                   color:${D.muted}">${skillsOnly(src.skills)}</td>
       </tr>`;
     }).join("");
 
