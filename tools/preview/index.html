@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Macro preview</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Signika:wght@300..700&display=swap">
+<style>
+  /* Approximates the Foundry v13 application frame so the screenshots read as
+     the real window. The macro supplies everything inside .window-content. */
+  :root { color-scheme: dark; }
+  body {
+    margin: 0; padding: 28px;
+    font-family: Signika, "Roboto", sans-serif;
+    background: #16171a url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'>\
+<rect width='40' height='40' fill='%2316171a'/>\
+<circle cx='8' cy='8' r='1' fill='%23222'/><circle cx='28' cy='24' r='1' fill='%23222'/></svg>");
+    display: flex; justify-content: center;
+  }
+  #stage { display: inline-block; }
+  .application {
+    background: #1b1c1f;
+    border: 1px solid #4d4b47;
+    border-radius: 6px;
+    box-shadow: 0 12px 40px rgba(0,0,0,.65);
+    overflow: hidden;
+  }
+  .window-header {
+    display: flex; align-items: center; gap: .5rem;
+    padding: .45rem .6rem;
+    background: linear-gradient(#2b2c30, #232427);
+    border-bottom: 1px solid #4d4b47;
+    color: #e8e3da;
+  }
+  .window-header i { font-size: .85rem; opacity: .8; }
+  .window-title {
+    margin: 0; font-size: .95rem; font-weight: 600;
+    letter-spacing: .02em; color: #e8e3da;
+  }
+  .header-control {
+    margin-left: auto; background: none; border: none; cursor: pointer;
+    color: #b8b2a8; font-size: .85rem; padding: 0 .2rem;
+  }
+  .window-content { padding: 0; }
+
+  /* Foundry's own base rules that macro CSS is written against. */
+  .window-content button { font-family: inherit; }
+  .window-content a { color: inherit; }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script>
+  /* ?macro=season-of-ghosts/fall-downtime-tracker.js
+     ?seed=<name>   optional fixture from fixtures.js */
+  const params = new URLSearchParams(location.search);
+  const macro = params.get("macro");
+  const seed = params.get("seed");
+
+  /* Every console clamps its scroll area to `calc(100vh - 140px)`, so its
+     rendered height always equals the viewport. `fit` lifts that clamp, which
+     is how the capture script learns how tall the console actually wants to
+     be before choosing a window size. */
+  if (params.get("fit")) {
+    const s = document.createElement("style");
+    s.textContent = ".window-content { max-height: none !important; overflow: visible !important; }";
+    document.head.appendChild(s);
+  }
+
+  const load = (src) => new Promise((res, rej) => {
+    const s = document.createElement("script");
+    s.src = src; s.onload = res; s.onerror = () => rej(new Error(`failed to load ${src}`));
+    document.head.appendChild(s);
+  });
+
+  (async () => {
+    if (!macro) {
+      document.getElementById("stage").innerHTML =
+        '<p style="color:#ccc">Add <code>?macro=season-of-ghosts/&lt;file&gt;.js</code> to the URL.</p>';
+      return;
+    }
+    await load("/tools/preview/fixtures.js");
+    if (seed && globalThis.FIXTURES?.[seed]) globalThis.__previewSeed = globalThis.FIXTURES[seed];
+    await load("/tools/preview/foundry-stub.js");
+    await load(`/macros/${macro}`);
+
+    /* The capture script reads the rendered height back out of the title,
+       then re-launches the browser at exactly that window size. Chrome's
+       headless --screenshot captures the viewport, not the full page, so
+       the size has to be known up front.
+
+       The macro boots inside its own async IIFE, so wait for the stub to
+       flag a finished render, and for webfonts, before measuring. */
+    const rendered = new Promise(res => {
+      const tick = () => document.body.dataset.ready === "true" ? res() : setTimeout(tick, 40);
+      tick();
+    });
+    const fonts = Promise.race([
+      document.fonts?.ready ?? Promise.resolve(),
+      new Promise(r => setTimeout(r, 3000))   // never block on a webfont that won't arrive
+    ]);
+    await rendered;
+    await fonts;
+    /* A timer rather than requestAnimationFrame: headless Chrome composites no
+       frames, so rAF may never fire and the measurement would hang. */
+    await new Promise(r => setTimeout(r, 150));
+
+    /* Measured from the window itself plus the page padding, not from
+       scrollHeight — scrollHeight floors at the viewport height, which would
+       pad every screenshot with empty background. */
+    const pad = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    const stage = document.getElementById("stage").getBoundingClientRect().height;
+    document.title = `preview:${Math.ceil(stage + pad * 2)}`;
+  })();
+</script>
+</body>
+</html>

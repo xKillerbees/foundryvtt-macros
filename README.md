@@ -1,0 +1,86 @@
+# Foundry VTT Macros
+
+GM tools for Foundry VTT, written as single self-contained script macros — no module, no
+manifest, no install step. Open a macro file, copy it, paste it into Foundry, run it.
+
+| Collection | System | Foundry | Macros |
+|---|---|---|---|
+| [Season of Ghosts](macros/season-of-ghosts) | PF2e | v11 – v13 | 3 |
+
+## Installing a macro
+
+1. Open the `.js` file and copy the whole thing.
+2. In Foundry, open the **Macro Directory** and create a new macro.
+3. Set **Type** to `Script`.
+4. Paste, save, and execute.
+
+That's the entire install. To update later, copy the newer version over the old one — these
+macros keep their state in a world setting, so re-pasting doesn't wipe your campaign progress.
+
+## Season of Ghosts
+
+Three GM consoles for Paizo's *Season of Ghosts* Adventure Path.
+Full details in the [collection README](macros/season-of-ghosts).
+
+### [Fall Downtime Tracker](macros/season-of-ghosts/fall-downtime-tracker.js)
+
+The twelve-week fall preparation subsystem from Act 2, Chapter 5 — Hope, Food, and Security
+pools, per-PC preparation activities with rollable checks, the town event for every week,
+teahouse restoration, curse research, and an opt-in read-only board for the players.
+
+![The Fall Downtime Tracker on week four](screenshots/season-of-ghosts/fall-downtime-tracker.png)
+
+### [First Long Night Console](macros/season-of-ghosts/first-long-night-console.js)
+
+The autumn-equinox festival: a five-phase run of show, the bard's grand show with through-line
+selection and per-movement degree tracking, the three traditional contests, eight booths, and a
+GM kit with the riddles, the lantern cipher, and the moon-stones rules.
+
+![The grand show tab of the First Long Night Console](screenshots/season-of-ghosts/first-long-night-console.png)
+
+Twelve head-to-head PC games sit alongside it, with medals, discipline sweeps, titles, and the
+Lantern Crown — none of which touch the winter ledger.
+
+![The games tab, with the medal tracker](screenshots/season-of-ghosts/first-long-night-games.png)
+
+### [Enlightened Path Console](macros/season-of-ghosts/enlightened-path-console.js)
+
+Chapter 6 — the *Open the Wall of Ghosts* ritual, the vision inside the Wall, and the four-day
+pilgrimage. Tracks enlightenment per shrine against the book's conditions and shows which save
+bonuses the party carries into Chapter 7.
+
+![The Enlightened Path Console on the first day of the pilgrimage](screenshots/season-of-ghosts/enlightened-path-console.png)
+
+## Screenshots
+
+The images above are captured from the macro code itself: `tools/preview/` renders each console
+against a stubbed Foundry API and photographs it. To regenerate them after a UI change:
+
+```bash
+python3 tools/preview/capture.py
+```
+
+Details in [tools/preview/README.md](tools/preview/README.md). The party shown is invented
+sample data — no adventure art or campaign content is stored in this repository.
+
+## Repository layout
+
+```
+macros/<collection>/   the macros themselves, one file each, plus a collection README
+screenshots/           README images, one directory per collection
+tools/preview/         the harness that renders a macro outside Foundry for screenshots
+```
+
+## Contributing
+
+Issues and pull requests are welcome. If you're changing a macro, read
+[CLAUDE.md](CLAUDE.md) first — the conventions in it were adopted after fixing real bugs,
+especially the rule about scoping every CSS selector.
+
+## Licence
+
+Code is released under the [MIT licence](LICENSE) — use it, modify it, ship it.
+
+Adventure content — encounter text, DCs, NPC names, and rewards — is derived from Paizo's
+*Season of Ghosts* and remains Paizo's intellectual property. These macros are unofficial, are
+not endorsed by Paizo, and are intended as an aid for GMs who own the adventure.

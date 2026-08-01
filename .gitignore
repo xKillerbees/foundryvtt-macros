@@ -1,0 +1,16 @@
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Node (only if you add tooling later)
+node_modules/
+package-lock.json
+
+# Local scratch
+scratch/
+*.local.js
