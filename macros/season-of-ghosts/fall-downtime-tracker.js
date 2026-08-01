@@ -710,6 +710,23 @@ class Tracker {
       </tr>`;
     }).join("");
 
+    /* Which sources are still worth a PC's second activity, and what they can
+       roll. Skill names only — the DCs stay on the GM's side of the screen,
+       as do the point totals each source is worth. */
+    const research = Object.entries(RESEARCH).map(([key, src]) => {
+      const left = src.max - this.s.research[key];
+      const spent = left <= 0;
+      return `<tr>
+        <td style="padding:3px 8px 3px 0;border-top:1px solid rgba(0,0,0,.1);font-weight:600;white-space:nowrap;
+                   color:${spent ? D.muted : D.ink}">${src.label}</td>
+        <td style="padding:3px 8px 3px 0;border-top:1px solid rgba(0,0,0,.1);color:${spent ? D.muted : D.ink}">
+          ${skillsOnly(src.skills)}</td>
+        <td style="padding:3px 0;border-top:1px solid rgba(0,0,0,.1);text-align:right;white-space:nowrap;
+                   color:${spent ? D.muted : "#5d3654"};font-weight:${spent ? 400 : 600}">
+          ${spent ? "nothing left to learn" : `${left} more`}</td>
+      </tr>`;
+    }).join("");
+
     const content = `
       <div style="background:${D.paper};color:${D.ink};border:1px solid ${D.line};border-radius:4px;
                   padding:8px 10px;font-family:Signika,sans-serif;line-height:1.35">
@@ -723,6 +740,11 @@ class Tracker {
         ${rows
           ? `<table style="width:100%;border-collapse:collapse;font-size:12px">${rows}</table>`
           : `<div style="font-size:12px;color:${D.muted}">No preparation work recorded yet this week.</div>`}
+        <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:${D.muted};margin:10px 0 2px">
+          Researching the curse
+        </div>
+        <div style="font-size:10px;color:${D.muted};margin-bottom:2px">One non-preparation activity per PC per week</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">${research}</table>
       </div>`;
     await ChatMessage.create({ content, speaker: { alias: "Willowshore Trade Office" } });
   }
@@ -731,6 +753,8 @@ class Tracker {
 }
 
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+/* "DC 17 Willowshore Lore / DC 19 Diplomacy" -> "Willowshore Lore / Diplomacy" */
+const skillsOnly = (s) => s.replace(/DC \d+ /g, "");
 const esc = (s) => foundry.utils.escapeHTML ? foundry.utils.escapeHTML(String(s)) : String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 /* --------------------------------------------------------------- interface */
