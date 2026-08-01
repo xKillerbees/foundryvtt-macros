@@ -5,7 +5,7 @@ manifest, no install step. Open a macro file, copy it, paste it into Foundry, ru
 
 | Collection | System | Foundry | Macros |
 |---|---|---|---|
-| [Season of Ghosts](macros/season-of-ghosts) | PF2e | v11 – v13 | 3 |
+| [Season of Ghosts](macros/season-of-ghosts) | PF2e | v11 – v13 | 4 |
 
 ## Installing a macro
 
@@ -19,7 +19,7 @@ macros keep their state in a world setting, so re-pasting doesn't wipe your camp
 
 ## Season of Ghosts
 
-Three GM consoles for Paizo's *Season of Ghosts* Adventure Path.
+Four GM consoles for Paizo's *Season of Ghosts* Adventure Path.
 Full details in the [collection README](macros/season-of-ghosts).
 
 ### [Fall Downtime Tracker](macros/season-of-ghosts/fall-downtime-tracker.js)
@@ -50,6 +50,14 @@ pilgrimage. Tracks enlightenment per shrine against the book's conditions and sh
 bonuses the party carries into Chapter 7.
 
 ![The Enlightened Path Console on the first day of the pilgrimage](screenshots/season-of-ghosts/enlightened-path-console.png)
+
+### [In the Ruins of Wisdom](macros/season-of-ghosts/ruins-of-wisdom-console.js)
+
+Chapter 7 — the ruined Tan Sugi monastery. The four corrupted statues with the Purify Statue
+activity and the escalating events each purification fires, all sixteen areas, and an
+aftermath ledger that pushes Hope and Reputation back into the Fall Downtime Tracker.
+
+![The statue tab of the Ruins of Wisdom console](screenshots/season-of-ghosts/ruins-of-wisdom-console.png)
 
 ## Screenshots
 

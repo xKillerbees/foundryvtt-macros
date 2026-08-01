@@ -10,6 +10,7 @@ Built for **PF2e** on Foundry **v11–v13**.
 | [`fall-downtime-tracker.js`](fall-downtime-tracker.js) | Act 2 Ch. 5 — the twelve-week fall preparation subsystem | Complete |
 | [`first-long-night-console.js`](first-long-night-console.js) | Act 2 Ch. 5, week 3 — the First Long Night festival | Complete |
 | [`enlightened-path-console.js`](enlightened-path-console.js) | Act 2 Ch. 6 — the Wall of Ghosts and the Pilgrim's Path | Complete |
+| [`ruins-of-wisdom-console.js`](ruins-of-wisdom-console.js) | Act 2 Ch. 7 — the ruined Tan Sugi monastery | Complete |
 
 ## Install
 
@@ -70,9 +71,31 @@ The ritual, the vision inside the Wall, and the four-day pilgrimage.
 - Header lamps and Reflex / Will / Fortitude badges showing what the party carries into Chapter 7
 - A final-day tab summarising what the party banked and which threads are live
 
+### In the Ruins of Wisdom
+
+![The statue tab of the Ruins of Wisdom console](../../screenshots/season-of-ghosts/ruins-of-wisdom-console.png)
+
+The ruined Tan Sugi monastery, from the arch at the end of the Path to Kugaptee's grave.
+
+- Arrival reads the Enlightened Path's saved state and tells you whether the party earned
+  the Pilgrimage Gifts or an unseen disappointment
+- The Purify Statue activity with all four degrees, gated per statue — the area has to be
+  cleared first, and Pharasma's statue stays locked until her head comes down from the tree
+- Purification order is tracked, so the four escalating events fire in the order the party
+  earns them, each with Zhi Hui's question budget of 1, 2, 3, then unlimited
+- The hidden library, the storm, and the ward over Kugaptee's grave are derived from the
+  purified count rather than stored, so undoing a purification undoes everything it opened
+- All sixteen areas across four tabs, with read-aloud text, creatures, checks, treasure,
+  and per-area beats: the tea ceremony chain, Yuni and her sister's charm, the nindorus'
+  circuit challenge, Kalen Bray, the axe and its quirk
+- An aftermath ledger for the return to Willowshore that pushes Hope and Reputation into
+  the Fall Downtime Tracker
+
+![The libraries and the sugi tree](../../screenshots/season-of-ghosts/ruins-of-wisdom-grove.png)
+
 ## Architecture
 
-All three share the same shape:
+All four share the same shape:
 
 - **Storage** — a hidden world setting (`world.sog*`). Settings don't fire document-update
   notifications, unlike journal flags.
@@ -81,7 +104,7 @@ All three share the same shape:
 - **Compatibility** — extends `ApplicationV2` where available, falls back to `Application`.
   `_replaceHTML` is attached conditionally because v1 and v2 use the same method name with
   incompatible signatures.
-- **Styling** — every CSS selector is namespaced under a root class (`.sog`, `.fln`, `.ep`).
+- **Styling** — every CSS selector is namespaced under a root class (`.sog`, `.fln`, `.ep`, `.rw`).
   Unscoped generic selectors like `.card` or `.panel` will bleed into PF2e character sheets
   and chat messages.
 - **Party detection** — prefers `game.actors.party`, falls back to assigned player characters,

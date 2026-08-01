@@ -47,6 +47,12 @@ SHOTS = {
     "path": (
         "season-of-ghosts/enlightened-path-console.js", "path",
         "season-of-ghosts/enlightened-path-console.png"),
+    "monastery": (
+        "season-of-ghosts/ruins-of-wisdom-console.js", "monastery",
+        "season-of-ghosts/ruins-of-wisdom-console.png"),
+    "monastery-grove": (
+        "season-of-ghosts/ruins-of-wisdom-console.js", "monastery-grove",
+        "season-of-ghosts/ruins-of-wisdom-grove.png"),
 }
 
 

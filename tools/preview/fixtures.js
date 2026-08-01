@@ -67,6 +67,40 @@ globalThis.FIXTURES = {
     }
   },
 
+  /* In the Ruins of Wisdom, two statues down: the hidden library has opened,
+     Zhi Hui has manifested twice, and the storm is still running. Includes an
+     Enlightened Path state so the arrival tab has a pilgrimage to read. */
+  "monastery": {
+    "world.sogEnlightenedPath": {
+      shrines: {
+        d1: { cleared: true, slept: true },
+        d2: { incense: true, slept: true },
+        d3: { iogaka: true, bathe: true, slept: true }
+      }
+    },
+    "world.sogRuinsOfWisdom": {
+      tab: "statues",
+      statues: { e2: { result: "cs" }, e3: { result: "s" }, e12: { result: "f" } },
+      order: ["e2", "e3"],
+      zhi: { 1: 1, 2: 1 },
+      cleared: { e2: true, e3: true, e12: true },
+      beats: { e13: { head: true } },
+      xp: 80
+    }
+  },
+
+  /* The same console on the grove tab, where the tree and the libraries sit. */
+  "monastery-grove": {
+    "world.sogRuinsOfWisdom": {
+      tab: "grove",
+      statues: { e2: { result: "cs" }, e3: { result: "s" } },
+      order: ["e2", "e3"],
+      cleared: { e2: true, e3: true, e10: true },
+      beats: { e10: { door: true }, e11: { yenrui: true } },
+      xp: 200
+    }
+  },
+
   /* Enlightened Path, opened on the first day of the pilgrimage with the
      ritual behind the party. */
   "path": {

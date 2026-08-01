@@ -3,6 +3,8 @@
 ## Unreleased
 
 ### Added
+- In the Ruins of Wisdom — Chapter 7's Tan Sugi monastery: statue purification with ordered
+  events, sixteen areas, and an aftermath ledger feeding the Fall Downtime Tracker
 - Repository laid out for more than one collection — macros live under
   `macros/<collection>/`, with generated screenshots in `screenshots/`
 - `tools/preview/` — renders a macro against a stubbed Foundry API and captures the
