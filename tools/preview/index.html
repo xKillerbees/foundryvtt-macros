@@ -70,9 +70,13 @@
     document.head.appendChild(s);
   }
 
+  /* Cache-busted: editing a macro or the stub and reloading has to pick up the
+     new file, and a plain reload will happily serve the cached one. */
+  const stamp = Date.now();
   const load = (src) => new Promise((res, rej) => {
     const s = document.createElement("script");
-    s.src = src; s.onload = res; s.onerror = () => rej(new Error(`failed to load ${src}`));
+    s.src = `${src}${src.includes("?") ? "&" : "?"}v=${stamp}`;
+    s.onload = res; s.onerror = () => rej(new Error(`failed to load ${src}`));
     document.head.appendChild(s);
   });
 

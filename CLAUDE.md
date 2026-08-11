@@ -1,7 +1,9 @@
 # Working on this repo
 
 Foundry VTT GM macros. Each file under `macros/<collection>/` is a standalone script macro,
-pasted whole into Foundry. There is no build step and no bundler.
+pasted whole into Foundry. There is no build step and no bundler. Collections may target
+different systems — Season of Ghosts is PF2e, Battle for Nova Rush is sf2e (a PF2e fork, so
+the same inline-check syntax and application classes apply).
 
 ```
 macros/<collection>/   macros plus a collection README

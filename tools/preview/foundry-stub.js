@@ -101,6 +101,33 @@ globalThis.ChatMessage = {
 
 globalThis.Dialog = { confirm: () => Promise.resolve(false) };
 
+/* Enough of Roll for macros that roll a die and read .total. Seeded so a
+   capture of a rolled result is reproducible rather than flickering. */
+let rollSeed = 1;
+globalThis.Roll = class Roll {
+  constructor(formula) { this.formula = formula; this.total = 0; }
+  async evaluate() {
+    const m = /^(\d*)d(\d+)([+-]\d+)?$/.exec(this.formula.replace(/\s/g, ""));
+    if (!m) { this.total = 0; return this; }
+    const count = Number(m[1] || 1), faces = Number(m[2]), flat = Number(m[3] || 0);
+    let sum = flat;
+    for (let i = 0; i < count; i++) {
+      rollSeed = (rollSeed * 1103515245 + 12345) & 0x7fffffff;   // deterministic
+      sum += (rollSeed % faces) + 1;
+    }
+    this.total = sum;
+    return this;
+  }
+  roll() { return this.evaluate(); }
+};
+
+/* Compendium lookups resolve to a stand-in whose sheet render is a no-op, so
+   "open the statblock" buttons can be exercised without a real world. */
+globalThis.fromUuid = async (uuid) => ({
+  uuid, name: uuid.split(".").pop(),
+  sheet: { render: () => console.log("[sheet]", uuid) }
+});
+
 globalThis.foundry = {
   utils: {
     escapeHTML: (s) => String(s).replace(/[&<>"']/g, c =>

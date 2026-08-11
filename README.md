@@ -6,6 +6,7 @@ manifest, no install step. Open a macro file, copy it, paste it into Foundry, ru
 | Collection | System | Foundry | Macros |
 |---|---|---|---|
 | [Season of Ghosts](macros/season-of-ghosts) | PF2e | v11 – v13 | 5 |
+| [Battle for Nova Rush](macros/battle-for-nova-rush) | SF2e | v11 – v13 | 1 |
 
 ## Installing a macro
 
@@ -66,6 +67,19 @@ outlive them, and a Threads view that turns red when the table reaches a chapter
 prerequisite was never ticked. Reads the four chapter consoles for a live rollup.
 
 ![The campaign tab, on Act 2 Chapter 5](screenshots/season-of-ghosts/campaign-status-tracker.png)
+
+## Battle for Nova Rush
+
+A GM console for the free Starfinder Second Edition adventure. Details in the
+[collection README](macros/battle-for-nova-rush).
+
+### [Nova Rush Console](macros/battle-for-nova-rush/nova-rush-console.js)
+
+The whole one-shot: the brig escape with its modifiers, both decks, the sinkwell's
+three-success disable, a battle-damage roller for the bridge fight, and a conclusion screen
+that applies every modifier the escape check has picked up along the way.
+
+![The upper deck of Nova Rush](screenshots/battle-for-nova-rush/nova-rush-console.png)
 
 ## Screenshots
 

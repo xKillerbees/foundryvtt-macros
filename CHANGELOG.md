@@ -3,6 +3,8 @@
 ## Unreleased
 
 ### Added
+- Battle for Nova Rush — a console for the free Starfinder 2e adventure, with the escape
+  check's modifiers calculated and a per-round battle damage roller for the bridge fight
 - Campaign Status Tracker — a checklist across all thirteen chapters, with a Threads view
   that flags a prerequisite the moment the table reaches the chapter that needs it, a loot
   ledger of every named treasure, and per-chapter scene and cue lists

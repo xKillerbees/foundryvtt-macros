@@ -154,6 +154,44 @@ globalThis.FIXTURES = {
     }
   },
 
+  /* Battle for Nova Rush, part way through: the brig is behind them, the
+     reactor is fixed, Polly was saved from the sinkwell. */
+  "novarush": {
+    "world.sf2eNovaRush": {
+      tab: "upper",
+      brig: { mods: { flattery: true }, escaped: "brinn", brinnHelped: true, compartment: true },
+      areas: { a2: true, a8: true },
+      repairs: { reactor: true, launcher: false },
+      allies: { brinn: true, polly: true },
+      sinkwell: { successes: 3, active: false, defeated: true }
+    }
+  },
+
+  /* The bridge fight, mid-round, with a battle-damage result showing. */
+  "novarush-bridge": {
+    "world.sf2eNovaRush": {
+      tab: "bridge",
+      repairs: { reactor: true, launcher: true },
+      allies: { brinn: true, polly: true },
+      round: 3, lastDamage: 4
+    }
+  },
+
+  /* The conclusion, with the crew assigned and the checks half rolled. */
+  "novarush-escape": {
+    "world.sf2eNovaRush": {
+      tab: "escape",
+      repairs: { reactor: true, launcher: true },
+      allies: { brinn: true, polly: false },
+      crew: {
+        0: { role: "pilot", result: "success" },
+        1: { role: "gunner", result: "success" },
+        2: { role: "skill", result: "failure" },
+        3: { role: "skill", result: "success" }
+      }
+    }
+  },
+
   /* Enlightened Path, opened on the first day of the pilgrimage with the
      ritual behind the party. */
   "path": {

@@ -56,6 +56,15 @@ SHOTS = {
     "campaign": (
         "season-of-ghosts/campaign-status-tracker.js", "campaign",
         "season-of-ghosts/campaign-status-tracker.png"),
+    "novarush": (
+        "battle-for-nova-rush/nova-rush-console.js", "novarush",
+        "battle-for-nova-rush/nova-rush-console.png"),
+    "novarush-bridge": (
+        "battle-for-nova-rush/nova-rush-console.js", "novarush-bridge",
+        "battle-for-nova-rush/nova-rush-bridge.png"),
+    "novarush-escape": (
+        "battle-for-nova-rush/nova-rush-console.js", "novarush-escape",
+        "battle-for-nova-rush/nova-rush-escape.png"),
     "campaign-loot": (
         "season-of-ghosts/campaign-status-tracker.js", "campaign-loot",
         "season-of-ghosts/campaign-status-loot.png"),
