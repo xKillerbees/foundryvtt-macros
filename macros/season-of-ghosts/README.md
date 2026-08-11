@@ -11,6 +11,7 @@ Built for **PF2e** on Foundry **v11–v13**.
 | [`first-long-night-console.js`](first-long-night-console.js) | Act 2 Ch. 5, week 3 — the First Long Night festival | Complete |
 | [`enlightened-path-console.js`](enlightened-path-console.js) | Act 2 Ch. 6 — the Wall of Ghosts and the Pilgrim's Path | Complete |
 | [`ruins-of-wisdom-console.js`](ruins-of-wisdom-console.js) | Act 2 Ch. 7 — the ruined Tan Sugi monastery | Complete |
+| [`campaign-status-tracker.js`](campaign-status-tracker.js) | All four acts — a checklist for the whole AP | Complete |
 
 ## Install
 
@@ -93,9 +94,31 @@ The ruined Tan Sugi monastery, from the arch at the end of the Path to Kugaptee'
 
 ![The libraries and the sugi tree](../../screenshots/season-of-ghosts/ruins-of-wisdom-grove.png)
 
+### Campaign Status Tracker
+
+![The campaign tab, on Act 2 Chapter 5](../../screenshots/season-of-ghosts/campaign-status-tracker.png)
+
+A checklist for all thirteen chapters — the decisions and items that outlive the chapter that
+produced them.
+
+- Every chapter with its spine, level, and a status that cycles not started → running → done;
+  only one chapter runs at a time, and the current one drives everything else
+- ~130 checklist items drawn from the campaign's own prep notes, tagged where they matter:
+  **required** when a later chapter can't proceed without them, **consequence** when the
+  choice is permanent, **rework** when it belongs to the Two Weavers changes
+- A **Threads** tab built from those items: anything with a downstream payoff, sorted by when
+  it comes due, and turning red the moment the table reaches the chapter that wants it and the
+  box is still empty
+- A live rollup strip read from the other four consoles' saved state — pools, week, shrine
+  enlightenments, statues purified — so the campaign view doesn't need re-typing
+- The Two Weavers continuity checklist, the milestone-level table, and per-PC arcs
+- A spoiler-free chat recap: act, chapter, level, and the chapters behind them
+
+![The Threads tab](../../screenshots/season-of-ghosts/campaign-status-threads.png)
+
 ## Architecture
 
-All four share the same shape:
+All five share the same shape:
 
 - **Storage** — a hidden world setting (`world.sog*`). Settings don't fire document-update
   notifications, unlike journal flags.
@@ -104,7 +127,7 @@ All four share the same shape:
 - **Compatibility** — extends `ApplicationV2` where available, falls back to `Application`.
   `_replaceHTML` is attached conditionally because v1 and v2 use the same method name with
   incompatible signatures.
-- **Styling** — every CSS selector is namespaced under a root class (`.sog`, `.fln`, `.ep`, `.rw`).
+- **Styling** — every CSS selector is namespaced under a root class (`.sog`, `.fln`, `.ep`, `.rw`, `.cst`).
   Unscoped generic selectors like `.card` or `.panel` will bleed into PF2e character sheets
   and chat messages.
 - **Party detection** — prefers `game.actors.party`, falls back to assigned player characters,

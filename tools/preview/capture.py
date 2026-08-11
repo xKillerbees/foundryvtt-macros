@@ -53,6 +53,12 @@ SHOTS = {
     "monastery-grove": (
         "season-of-ghosts/ruins-of-wisdom-console.js", "monastery-grove",
         "season-of-ghosts/ruins-of-wisdom-grove.png"),
+    "campaign": (
+        "season-of-ghosts/campaign-status-tracker.js", "campaign",
+        "season-of-ghosts/campaign-status-tracker.png"),
+    "campaign-threads": (
+        "season-of-ghosts/campaign-status-tracker.js", "campaign-threads",
+        "season-of-ghosts/campaign-status-threads.png"),
 }
 
 

@@ -101,6 +101,46 @@ globalThis.FIXTURES = {
     }
   },
 
+  /* Campaign Status Tracker at the table's real position — Act 2, Chapter 5,
+     week 3 — with the downtime tracker's state present so the rollup strip has
+     something live to read. */
+  "campaign": {
+    "world.sogFallDowntime": {
+      week: 3,
+      pools: { hope: 8, food: 3, security: 2, restoration: 2 },
+      rep: { southbank: 1, northridge: 2 },
+      research: { sojin: 2, igawa: 0, willow: 0, solo: 4, zoudou: 0 },
+      opts: { expansion: true, teaware: false },
+      yami: { bonded: true, pc: "Re Tang", lockUntil: 0 }
+    },
+    "world.sogCampaign": {
+      tab: "campaign",
+      chapters: { 1: "done", 2: "done", 3: "done", 4: "done", 5: "active" },
+      flags: {
+        "1.lantern": true, "1.abacus": true, "1.kappas": true, "1.elders": true,
+        "2.butcher": true, "2.douqiu": true, "2.prison": true, "2.will": true,
+        "3.governor": true, "3.xungu": true, "3.willow": true, "3.teahouse": true,
+        "3.teafarm": true, "3.expansion": true, "3.duel": true, "3.shinzo": true, "3.lesson1": true,
+        "4.ledger": true, "4.advance": true, "4.bargain": true, "4.gift": true,
+        "4.intime": true, "4.mengsung": true, "4.abductees": true,
+        "5.festival": true, "5.yami": true
+      }
+    }
+  },
+
+  /* The Threads tab, which is where the tracker earns its keep. */
+  "campaign-threads": {
+    "world.sogCampaign": {
+      tab: "threads",
+      chapters: { 1: "done", 2: "done", 3: "done", 4: "done", 5: "active" },
+      flags: {
+        "1.abacus": true, "1.kappas": true, "2.will": true, "3.xungu": true,
+        "3.willow": true, "3.teahouse": true, "3.expansion": true, "3.lesson1": true,
+        "4.ledger": true
+      }
+    }
+  },
+
   /* Enlightened Path, opened on the first day of the pilgrimage with the
      ritual behind the party. */
   "path": {

@@ -5,7 +5,7 @@ manifest, no install step. Open a macro file, copy it, paste it into Foundry, ru
 
 | Collection | System | Foundry | Macros |
 |---|---|---|---|
-| [Season of Ghosts](macros/season-of-ghosts) | PF2e | v11 – v13 | 4 |
+| [Season of Ghosts](macros/season-of-ghosts) | PF2e | v11 – v13 | 5 |
 
 ## Installing a macro
 
@@ -19,7 +19,7 @@ macros keep their state in a world setting, so re-pasting doesn't wipe your camp
 
 ## Season of Ghosts
 
-Four GM consoles for Paizo's *Season of Ghosts* Adventure Path.
+Five GM tools for Paizo's *Season of Ghosts* Adventure Path.
 Full details in the [collection README](macros/season-of-ghosts).
 
 ### [Fall Downtime Tracker](macros/season-of-ghosts/fall-downtime-tracker.js)
@@ -58,6 +58,14 @@ activity and the escalating events each purification fires, all sixteen areas, a
 aftermath ledger that pushes Hope and Reputation back into the Fall Downtime Tracker.
 
 ![The statue tab of the Ruins of Wisdom console](screenshots/season-of-ghosts/ruins-of-wisdom-console.png)
+
+### [Campaign Status Tracker](macros/season-of-ghosts/campaign-status-tracker.js)
+
+A checklist for the whole Adventure Path. All thirteen chapters, the decisions and items that
+outlive them, and a Threads view that turns red when the table reaches a chapter whose
+prerequisite was never ticked. Reads the four chapter consoles for a live rollup.
+
+![The campaign tab, on Act 2 Chapter 5](screenshots/season-of-ghosts/campaign-status-tracker.png)
 
 ## Screenshots
 

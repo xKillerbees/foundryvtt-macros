@@ -3,6 +3,8 @@
 ## Unreleased
 
 ### Added
+- Campaign Status Tracker — a checklist across all thirteen chapters, with a Threads view
+  that flags a prerequisite the moment the table reaches the chapter that needs it
 - In the Ruins of Wisdom — Chapter 7's Tan Sugi monastery: statue purification with ordered
   events, sixteen areas, and an aftermath ledger feeding the Fall Downtime Tracker
 - Repository laid out for more than one collection — macros live under
