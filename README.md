@@ -76,8 +76,9 @@ A GM console for the free Starfinder Second Edition adventure. Details in the
 ### [Nova Rush Console](macros/battle-for-nova-rush/nova-rush-console.js)
 
 The whole one-shot: the brig escape with its modifiers, both decks, the sinkwell's
-three-success disable, a battle-damage roller for the bridge fight, and a conclusion screen
-that applies every modifier the escape check has picked up along the way.
+three-success disable, a battle-damage roller for the bridge fight, and a conclusion that runs
+either as printed or as a full Cinematic Starship Scene. Optional Sequencer / JB2A effect cues
+throughout.
 
 ![The upper deck of Nova Rush](screenshots/battle-for-nova-rush/nova-rush-console.png)
 

@@ -192,6 +192,30 @@ globalThis.FIXTURES = {
     }
   },
 
+  /* The cinematic escape, two rounds in. */
+  "novarush-scene": {
+    "world.sf2eNovaRush": {
+      tab: "escape", mode: "cinematic",
+      repairs: { reactor: true, launcher: true },
+      allies: { brinn: true, polly: true },
+      scene: { rounds: [
+        { assign: { 0: "pilot", 1: "gunner", 2: "engineer", 3: "science" },
+          results: { 0: "cs", 1: "s", 2: "f", 3: "s" } },
+        { assign: { 0: "pilot", 1: "gunner", 2: "captain", 3: "magic" },
+          results: { 0: "s", 1: "cs", 2: "s" } }
+      ] }
+    }
+  },
+
+  /* The effects tab, with no Sequencer in the harness. */
+  "novarush-fx": {
+    "world.sf2eNovaRush": {
+      tab: "fx",
+      repairs: { reactor: true, launcher: true },
+      allies: { brinn: true, polly: true }
+    }
+  },
+
   /* Enlightened Path, opened on the first day of the pilgrimage with the
      ritual behind the party. */
   "path": {

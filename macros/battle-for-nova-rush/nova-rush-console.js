@@ -26,6 +26,62 @@ const UUIDS = {
   sinkwell: "Compendium.sf2e.standalone-adventure-bestiary.Actor.d3VwBxBy5VMwfgxG"
 };
 
+/* ------------------------------------------------------------------- FX
+   Sequencer + JB2A, both optional. Every cue lists several database keys and
+   the first one that actually exists in this world is used, because the free
+   and Patreon JB2A modules carry different subsets. Swap in your own keys here
+   if you'd rather — the FX tab has a Test button for each cue, and the
+   Sequencer Database Viewer (under the module's settings) lists everything
+   installed. With neither module present the console just says so and carries
+   on; nothing else depends on this. */
+const FX = {
+  attack: {
+    label: "We're Under Attack", where: "A1 — the Corpse Fleet's first volley",
+    files: ["jb2a.explosion.01.orange", "jb2a.explosion.02.orange", "jb2a.impact.orange.0"],
+    scale: 1.8, screen: true, shake: { duration: 1000, strength: 28 }
+  },
+  reactor: {
+    label: "Reactor shock", where: "A8 — a failed repair attempt",
+    files: ["jb2a.static_electricity.02.blue", "jb2a.static_electricity.01.blue",
+            "jb2a.chain_lightning.primary.blue", "jb2a.lightning_ball.blue"],
+    scale: 1.0, target: "selected"
+  },
+  sinkwell: {
+    label: "Soul-Draining Wave", where: "B1 — the haunt triggers",
+    files: ["jb2a.energy_strands.overlay.dark_purple.01",
+            "jb2a.magic_signs.rune.necromancy.loop.dark_purple",
+            "jb2a.impact.dark_purple.0", "jb2a.explosion.01.purple"],
+    scale: 1.4, target: "selected", shake: { duration: 600, strength: 12 }
+  },
+  sparks: {
+    label: "Battle damage — sparks", where: "B5 — the 1 result",
+    files: ["jb2a.static_electricity.01.blue", "jb2a.chain_lightning.primary.blue"],
+    scale: 0.9, target: "selected"
+  },
+  steam: {
+    label: "Battle damage — steam", where: "B5 — the 2 result",
+    files: ["jb2a.smoke.puff.centered.grey.0", "jb2a.smoke.puff.centered.dark_black.0",
+            "jb2a.fog_cloud.01.white"],
+    scale: 1.3, target: "selected"
+  },
+  lurch: {
+    label: "Battle damage — lurch", where: "B5 — the 3 result",
+    files: [], shake: { duration: 800, strength: 20 }
+  },
+  holo: {
+    label: "Battle damage — Concierge", where: "B5 — the 4 result",
+    files: ["jb2a.energy_field.02.above.blue", "jb2a.shield_themed.above.holy.blue.01",
+            "jb2a.magic_signs.circle.02.illusion.loop.blue"],
+    scale: 0.8, target: "selected"
+  },
+  escape: {
+    label: "Breaking away", where: "The end of the cinematic escape",
+    files: ["jb2a.portal.vortex.loop.blue", "jb2a.energy_beam.normal.blue.03",
+            "jb2a.explosion.01.blue"],
+    scale: 1.6, screen: true, shake: { duration: 700, strength: 14 }
+  }
+};
+
 const THEME = "console";
 const PALETTES = {
   /* A starship UI: dark hull, lit glass, amber alarms. */
@@ -63,7 +119,8 @@ const TABS = [
   { key: "lower", label: "Lower deck", sub: "A2 – A8" },
   { key: "upper", label: "Upper deck", sub: "B1 – B4" },
   { key: "bridge", label: "B5 Bridge", sub: "the finale" },
-  { key: "escape", label: "Escape", sub: "the last check" }
+  { key: "escape", label: "Escape", sub: "the last check" },
+  { key: "fx", label: "Effects", sub: "Sequencer · JB2A" }
 ];
 
 /* ------------------------------------------------------------------- brig */
@@ -236,10 +293,10 @@ const BRIDGE = {
     "A third pirate is flying the ship and is not a combatant; they call for mercy if attacked, and hand the controls to a PC afterwards, pointedly calling them captain."
   ],
   damage: [
-    { roll: 1, label: "Sparks", text: "Sparks burst from one random console or panel — 1d6 electricity damage in a 10-foot emanation, DC 14 basic Reflex." },
-    { roll: 2, label: "Steam", text: "A pipe sprays steam into the fore or the rear of the bridge. Creatures in the area are concealed until the end of the round." },
-    { roll: 3, label: "Lurch", text: "Violent motion knocks every non-seated creature prone — DC 14 Reflex negates." },
-    { roll: 4, label: "Concierge", text: "Captain Concierge fires a hologram into Captain Firestorm's face, making her off-guard until the end of the round." }
+    { roll: 1, fx: "sparks", label: "Sparks", text: "Sparks burst from one random console or panel — 1d6 electricity damage in a 10-foot emanation, DC 14 basic Reflex." },
+    { roll: 2, fx: "steam", label: "Steam", text: "A pipe sprays steam into the fore or the rear of the bridge. Creatures in the area are concealed until the end of the round." },
+    { roll: 3, fx: "lurch", label: "Lurch", text: "Violent motion knocks every non-seated creature prone — DC 14 Reflex negates." },
+    { roll: 4, fx: "holo", label: "Concierge", text: "Captain Concierge fires a hologram into Captain Firestorm's face, making her off-guard until the end of the round." }
   ]
 };
 
@@ -262,6 +319,72 @@ const ESCAPE = {
   ]
 };
 
+/* -------------------------------------------------- the cinematic version
+   The adventure resolves the escape with one check each. This runs it instead
+   as a Cinematic Starship Scene (SF2e GM Core): encounter mode, roles reset
+   every round, PCs may switch between rounds, and a Victory Point track for
+   the victory condition.
+
+   The scene itself — which roles, which actions, the VP goal and the hull
+   clock — is the GM's to design under those rules, so this is one build of it,
+   pitched at the adventure's own DC 15. Every modifier the book grants still
+   applies: the reactor lowers DCs, an ally gives a circumstance bonus, and the
+   missile launcher opens the second gunner seat. */
+const SCENE = {
+  goal: 10,
+  hull: 6,
+  maxRounds: 5,
+  brief: "Nova Rush breaks for open space with Corpse Fleet raiders on her tail. Roles reset at the top of each round and a PC may take a different one; each action is 2 actions, leaving a spare for something else.",
+  initiative: "Roll initiative with the skill your role uses — Piloting for the pilot, Computers or Perception for the science officer, and so on.",
+  volley: "At the end of each round the raiders fire: Nova Rush takes 1 hull. A critical success anywhere in the round means the shot goes wide instead.",
+  ends: [
+    "Reach the Victory Point goal and Nova Rush breaks away clean — the adventure's better ending.",
+    "Hull reaches zero, or the rounds run out, and she escapes severely damaged — the adventure's other ending. She is disabled, never destroyed.",
+    "Either way, the ship is theirs."
+  ]
+};
+
+/* vp and hull are deltas. Anything not listed is zero. */
+const ROLES = {
+  captain: { label: "Captain", tone: "gold", seats: 1,
+    action: "Rally the Crew", skills: "Diplomacy or Intimidation",
+    text: "Orders, encouragement, or an insult aimed at the raiders — whatever gets the next station moving.",
+    outcome: { cs: { vp: 1, note: "and one crewmate may reroll their check this round" },
+               s: { vp: 0, note: "the next PC to act this round gets a +1 circumstance bonus" },
+               f: {}, cf: { vp: -1, note: "the wrong order at the wrong moment" } } },
+
+  pilot: { label: "Pilot", tone: "slate", seats: 2, required: true,
+    action: "Evasive Burn", skills: "Piloting",
+    text: "Throw Nova Rush through the debris and the raiders' firing solutions.",
+    outcome: { cs: { vp: 2, note: "and this round's volley goes wide" },
+               s: { vp: 1 }, f: {}, cf: { hull: -1, note: "she clips something" } } },
+
+  gunner: { label: "Gunner", tone: "rust", seats: 1, seatsWithLauncher: 2,
+    action: "Fire at Will", skills: "a ranged Strike, or Computers to let the turret aim",
+    text: "Keep the raiders at arm's length. The second seat only opens if the missile launcher was unjammed.",
+    outcome: { cs: { vp: 2 }, s: { vp: 1 }, f: {}, cf: { hull: -1, note: "a misfire in the tube" } } },
+
+  engineer: { label: "Engineer", tone: "ember", seats: 2,
+    action: "Reroute Power", skills: "Crafting or Computers",
+    text: "Patch what the raiders keep breaking. Brinn Aids this one gladly; Polly drinks the feedback.",
+    outcome: { cs: { hull: 2 }, s: { hull: 1 }, f: {},
+               cf: { hull: -1, note: "unless Polly is aboard to swallow the surge" } } },
+
+  science: { label: "Science Officer", tone: "moss", seats: 2,
+    action: "Read the Void", skills: "Computers, Perception, or an applicable Lore",
+    text: "Find the gap in the pursuit and call it out before it closes.",
+    outcome: { cs: { vp: 1, note: "and the next PC this round gets a +2 circumstance bonus" },
+               s: { vp: 0, note: "the next PC this round gets a +1 circumstance bonus" },
+               f: {}, cf: {} } },
+
+  magic: { label: "Magic Officer", tone: "plum", seats: 2,
+    action: "Ward the Hull", skills: "Arcana, Nature, Occultism, or Religion",
+    text: "The raiders' guns fire something worse than plasma. Meet it in kind.",
+    outcome: { cs: { vp: 1, hull: 1 }, s: { hull: 1 }, f: {}, cf: { hull: -1 } } }
+};
+
+const DEGREES = [["cs", "Crit success"], ["s", "Success"], ["f", "Failure"], ["cf", "Crit failure"]];
+
 /* ------------------------------------------------------------------ state */
 function blankState(pcs) {
   return {
@@ -273,7 +396,12 @@ function blankState(pcs) {
     sinkwell: { successes: 0, active: false, defeated: false },
     round: 0,
     lastDamage: null,
+    mode: "book",       // "book" = the printed single check, "cinematic" = the scene
     crew: {},           // pc index -> { role, result }
+    /* One entry per round: { assign: {pcIndex: roleKey}, results: {pcIndex: degree} }.
+       Totals are replayed from this rather than accumulated, so un-ticking any
+       result rolls the whole scene back exactly. */
+    scene: { rounds: [{ assign: {}, results: {} }] },
     log: []
   };
 }
@@ -397,6 +525,7 @@ class NovaRush {
     this.s.lastDamage = face.roll;
     await this.postCard(`Round ${this.s.round} · battle damage`, face.label,
       `<p style="margin:0">${linkify(face.text)}</p>`, "rust");
+    if (face.fx) this.fx(face.fx);        // fires only if Sequencer is up
     this.log(`Round ${this.s.round}: ${face.label}.`);
     this.touch();
   }
@@ -433,6 +562,157 @@ class NovaRush {
       clean: passed >= need,
       resolved: rolled === rows.length
     };
+  }
+
+  /* ----- effects -----
+     Everything here is feature-detected. Sequencer's API surface has moved
+     between major versions and JB2A's free and Patreon libraries hold
+     different files, so nothing is assumed to exist. */
+  get fxReady() {
+    return !!(globalThis.Sequencer && game.modules?.get("sequencer")?.active);
+  }
+  resolveFx(key) {
+    const cue = FX[key];
+    if (!cue) return null;
+    if (!this.fxReady) return null;
+    const db = globalThis.Sequencer.Database;
+    for (const f of cue.files) {
+      const exists = typeof db?.entryExists === "function" ? db.entryExists(f)
+        : typeof db?.getEntry === "function" ? !!db.getEntry(f) : false;
+      if (exists) return f;
+    }
+    return null;
+  }
+  /* A cue with no art but a shake is still playable; one that needs art and
+     has none is not. */
+  fxStatus(key) {
+    const cue = FX[key];
+    if (!this.fxReady) return { state: "off", detail: "Sequencer not detected" };
+    const file = this.resolveFx(key);
+    if (file) return { state: "ok", detail: file };
+    if (!cue.files.length && cue.shake) return { state: "ok", detail: "camera shake only" };
+    return { state: "missing", detail: "no matching JB2A file installed" };
+  }
+
+  async fx(key) {
+    const cue = FX[key];
+    if (!cue) return;
+    if (!this.fxReady) return ui.notifications.info("Sequencer isn't active — no effect played.");
+    const file = this.resolveFx(key);
+    if (!file && !cue.shake) {
+      return ui.notifications.warn(`No JB2A file found for "${cue.label}". Set your own key in the FX tab's list.`);
+    }
+    try {
+      const seq = new globalThis.Sequence();
+      if (file) {
+        const targets = cue.target === "selected" ? (canvas?.tokens?.controlled ?? []) : [];
+        if (cue.screen || !targets.length) {
+          /* Screen space keeps a ship-wide cue from needing a token selected. */
+          const e = seq.effect().file(file).scale(cue.scale ?? 1);
+          if (typeof e.screenSpace === "function") e.screenSpace().screenSpaceAnchor({ x: 0.5, y: 0.5 });
+          else if (canvas?.scene) e.atLocation({ x: canvas.dimensions.width / 2, y: canvas.dimensions.height / 2 });
+        } else {
+          for (const t of targets) seq.effect().file(file).atLocation(t).scale(cue.scale ?? 1);
+        }
+      }
+      if (cue.shake && typeof seq.canvasPan === "function") {
+        const pan = seq.canvasPan();
+        if (typeof pan.shake === "function") pan.shake(cue.shake);
+      }
+      await seq.play();
+    } catch (err) {
+      console.error("Nova Rush | effect failed", err);
+      ui.notifications.warn(`Couldn't play "${cue.label}" — see the console. The rest of the macro is unaffected.`);
+    }
+  }
+
+  /* ----- the cinematic scene -----
+     Totals are derived by replaying every recorded round, so any result can be
+     un-ticked and the track rewinds exactly. */
+  get rounds() { return this.s.scene.rounds; }
+  get roundNo() { return this.rounds.length; }
+
+  seatsFor(role) {
+    const r = ROLES[role];
+    if (role === "gunner") return this.s.repairs.launcher ? r.seatsWithLauncher : r.seats;
+    return r.seats;
+  }
+
+  sceneTotals() {
+    let vp = 0, hull = SCENE.hull;
+    const volleys = [];
+    this.rounds.forEach((rd, idx) => {
+      let critHere = false;
+      for (const [i, degree] of Object.entries(rd.results ?? {})) {
+        const role = rd.assign?.[i];
+        if (!role || !degree) continue;
+        const out = ROLES[role].outcome[degree] ?? {};
+        if (degree === "cs") critHere = true;
+        vp += out.vp ?? 0;
+        /* Polly drinks the feedback the engineer would otherwise eat. */
+        const spared = role === "engineer" && degree === "cf" && this.s.allies.polly;
+        if (!spared) hull += out.hull ?? 0;
+      }
+      /* The volley lands at the end of a round the table has finished. */
+      const finished = idx < this.rounds.length - 1;
+      const wide = critHere;
+      if (finished) { volleys.push(wide ? 0 : -1); hull += wide ? 0 : -1; }
+    });
+    vp = Math.max(0, vp);
+    hull = Math.max(0, Math.min(SCENE.hull, hull));
+    const outOfRounds = this.roundNo > SCENE.maxRounds;
+    return {
+      vp, hull, volleys,
+      won: vp >= SCENE.goal,
+      lost: hull <= 0 || (outOfRounds && vp < SCENE.goal),
+      over: vp >= SCENE.goal || hull <= 0 || outOfRounds
+    };
+  }
+
+  /* Seats are advisory — the console flags an overfull role rather than
+     blocking it, because a GM may well allow it. */
+  seatUse(roleKey) {
+    const rd = this.rounds[this.roundNo - 1];
+    return Object.values(rd.assign ?? {}).filter(r => r === roleKey).length;
+  }
+  assignRole(i, role) {
+    const rd = this.rounds[this.roundNo - 1];
+    rd.assign = rd.assign ?? {};
+    if (rd.assign[i] === role) { delete rd.assign[i]; delete rd.results?.[i]; }
+    else rd.assign[i] = role;
+    this.touch();
+  }
+  setDegree(i, degree) {
+    const rd = this.rounds[this.roundNo - 1];
+    if (!rd.assign?.[i]) return ui.notifications.warn("Give them a role first.");
+    rd.results = rd.results ?? {};
+    if (rd.results[i] === degree) delete rd.results[i]; else rd.results[i] = degree;
+    this.touch();
+  }
+  nextRound() {
+    if (this.roundNo >= SCENE.maxRounds + 1) return ui.notifications.warn("The scene is out of rounds.");
+    const prev = this.rounds[this.roundNo - 1];
+    this.rounds.push({ assign: { ...(prev.assign ?? {}) }, results: {} });
+    this.log(`Escape round ${this.roundNo}.`);
+    this.touch();
+  }
+  undoRound() {
+    if (this.roundNo <= 1) return;
+    this.rounds.pop();
+    this.touch();
+  }
+  resetScene() {
+    this.s.scene = { rounds: [{ assign: {}, results: {} }] };
+    this.touch();
+  }
+  setMode(mode) { this.s.mode = mode; this.touch(); }
+
+  async postSceneStatus() {
+    const t = this.sceneTotals();
+    return this.postCard(`Round ${this.roundNo} of ${SCENE.maxRounds}`, "Nova Rush — breaking away",
+      `<p style="margin:0 0 6px"><b>Victory Points</b> ${t.vp} of ${SCENE.goal} · <b>Hull</b> ${t.hull} of ${SCENE.hull}</p>
+       <p style="margin:0">${t.won ? "She's clear." : t.lost ? "She's out, and badly hurt." : "Still running."}</p>`,
+      t.won ? "moss" : t.lost ? "rust" : "slate");
   }
 
   reset() {
@@ -535,7 +815,8 @@ class NRApp extends BaseApp {
         ${s.tab === "lower" ? this.deckTab("lower", ro) : ""}
         ${s.tab === "upper" ? this.deckTab("upper", ro) : ""}
         ${s.tab === "bridge" ? this.bridgeTab(ro) : ""}
-        ${s.tab === "escape" ? this.escapeTab(ro) : ""}
+        ${s.tab === "escape" ? (s.mode === "cinematic" ? this.sceneTab(ro) : this.escapeTab(ro)) : ""}
+        ${s.tab === "fx" ? this.fxTab(ro) : ""}
       </div>`;
   }
 
@@ -618,6 +899,11 @@ class NRApp extends BaseApp {
         </h3>
         <p class="boxed">${BRIG.attack.boxed}</p>
         <p class="note">${BRIG.attack.fail}</p>
+        <div class="btnrow">
+          <button type="button" class="primary" data-act="fx" data-k="attack">
+            <i class="fa-solid fa-wand-sparkles"></i> Play the hit
+          </button>
+        </div>
       </section>`;
   }
 
@@ -695,6 +981,7 @@ class NRApp extends BaseApp {
         ${r.polly ? `<p class="note">${t.s.allies.polly ? "<b>Polly is helping</b> — " : ""}${r.polly}</p>` : ""}
         <p class="bonus">${r.pays}</p>
         <div class="btnrow">
+          ${key === "reactor" ? `<button type="button" class="ghost" data-act="fx" data-k="reactor"><i class="fa-solid fa-bolt"></i> Shock</button>` : ""}
           <button type="button" class="${done ? "ghost" : "primary"}" data-act="repair" data-k="${key}" ${ro ? "disabled" : ""}>
             ${done ? "Mark unrepaired" : "Mark repaired"}
           </button>
@@ -749,6 +1036,7 @@ class NRApp extends BaseApp {
             <button type="button" class="ghost" data-act="sinktoggle" ${ro ? "disabled" : ""}>
               ${sw.active ? "Stand it down" : "Trigger the wave"}
             </button>
+            <button type="button" class="ghost" data-act="fx" data-k="sinkwell"><i class="fa-solid fa-wand-sparkles"></i> Effect</button>
           </div>
           ${sw.defeated ? `<p class="bonus">Disabled — “Guess I owe you one!” Polly will help with the reactor.</p>` : ""}
         </div>
@@ -789,9 +1077,156 @@ class NRApp extends BaseApp {
   }
 
   /* -------------------------------------------------------------- escape */
+  modeSwitch(ro) {
+    const t = this.t;
+    return `
+      <div class="modes">
+        <span class="subhead">How you're running it</span>
+        <button type="button" class="opt ${t.s.mode === "book" ? "on" : ""}" data-act="mode" data-k="book" ${ro ? "disabled" : ""}>As printed — one check each</button>
+        <button type="button" class="opt ${t.s.mode === "cinematic" ? "on" : ""}" data-act="mode" data-k="cinematic" ${ro ? "disabled" : ""}>Cinematic starship scene</button>
+      </div>`;
+  }
+
+  /* ------------------------------------------------------ cinematic scene */
+  sceneTab(ro) {
+    const t = this.t, totals = t.sceneTotals(), dc = t.escapeDC, bonus = t.escapeBonus;
+    const rd = t.rounds[t.roundNo - 1];
+    const vpPct = Math.min(100, Math.round((totals.vp / SCENE.goal) * 100));
+    const hullPct = Math.round((totals.hull / SCENE.hull) * 100);
+    return `
+      ${this.modeSwitch(ro)}
+
+      <section class="panel scenebar" style="--tone:var(--gold)">
+        <h3>Breaking away <small>round ${t.roundNo} of ${SCENE.maxRounds}</small>
+          <button type="button" class="say" data-act="postscene" title="Post the scene's standing"><i class="fa-solid fa-comment"></i></button>
+        </h3>
+        <div class="tracks">
+          <div class="track">
+            <div class="tlabel"><span>Victory Points</span><b>${totals.vp} / ${SCENE.goal}</b></div>
+            <div class="bar"><span class="vp" style="width:${vpPct}%"></span></div>
+          </div>
+          <div class="track">
+            <div class="tlabel"><span>Hull</span><b>${totals.hull} / ${SCENE.hull}</b></div>
+            <div class="bar"><span class="hull ${totals.hull <= 2 ? "low" : ""}" style="width:${hullPct}%"></span></div>
+          </div>
+          <div class="track thin">
+            <div class="tlabel"><span>Each check</span><b>DC ${dc}${bonus ? ` (+${bonus})` : ""}</b></div>
+            <div class="tnote">${t.s.repairs.reactor ? "Reactor repaired — DC −1. " : ""}${bonus ? "An ally is assisting — +1 circumstance." : "No ally assisting."}</div>
+          </div>
+        </div>
+        <p class="text">${SCENE.brief}</p>
+        <p class="note">${SCENE.initiative}</p>
+        <p class="note">${SCENE.volley}</p>
+      </section>
+
+      ${totals.over ? `
+      <section class="panel verdict ${totals.won ? "good" : "bad"}" style="--tone:var(--${totals.won ? "moss" : "rust"})">
+        <h3>${totals.won ? "Clear of the Corpse Fleet" : "Out, and badly hurt"}</h3>
+        <p class="text">${totals.won
+          ? "Nova Rush breaks away without sustaining further damage — the adventure's better ending."
+          : "Nova Rush escapes severely damaged. She is disabled, never destroyed, and she is still theirs."}</p>
+        <p class="quote">${ESCAPE.win}</p>
+        <div class="btnrow">
+          <button type="button" class="primary" data-act="fx" data-k="escape">
+            <i class="fa-solid fa-wand-sparkles"></i> Play the breakaway
+          </button>
+        </div>
+      </section>` : ""}
+
+      <section class="panel">
+        <h3>This round's stations <small>roles reset every round</small></h3>
+        <div class="crewgrid">
+          ${t.s.pcs.map((pc, i) => {
+            const role = rd.assign?.[i] ?? null;
+            const degree = rd.results?.[i] ?? null;
+            return `
+              <div class="scenerow ${degree ? "res-" + degree : ""}">
+                <img src="${pc.img}" alt="" onerror="this.src='icons/svg/mystery-man.svg'">
+                <div class="cn">${esc(pc.name)}</div>
+                <div class="roles">
+                  ${Object.entries(ROLES).map(([k, r]) => {
+                    const used = t.seatUse(k), full = used >= t.seatsFor(k) && role !== k;
+                    return `<button type="button" class="opt sm ${role === k ? "on" : ""} ${full ? "full" : ""}"
+                      data-act="assign" data-i="${i}" data-k="${k}" ${ro ? "disabled" : ""}
+                      title="${r.action} — ${r.skills}${full ? " · every seat taken" : ""}">${r.label}</button>`;
+                  }).join("")}
+                </div>
+                <div class="res">
+                  ${DEGREES.map(([d, label]) => `<button type="button" class="opt sm deg-${d} ${degree === d ? "on" : ""}"
+                    data-act="degree" data-i="${i}" data-k="${d}" ${ro || !role ? "disabled" : ""}>${label}</button>`).join("")}
+                </div>
+              </div>`;
+          }).join("")}
+        </div>
+        <div class="btnrow" style="margin-top:.5rem">
+          <button type="button" class="primary" data-act="nextround" ${ro || totals.over ? "disabled" : ""}>
+            <i class="fa-solid fa-forward"></i> End the round — raiders fire
+          </button>
+          <button type="button" class="ghost" data-act="undoround" ${ro || t.roundNo <= 1 ? "disabled" : ""}>Undo the round</button>
+          <button type="button" class="ghost" data-act="resetscene" ${ro ? "disabled" : ""}>Reset the scene</button>
+        </div>
+        ${totals.volleys.length ? `<p class="hint">Volleys so far: ${totals.volleys.map((v, i) => `round ${i + 1} ${v ? "hit" : "went wide"}`).join(" · ")}.</p>` : ""}
+      </section>
+
+      <div class="grid roles">
+        ${Object.entries(ROLES).map(([k, r]) => `
+          <article class="panel role" style="--tone:var(--${r.tone})">
+            <h3>${r.label} <span class="lvl">${t.seatsFor(k)} seat${t.seatsFor(k) === 1 ? "" : "s"}</span></h3>
+            <p class="dcs">${r.action} — ${r.skills}</p>
+            <p class="text">${r.text}</p>
+            <ul class="checks">
+              ${DEGREES.map(([d, label]) => {
+                const o = r.outcome[d] ?? {};
+                const bits = [];
+                if (o.vp) bits.push(`${o.vp > 0 ? "+" : ""}${o.vp} VP`);
+                if (o.hull) bits.push(`${o.hull > 0 ? "+" : ""}${o.hull} hull`);
+                if (o.note) bits.push(o.note);
+                return `<li><b>${label}</b> ${bits.length ? bits.join(", ") : "no change"}</li>`;
+              }).join("")}
+            </ul>
+          </article>`).join("")}
+      </div>
+
+      <section class="panel">
+        <h3>How it ends</h3>
+        <ul class="checks">${SCENE.ends.map(x => `<li>${x}</li>`).join("")}</ul>
+        <p class="hint">Designed against the SF2e Cinematic Starship Scene framework — roles, per-round role switching, and a Victory Point victory condition — at the adventure's own DC 15.</p>
+      </section>`;
+  }
+
+  /* ------------------------------------------------------------------ fx */
+  fxTab(ro) {
+    const t = this.t, ready = t.fxReady;
+    return `
+      <section class="panel" style="--tone:var(--${ready ? "moss" : "muted"})">
+        <h3>Sequencer and JB2A <small>${ready ? "detected" : "not detected"}</small></h3>
+        <p class="text">Both modules are optional — everything in this console works without them. When they're active, the cues below fire from their buttons, and the bridge's battle damage plays its own effect as you roll it.</p>
+        ${ready ? "" : `<p class="note">Install and enable <b>Sequencer</b> and a <b>JB2A</b> module (the free library covers most of these) and reopen this macro.</p>`}
+        <p class="hint">Each cue tries several JB2A database keys and uses the first one your world actually has. If a cue reads “no matching file”, open Sequencer's Database Viewer, find something you like, and put its key at the top of that cue's list in the <code>FX</code> block near the top of this macro.</p>
+      </section>
+
+      <section class="panel">
+        <h3>Cues</h3>
+        <div class="fxlist">
+          ${Object.entries(FX).map(([k, cue]) => {
+            const st = t.fxStatus(k);
+            return `
+              <div class="fxrow">
+                <span class="dot ${st.state}"></span>
+                <div class="fxname"><b>${cue.label}</b><small>${cue.where}</small></div>
+                <code class="fxfile">${st.detail}</code>
+                <button type="button" class="opt sm" data-act="fx" data-k="${k}" ${ro || !ready ? "disabled" : ""}>Test</button>
+              </div>`;
+          }).join("")}
+        </div>
+        <p class="hint">Cues marked “selected” play on the tokens you have selected; ship-wide ones play in screen space and don't need a selection.</p>
+      </section>`;
+  }
+
   escapeTab(ro) {
     const t = this.t, e = t.escapeState, dc = t.escapeDC, bonus = t.escapeBonus;
     return `
+      ${this.modeSwitch(ro)}
       <section class="panel" style="--tone:var(--gold)">
         <h3>Conclusion <small>the run for it</small></h3>
         <p class="text">${ESCAPE.text}</p>
@@ -856,6 +1291,14 @@ class NRApp extends BaseApp {
       else if (a === "sinktoggle") t.toggleSinkwell();
       else if (a === "rolldmg") t.rollBattleDamage();
       else if (a === "resetrounds") t.resetRounds();
+      else if (a === "mode") t.setMode(btn.dataset.k);
+      else if (a === "assign") t.assignRole(Number(btn.dataset.i), btn.dataset.k);
+      else if (a === "degree") t.setDegree(Number(btn.dataset.i), btn.dataset.k);
+      else if (a === "nextround") t.nextRound();
+      else if (a === "undoround") t.undoRound();
+      else if (a === "resetscene") t.resetScene();
+      else if (a === "postscene") t.postSceneStatus();
+      else if (a === "fx") t.fx(btn.dataset.k);
       else if (a === "role") t.setRole(Number(btn.dataset.i), btn.dataset.k);
       else if (a === "result") t.setResult(Number(btn.dataset.i), btn.dataset.k);
       else if (a === "actor") t.openActor(btn.dataset.k);
@@ -1004,8 +1447,55 @@ class NRApp extends BaseApp {
       .nr .verdict.good { box-shadow:inset 0 0 0 1px var(--moss); }
       .nr .verdict.bad { box-shadow:inset 0 0 0 1px var(--rust); }
 
+      .nr .modes { display:flex; align-items:center; gap:.35rem; margin-bottom:.5rem; flex-wrap:wrap; }
+      .nr .modes .subhead { margin:0 .35rem 0 0; }
+      .nr .tracks { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:.5rem; }
+      .nr .track { flex:1; min-width:170px; }
+      .nr .track.thin { flex:0 0 auto; }
+      .nr .tlabel { display:flex; justify-content:space-between; align-items:baseline; gap:.5rem; }
+      .nr .tlabel span { font-size:.58rem; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); }
+      .nr .tlabel b { font-size:.9rem; color:var(--gold); }
+      .nr .tnote { font-size:.7rem; color:var(--muted); margin-top:.2rem; }
+      .nr .bar { height:8px; border:1px solid var(--line); border-radius:4px; background:var(--stripe);
+                 overflow:hidden; margin-top:.2rem; }
+      .nr .bar span { display:block; height:100%; }
+      .nr .bar .vp { background:var(--moss); }
+      .nr .bar .hull { background:var(--slate); }
+      .nr .bar .hull.low { background:var(--rust); }
+      .nr .scenerow { display:grid; grid-template-columns:28px 7.5rem 1fr auto; gap:.5rem; align-items:center;
+                      border:1px solid var(--line); border-radius:3px; padding:.3rem .4rem; }
+      .nr .scenerow img { width:28px; height:28px; border-radius:3px; object-fit:cover; border:1px solid var(--line); }
+      .nr .scenerow .cn { font-size:.8rem; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+      .nr .scenerow .roles, .nr .scenerow .res { display:flex; gap:.22rem; flex-wrap:wrap; }
+      .nr .scenerow.res-cs { border-color:var(--moss); }
+      .nr .scenerow.res-s { border-color:var(--slate); }
+      .nr .scenerow.res-f { border-color:var(--muted); }
+      .nr .scenerow.res-cf { border-color:var(--rust); }
+      .nr .opt.full { opacity:.5; }
+      .nr .opt.deg-cs.on { background:var(--moss); border-color:var(--moss); }
+      .nr .opt.deg-s.on { background:var(--slate); border-color:var(--slate); }
+      .nr .opt.deg-f.on { background:var(--muted); border-color:var(--muted); }
+      .nr .opt.deg-cf.on { background:var(--rust); border-color:var(--rust); }
+      .nr .grid.roles { grid-template-columns:repeat(3,1fr); }
+      .nr .role .checks { color:var(--ink); }
+      .nr .role .checks b { color:var(--tone); }
+
+      .nr .fxlist { display:flex; flex-direction:column; gap:2px; }
+      .nr .fxrow { display:grid; grid-template-columns:10px 1fr 15rem auto; gap:.55rem; align-items:center;
+                   padding:.3rem .25rem; border-top:1px solid var(--stripe); }
+      .nr .dot { width:10px; height:10px; border-radius:50%; border:1px solid var(--line); }
+      .nr .dot.ok { background:var(--moss); border-color:var(--moss); box-shadow:0 0 6px var(--moss); }
+      .nr .dot.missing { background:var(--ember); border-color:var(--ember); }
+      .nr .fxname b { font-size:.8rem; display:block; }
+      .nr .fxname small { font-size:.7rem; color:var(--muted); }
+      .nr .fxfile { font-size:.68rem; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
       @media (max-width:820px) {
-        .nr .grid, .nr .faces { grid-template-columns:1fr; }
+        .nr .grid, .nr .faces, .nr .grid.roles { grid-template-columns:1fr; }
+        .nr .scenerow { grid-template-columns:28px 1fr; }
+        .nr .scenerow .roles, .nr .scenerow .res { grid-column:2; }
+        .nr .fxrow { grid-template-columns:10px 1fr auto; }
+        .nr .fxfile { display:none; }
         .nr .tabs { flex-wrap:wrap; }
         .nr .crewrow { grid-template-columns:28px 1fr; }
         .nr .crewrow .roles, .nr .crewrow .res { grid-column:2; }
