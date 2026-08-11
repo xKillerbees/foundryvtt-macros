@@ -508,6 +508,87 @@ const MODULE_MACROS = {
   ]
 };
 
+/* -------------------------------------------------- the module's playlists
+   The same module ships playlists per act — Ambience, Loop, and SFX — plus a
+   22-track looped soundtrack whose names line up with the chapters almost
+   exactly. Listed the same way as the macros: reference, not remote control.
+
+   `always` holds the generic beds that appear in nearly every act's Ambience
+   list, so they aren't repeated against all thirteen chapters. */
+const AUDIO = {
+  always: [
+    { name: "Indoors · Woods · Willowshore · Willowshore Hinterlands", from: "Ambience, every act" },
+    { name: "Mist Indoors · Mist Outdoors · Dense Fog", from: "Ambience, every act" },
+    { name: "River", from: "Loop, Acts 1–2 and 4" }
+  ],
+  chapters: {
+    1: [{ name: "Occupied Willowshore", from: "Act 1 · Ambience" },
+        { name: "Eternal Lantern", from: "Act 1 · Loop" },
+        { name: "Lighting The Eternal Lantern", from: "Act 1 · SFX" }],
+    2: [{ name: "Occupied Willowshore", from: "Act 1 · Ambience" },
+        { name: "Rowdy Celebration", from: "Act 1 · Loop" },
+        { name: "Rowdy Celebration 1", from: "Act 1 · SFX" }],
+    3: [{ name: "Canary Inn", from: "Act 1 · Ambience" },
+        { name: "Singing", from: "Act 1 · Loop", note: "the Canary Inn approach" },
+        { name: "Wind", from: "Act 1 · Ambience" }],
+    4: [{ name: "The Lumber Camp", from: "Act 1 · Ambience" },
+        { name: "Ritual Chanting", from: "Act 1 · Loop" },
+        { name: "Interrupting The Ritual", from: "Act 1 · SFX", note: "cut the chant the instant it breaks" }],
+    5: [{ name: "Festival", from: "Act 2 · Ambience", note: "week 3" },
+        { name: "Barn Fire", from: "Act 2 · Ambience", note: "week 8" },
+        { name: "Feast Of The Kami", from: "Act 2 · Ambience", note: "week 10" }],
+    6: [{ name: "Rain · Thunderstorm", from: "Act 2 · Ambience", note: "days 2 and 3" },
+        { name: "Waterfall", from: "Act 2 · Loop", note: "the Mountain Shrine" },
+        { name: "Arms of the Drowned", from: "Act 2 · SFX", note: "the Bridge Shrine haunt" },
+        { name: "Terrifying Roar", from: "Act 2 · SFX" },
+        { name: "Lightning Bolt", from: "Act 2 · SFX", note: "Iogaka" }],
+    7: [{ name: "Old Large Monastery", from: "Act 2 · Ambience" },
+        { name: "Kugaptees Grave", from: "Act 2 · Ambience", note: "E16" }],
+    8: [{ name: "Governor's Manor", from: "Act 3 · Ambiances" },
+        { name: "Dark Willowshore", from: "Act 3 · Ambiances" },
+        { name: "Buildings Collapsing", from: "Act 3 · Loop", note: "the Structural Collapse" },
+        { name: "Pounding at the Manor Walls · Howling Crowd", from: "Act 3 · Loop", note: "the nightly crowd" },
+        { name: "Mindscape Shift", from: "Act 3 · SFX" },
+        { name: "The Manor is Breached", from: "Act 3 · SFX" }],
+    9: [{ name: "Seance 1 · Seance 2", from: "Act 3 · Seance", note: "Event 12" },
+        { name: "Ending the Seance", from: "Act 3 · SFX" },
+        { name: "Borderlands", from: "Act 3 · Ambiances", note: "Between Life and Death" },
+        { name: "Portal Opens", from: "Act 3 · SFX", guess: true }],
+    10: [{ name: "Karahai Village Day · Karahai Village Night", from: "Act 3 · Ambiances" },
+         { name: "Karahai Fortress", from: "Act 3 · Ambiances and Loop" },
+         { name: "Dining Hall · Shrine · Baths", from: "Act 3 · Loop", note: "fortress rooms" },
+         { name: "Invisible Flames", from: "Act 3 · Ambiances", guess: true },
+         { name: "Warding Bell", from: "Act 3 · SFX", note: "C11" }],
+    11: [{ name: "Dark Willowshore · Governors Manor", from: "Act 4 · Ambience" },
+         { name: "Creek · Coastline", from: "Act 4 · Ambience and Loop", note: "the bridge and the camp" },
+         { name: "Clouds Of Butterflies", from: "Act 4 · SFX", note: "the False Governor in A8" }],
+    12: [{ name: "Softly Playing Flute", from: "Act 4 · Ambience", note: "the yohoi fears it" },
+         { name: "Creaky Building", from: "Act 4 · Ambience", guess: true }],
+    13: [{ name: "Below Kugaptees Claw · Kuraptees Rise", from: "Act 4 · Ambience" },
+         { name: "Old Tree Falling", from: "Act 4 · SFX", note: "D2, with the Sugi Tree Falls macros" },
+         { name: "Crashing Arms", from: "Act 4 · SFX", note: "the Sealing's pulses", guess: true },
+         { name: "Death Roar · Demonic Roar", from: "Act 4 · SFX" },
+         { name: "Mindscape Shift", from: "Act 4 · SFX" }]
+  },
+  /* The looped soundtrack, by the chapter each track was clearly written for. */
+  track: {
+    1: ["02 The Summer That Never Was", "03 Relight the Eternal Lantern"],
+    2: ["04 Town of Willowshore"],
+    3: ["06 The Hinterlands", "05 The Mysterious Merchant"],
+    4: ["07 The Wall of Ghosts", "08 Horror From Beyond"],
+    5: ["09 Let The Leaves Fall", "10 Researching The Curse", "13 First Long Night"],
+    6: ["11 The Pilgrim's Path"],
+    7: ["12 Tan Sugi Monastery"],
+    8: ["14 Oblivion of Truth", "17 Worlds Within the Mind"],
+    9: ["15 The Ritual"],
+    10: ["16 Fortress of Karahai"],
+    11: ["18 The Plum Knows Before The Snow", "19 Bridges and Bandits"],
+    12: ["20 The Princess's Web"],
+    13: ["21 Into the Corruption", "22 The Governor's Den"]
+  },
+  theme: "01 Season of Ghosts"
+};
+
 /* ------------------------------------------------------ the rework tracker */
 const REWORK = {
   pitch: "The book sets jorogumo politics beside the Kugaptee plot. This welds them together: two jorogumo, one patron and one villain, turn the stewardship trials into a sealing ritual and end the campaign with a two-phase boss — so the party fights Kugaptee without breaking the lore that he cannot truly die.",
@@ -664,6 +745,9 @@ class Campaign {
      get diluted by loot the party simply never found. */
   lootFor(n) { return LOOT[n] ?? []; }
   cuesFor(n) { return CUES[n] ?? []; }
+
+  audioFor(n) { return AUDIO.chapters[n] ?? []; }
+  trackFor(n) { return AUDIO.track[n] ?? []; }
 
   /* A chapter's module macros, plus any that could only be placed to its act,
      flagged so you can see the difference. */
@@ -892,6 +976,17 @@ class CSApp extends BaseApp {
     </div>`;
   }
 
+  audioList(list, tracks) {
+    if (!list.length && !tracks.length) return "";
+    return `<div class="macros">
+      ${tracks.map(t => `<div class="mrow"><i class="fa-solid fa-music"></i>
+          <span class="mname">${t}<small>Soundtrack · Looped Soundtrack</small></span></div>`).join("")}
+      ${list.map(a => `<div class="mrow"><i class="fa-solid fa-volume-high"></i>
+          <span class="mname">${a.name}<small>${a.from}${a.note ? ` · ${a.note}` : ""}</small></span>
+          ${a.guess ? `<span class="pip">placed by guess</span>` : ""}</div>`).join("")}
+    </div>`;
+  }
+
   /* ------------------------------------------------------------ campaign */
   campaignTab(ro) {
     const t = this.t, c = t.current, roll = t.rollup;
@@ -919,7 +1014,8 @@ class CSApp extends BaseApp {
       ${(() => {
         const cues = t.cuesFor(c.n), loot = t.lootFor(c.n).filter(i => !t.claimed(c.n, i.key));
         const macros = t.macrosFor(c.n);
-        if (!cues.length && !loot.length && !macros.length) return "";
+        const audio = t.audioFor(c.n), tracks = t.trackFor(c.n);
+        if (!cues.length && !loot.length && !macros.length && !audio.length) return "";
         return `
         <section class="panel" style="--tone:var(--ember)">
           <h3>Before this session <small>Chapter ${c.n}</small></h3>
@@ -933,6 +1029,10 @@ class CSApp extends BaseApp {
             ${macros.length ? `<div>
               <div class="subhead"><i class="fa-solid fa-bolt"></i> Module macros for this chapter</div>
               ${this.macroList(macros)}
+            </div>` : ""}
+            ${(audio.length || tracks.length) ? `<div>
+              <div class="subhead"><i class="fa-solid fa-headphones"></i> Audio to have queued</div>
+              ${this.audioList(audio, tracks)}
             </div>` : ""}
             ${loot.length ? `<div>
               <div class="subhead"><i class="fa-solid fa-sack-xmark"></i> Treasure still on the table</div>
@@ -955,8 +1055,9 @@ class CSApp extends BaseApp {
         </section>
 
         <section class="panel" style="--tone:var(--ember)">
-          <h3>Submacros <small>useful in any chapter</small></h3>
+          <h3>Always to hand <small>any chapter</small></h3>
           ${this.macroList(MODULE_MACROS.always)}
+          ${this.audioList(AUDIO.always, [AUDIO.theme])}
         </section>
 
         <section class="panel" style="--tone:var(--slate)">
@@ -1044,6 +1145,12 @@ class CSApp extends BaseApp {
         <div class="sub">
           <div class="subhead"><i class="fa-solid fa-bolt"></i> Module macros <span>${t.macrosFor(c.n).length}</span></div>
           ${this.macroList(t.macrosFor(c.n))}
+        </div>` : ""}
+
+        ${(t.audioFor(c.n).length || t.trackFor(c.n).length) ? `
+        <div class="sub">
+          <div class="subhead"><i class="fa-solid fa-headphones"></i> Audio <span>${t.audioFor(c.n).length + t.trackFor(c.n).length}</span></div>
+          ${this.audioList(t.audioFor(c.n), t.trackFor(c.n))}
         </div>` : ""}
 
         ${p.cueTotal ? `

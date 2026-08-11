@@ -119,14 +119,22 @@ produced them.
 - **Module macros** per chapter — all 57 macros from the Season of Ghosts Foundry module's
   directory, named exactly as they appear there, with their folder. Reference only: they're
   run from the macro directory, so there's nothing to tick
+- **Audio** per chapter — the module's ambience, loops, and SFX matched to the beats that want
+  them, plus the looped soundtrack: all 21 numbered tracks placed against the chapter each was
+  written for, from *02 The Summer That Never Was* to *22 The Governor's Den*
 - A **Before this session** panel on the campaign tab surfacing the current chapter's cues and
   unclaimed treasure without hunting through tabs
 - The Two Weavers continuity checklist, the milestone-level table, and per-PC arcs
 - A spoiler-free chat recap: act, chapter, level, and the chapters behind them
 
-Where a module macro's chapter couldn't be pinned down it's flagged in place — `act only` for
-the ones placeable to an act but no further, `placed by guess` for the ones inferred from the
-name. Both are one-line edits in the `MODULE_MACROS` block near the top of the macro.
+Generic beds that appear in every act — Indoors, Woods, Willowshore, the Mist and Fog set, the
+River loop — sit on the campaign tab under **Always to hand** rather than repeating against all
+thirteen chapters, alongside the Submacros folder and the campaign theme.
+
+Where a macro or audio cue couldn't be pinned to a chapter it's flagged in place — `act only`
+for the ones placeable to an act but no further, `placed by guess` for the ones inferred from
+the name. Both are one-line edits in the `MODULE_MACROS` and `AUDIO` blocks near the top of
+the macro.
 
 ![An act tab, with checklist, treasure, module macros, and cues](../../screenshots/season-of-ghosts/campaign-status-act4.png)
 
