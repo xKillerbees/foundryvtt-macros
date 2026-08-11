@@ -207,8 +207,10 @@ globalThis.FIXTURES = {
     }
   },
 
-  /* The effects tab, with no Sequencer in the harness. */
+  /* The effects tab with the Sequencer stand-in switched on, so the cue list
+     shows what it looks like once the modules are installed. */
   "novarush-fx": {
+    __sequencer: true,
     "world.sf2eNovaRush": {
       tab: "fx",
       repairs: { reactor: true, launcher: true },

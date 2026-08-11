@@ -70,20 +70,39 @@ result rewinds the tracks exactly.
 
 ![The cinematic escape, two rounds in](../../screenshots/battle-for-nova-rush/nova-rush-scene.png)
 
-## Effects — Sequencer and JB2A
+## Effects — Sequencer, JB2A, and PSFX
 
-Both modules are **optional**. Without them every button still works and the console simply
-says the effect didn't play.
+Animation comes from **JB2A**, sound from **PSFX**, both driven through **Sequencer**. All of
+it is **optional**: without the modules every button still works and the console says the
+effect didn't play.
 
-With them, eight cues are available: the Corpse Fleet's first hit in the brig, the reactor's
-shock, the sinkwell's wave, each of the four battle-damage results on the bridge (these fire
-automatically as you roll), and the breakaway at the end of the cinematic escape.
+Eight cues, each with an animation and a sound:
 
-JB2A's free and Patreon libraries carry different files, so each cue lists several Sequencer
-database keys and uses the first one your world actually has. The **Effects** tab shows which
-key resolved for each cue — or flags the ones that found nothing — and gives you a Test
-button. To substitute your own, open Sequencer's Database Viewer, find a file, and put its
-key at the top of that cue's list in the `FX` block near the top of the macro.
+| Cue | Fires at | Animation | Sound |
+|---|---|---|---|
+| We're Under Attack | A1, the first volley | `jb2a.explosion.01.orange` | fireball explosion |
+| Reactor shock | A8, a failed repair | `jb2a.static_electricity.01.blue` | shocking grasp |
+| Soul-Draining Wave | B1, the haunt triggers | `jb2a.energy_strands.overlay.dark_purple.01` | arms of hadar |
+| Battle damage — sparks | B5, the 1 result | `jb2a.static_electricity.01.blue` | lightning impact |
+| Battle damage — steam | B5, the 2 result | `jb2a.smoke.puff.centered.grey` | gust |
+| Battle damage — lurch | B5, the 3 result | camera shake | bludgeoning impact |
+| Battle damage — Concierge | B5, the 4 result | `jb2a.energy_field.02.above.blue` | dancing lights |
+| Breaking away | the end of the escape | `jb2a.fire_jet.blue.30ft` | misty step |
+
+The four battle-damage cues fire automatically as you roll the d4 — no extra click.
+
+PSFX is a fantasy library rather than a science-fiction one, so its sounds are picked for what
+they sound like rather than what they're named after: a fireball's explosion for a hull hit,
+Arms of Hadar for the sinkwell's void tentacles, a gust for a ruptured steam pipe.
+
+Every key ships **verified against the full JB2A and PSFX databases**, with fallbacks for
+JB2A's free release. Each cue uses the first key your world actually has; the **Effects** tab
+reports which one resolved, flags any that found nothing, and gives you a Test button. To
+substitute your own, open Sequencer's Database Viewer and put its key at the top of that cue's
+list in the `FX` block near the top of the macro.
+
+Cues aimed at tokens play on whatever you have selected, and fall back to a screen-space
+effect when nothing is selected, so nothing is ever silently skipped.
 
 ![The effects tab](../../screenshots/battle-for-nova-rush/nova-rush-fx.png)
 

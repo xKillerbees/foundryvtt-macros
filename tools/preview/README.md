@@ -43,6 +43,14 @@ macro, just talking to a fake Foundry. Settings writes and chat messages go to t
 2. Add an entry to `SHOTS` in `capture.py`.
 3. Run the capture and commit the PNG.
 
+## Testing effect code
+
+Macros that drive Sequencer can be exercised without the real modules. Set `__sequencer: true`
+on a fixture and the stub installs a recording stand-in: it reports any `jb2a.` or `psfx.` key
+as installed, and every sequence built is pushed to `globalThis.__sequences` as plain data, so
+a test can assert what a cue actually constructed. It is off by default, because the "no
+Sequencer installed" branch needs testing too.
+
 ## Limits
 
 This is a preview harness, not an emulator. It knows nothing about actors beyond the four

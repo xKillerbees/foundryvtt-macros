@@ -27,57 +27,65 @@ const UUIDS = {
 };
 
 /* ------------------------------------------------------------------- FX
-   Sequencer + JB2A, both optional. Every cue lists several database keys and
-   the first one that actually exists in this world is used, because the free
-   and Patreon JB2A modules carry different subsets. Swap in your own keys here
-   if you'd rather — the FX tab has a Test button for each cue, and the
-   Sequencer Database Viewer (under the module's settings) lists everything
-   installed. With neither module present the console just says so and carries
-   on; nothing else depends on this. */
+   Sequencer drives two optional libraries: JB2A for the animation and PSFX
+   (Peri's Sound Effects) for the sound. Every key below was checked against
+   the installed databases, so the first entry in each list is the one that
+   plays on a full JB2A install; the rest are fallbacks for the free library.
+   PSFX is a fantasy library rather than a science-fiction one, so the sounds
+   are chosen for what they sound like, not what they're named after — the
+   fireball's explosion for a hull hit, Arms of Hadar for the sinkwell's void
+   tentacles, a gust for a ruptured steam pipe.
+
+   Both modules are optional. With neither installed nothing here fires and
+   nothing else in the console is affected. The Effects tab reports what
+   resolved and can test each cue. */
 const FX = {
   attack: {
     label: "We're Under Attack", where: "A1 — the Corpse Fleet's first volley",
-    files: ["jb2a.explosion.01.orange", "jb2a.explosion.02.orange", "jb2a.impact.orange.0"],
+    files: ["jb2a.explosion.01.orange", "jb2a.impact.orange", "jb2a.explosion.02.orange"],
+    sound: "psfx.3rd-level-spells.fireball.v1.001.explosion",
     scale: 1.8, screen: true, shake: { duration: 1000, strength: 28 }
   },
   reactor: {
     label: "Reactor shock", where: "A8 — a failed repair attempt",
-    files: ["jb2a.static_electricity.02.blue", "jb2a.static_electricity.01.blue",
-            "jb2a.chain_lightning.primary.blue", "jb2a.lightning_ball.blue"],
+    files: ["jb2a.static_electricity.01.blue", "jb2a.lightning_ball.blue"],
+    sound: "psfx.cantrips.shocking-grasp.v1.001",
     scale: 1.0, target: "selected"
   },
   sinkwell: {
     label: "Soul-Draining Wave", where: "B1 — the haunt triggers",
     files: ["jb2a.energy_strands.overlay.dark_purple.01",
-            "jb2a.magic_signs.rune.necromancy.loop.dark_purple",
-            "jb2a.impact.dark_purple.0", "jb2a.explosion.01.purple"],
+            "jb2a.magic_signs.circle.02.necromancy.intro.dark_purple"],
+    sound: "psfx.1st-level-spells.arms-of-hadar.v1.001",
     scale: 1.4, target: "selected", shake: { duration: 600, strength: 12 }
   },
   sparks: {
     label: "Battle damage — sparks", where: "B5 — the 1 result",
-    files: ["jb2a.static_electricity.01.blue", "jb2a.chain_lightning.primary.blue"],
+    files: ["jb2a.static_electricity.01.blue", "jb2a.lightning_ball.blue"],
+    sound: "psfx.impacts.magicaleffects.lightning",
     scale: 0.9, target: "selected"
   },
   steam: {
     label: "Battle damage — steam", where: "B5 — the 2 result",
-    files: ["jb2a.smoke.puff.centered.grey.0", "jb2a.smoke.puff.centered.dark_black.0",
-            "jb2a.fog_cloud.01.white"],
+    files: ["jb2a.smoke.puff.centered.grey", "jb2a.smoke.puff.centered.dark_black"],
+    sound: "psfx.cantrips.gust.v1",
     scale: 1.3, target: "selected"
   },
   lurch: {
     label: "Battle damage — lurch", where: "B5 — the 3 result",
-    files: [], shake: { duration: 800, strength: 20 }
+    files: [], sound: "psfx.impacts.bludgeoning.v1",
+    shake: { duration: 800, strength: 20 }
   },
   holo: {
     label: "Battle damage — Concierge", where: "B5 — the 4 result",
-    files: ["jb2a.energy_field.02.above.blue", "jb2a.shield_themed.above.holy.blue.01",
-            "jb2a.magic_signs.circle.02.illusion.loop.blue"],
+    files: ["jb2a.energy_field.02.above.blue", "jb2a.magic_signs.circle.02.divination.intro.blue"],
+    sound: "psfx.cantrips.dancing-lights.v1.001",
     scale: 0.8, target: "selected"
   },
   escape: {
     label: "Breaking away", where: "The end of the cinematic escape",
-    files: ["jb2a.portal.vortex.loop.blue", "jb2a.energy_beam.normal.blue.03",
-            "jb2a.explosion.01.blue"],
+    files: ["jb2a.fire_jet.blue.30ft", "jb2a.portals.horizontal.ring.blue"],
+    sound: "psfx.2nd-level-spells.misty-step.v1.complete.generic",
     scale: 1.6, screen: true, shake: { duration: 700, strength: 14 }
   }
 };
@@ -585,13 +593,22 @@ class NovaRush {
   }
   /* A cue with no art but a shake is still playable; one that needs art and
      has none is not. */
+  resolveSound(key) {
+    const cue = FX[key];
+    if (!cue?.sound || !this.fxReady) return null;
+    const db = globalThis.Sequencer.Database;
+    const exists = typeof db?.entryExists === "function" ? db.entryExists(cue.sound)
+      : typeof db?.getEntry === "function" ? !!db.getEntry(cue.sound) : false;
+    return exists ? cue.sound : null;
+  }
   fxStatus(key) {
     const cue = FX[key];
-    if (!this.fxReady) return { state: "off", detail: "Sequencer not detected" };
+    if (!this.fxReady) return { state: "off", detail: "Sequencer not detected", sound: "" };
     const file = this.resolveFx(key);
-    if (file) return { state: "ok", detail: file };
-    if (!cue.files.length && cue.shake) return { state: "ok", detail: "camera shake only" };
-    return { state: "missing", detail: "no matching JB2A file installed" };
+    const sound = this.resolveSound(key) ? "sound" : cue.sound ? "no sound file" : "";
+    if (file) return { state: "ok", detail: file, sound };
+    if (!cue.files.length && cue.shake) return { state: "ok", detail: "camera shake only", sound };
+    return { state: "missing", detail: "no matching JB2A file installed", sound };
   }
 
   async fx(key) {
@@ -599,11 +616,13 @@ class NovaRush {
     if (!cue) return;
     if (!this.fxReady) return ui.notifications.info("Sequencer isn't active — no effect played.");
     const file = this.resolveFx(key);
-    if (!file && !cue.shake) {
-      return ui.notifications.warn(`No JB2A file found for "${cue.label}". Set your own key in the FX tab's list.`);
+    const sound = this.resolveSound(key);
+    if (!file && !cue.shake && !sound) {
+      return ui.notifications.warn(`Nothing installed for "${cue.label}". Set your own key in the FX block at the top of this macro.`);
     }
     try {
       const seq = new globalThis.Sequence();
+      if (sound) seq.sound().file(sound);
       if (file) {
         const targets = cue.target === "selected" ? (canvas?.tokens?.controlled ?? []) : [];
         if (cue.screen || !targets.length) {
@@ -1200,9 +1219,9 @@ class NRApp extends BaseApp {
     return `
       <section class="panel" style="--tone:var(--${ready ? "moss" : "muted"})">
         <h3>Sequencer and JB2A <small>${ready ? "detected" : "not detected"}</small></h3>
-        <p class="text">Both modules are optional — everything in this console works without them. When they're active, the cues below fire from their buttons, and the bridge's battle damage plays its own effect as you roll it.</p>
+        <p class="text">Animation comes from <b>JB2A</b> and sound from <b>PSFX</b>, both through Sequencer, and all of it is optional — everything in this console works without them. When they're active, the cues below fire from their buttons, and the bridge's battle damage plays its own effect as you roll it.</p>
         ${ready ? "" : `<p class="note">Install and enable <b>Sequencer</b> and a <b>JB2A</b> module (the free library covers most of these) and reopen this macro.</p>`}
-        <p class="hint">Each cue tries several JB2A database keys and uses the first one your world actually has. If a cue reads “no matching file”, open Sequencer's Database Viewer, find something you like, and put its key at the top of that cue's list in the <code>FX</code> block near the top of this macro.</p>
+        <p class="hint">Every key ships verified against the full JB2A and PSFX libraries, with fallbacks for JB2A's free release. Each cue uses the first key your world actually has. If one reads “no matching file”, open Sequencer's Database Viewer, find something you like, and put its key at the top of that cue's list in the <code>FX</code> block near the top of this macro.</p>
       </section>
 
       <section class="panel">
@@ -1214,7 +1233,7 @@ class NRApp extends BaseApp {
               <div class="fxrow">
                 <span class="dot ${st.state}"></span>
                 <div class="fxname"><b>${cue.label}</b><small>${cue.where}</small></div>
-                <code class="fxfile">${st.detail}</code>
+                <code class="fxfile">${st.detail}${st.sound ? ` · ${st.sound}` : ""}</code>
                 <button type="button" class="opt sm" data-act="fx" data-k="${k}" ${ro || !ready ? "disabled" : ""}>Test</button>
               </div>`;
           }).join("")}

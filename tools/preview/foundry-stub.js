@@ -128,6 +128,40 @@ globalThis.fromUuid = async (uuid) => ({
   sheet: { render: () => console.log("[sheet]", uuid) }
 });
 
+/* Opt-in Sequencer stand-in, switched on by a fixture setting
+   `__previewSequencer`. It reports any jb2a./psfx. key as installed and
+   records what a sequence was built from, so effect code paths can be
+   exercised and asserted without the real modules. Never on by default —
+   a macro's "no Sequencer" branch needs testing too. */
+if (globalThis.__previewSequencer) {
+  const calls = [];
+  globalThis.__sequences = calls;
+  const section = (kind, entry) => {
+    const self = {
+      file: (f) => { entry.file = f; return self; },
+      atLocation: (t) => { entry.at = t?.name ?? "location"; return self; },
+      scale: (n) => { entry.scale = n; return self; },
+      screenSpace: () => { entry.screenSpace = true; return self; },
+      screenSpaceAnchor: (a) => { entry.anchor = a; return self; },
+      shake: (o) => { entry.shake = o; return self; }
+    };
+    entry.kind = kind;
+    return self;
+  };
+  globalThis.Sequence = class Sequence {
+    constructor() { this.parts = []; calls.push(this.parts); }
+    effect() { const e = {}; this.parts.push(e); return section("effect", e); }
+    sound() { const e = {}; this.parts.push(e); return section("sound", e); }
+    canvasPan() { const e = {}; this.parts.push(e); return section("canvasPan", e); }
+    async play() { return this; }
+  };
+  globalThis.Sequencer = {
+    Database: { entryExists: (k) => /^(jb2a|psfx)\./.test(k) }
+  };
+  game.modules = { get: (id) => ({ id, active: ["sequencer", "jb2a_patreon", "psfx"].includes(id) }) };
+  globalThis.canvas = { tokens: { controlled: [] }, dimensions: { width: 4000, height: 3000 }, scene: {} };
+}
+
 globalThis.foundry = {
   utils: {
     escapeHTML: (s) => String(s).replace(/[&<>"']/g, c =>
@@ -211,6 +245,7 @@ globalThis.Application = ApplicationV2;
    show a console mid-session rather than an untouched one. */
 if (globalThis.__previewSeed) {
   for (const [id, value] of Object.entries(globalThis.__previewSeed)) {
+    if (id.startsWith("__")) continue;
     settingStore.set(id, value);
     settingDefs.set(id, { scope: "world", config: false, type: Object, default: null });
   }

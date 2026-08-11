@@ -88,6 +88,8 @@
     }
     await load("/tools/preview/fixtures.js");
     if (seed && globalThis.FIXTURES?.[seed]) globalThis.__previewSeed = globalThis.FIXTURES[seed];
+    /* Fixtures may ask for the Sequencer stand-in; see foundry-stub.js. */
+    if (globalThis.__previewSeed?.__sequencer) globalThis.__previewSequencer = true;
     await load("/tools/preview/foundry-stub.js");
     await load(`/macros/${macro}`);
 

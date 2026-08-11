@@ -7,8 +7,8 @@
   check's modifiers calculated and a per-round battle damage roller for the bridge fight
 - Nova Rush: the escape can be run as a Cinematic Starship Scene — six roles, a Victory
   Point goal, and a hull clock — alongside the printed single-check version
-- Nova Rush: optional Sequencer / JB2A effect cues, resolved against whichever JB2A library
-  is installed, with a tester
+- Nova Rush: optional Sequencer effect cues — JB2A animation plus PSFX sound, every key
+  verified against the real databases, with a tester and graceful fallbacks
 - Campaign Status Tracker — a checklist across all thirteen chapters, with a Threads view
   that flags a prerequisite the moment the table reaches the chapter that needs it, a loot
   ledger of every named treasure, and per-chapter scene and cue lists
