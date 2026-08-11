@@ -313,6 +313,144 @@ const CHAPTERS = [
     ] }
 ];
 
+/* ------------------------------------------------------------ the treasure
+   Keyed by chapter rather than folded into CHAPTERS, so the ledger reads as
+   one list when you're checking what the party never picked up. Items already
+   tracked as chapter decisions (Zoudou's ledger, the Fang and Key) live there
+   and aren't repeated here. */
+const LOOT = {
+  2: [
+    { key: "care", label: "Care package — 10 minor healing potions, 8 potency crystals", where: "The favored elder, before downtown" }
+  ],
+  3: [
+    { key: "cloak", label: "Hongrui's red cloak", where: "Canary Inn D4", note: "Cursed unless her gratitude was earned first." },
+    { key: "pearls", label: "Two pearls", where: "Eyes of Fumeiyoshi D9", note: "They claim the Cerulean Teahouse." },
+    { key: "peachwood", label: "Peachwood", where: "Collecting Peachwood", note: "A critical failure kills the grove for the campaign." }
+  ],
+  4: [
+    { key: "pendant", label: "Pendant of the occult", where: "E14 — the occultists' bargain" },
+    { key: "gift", label: "Cape of justice, or the noppera-bo hood", where: "Shinzo's gift", note: "Whichever his question chose." },
+    { key: "iron", label: "Invisibility potion and a 100 gp silver ingot", where: "Behind the E11→E12 iron door" }
+  ],
+  5: [
+    { key: "yami", label: "Yami's weekly gift", where: "DC 11 flat at the end of each week" },
+    { key: "shinzo", label: "Shinzo at 10% off", where: "During the First Long Night, week 3" }
+  ],
+  6: [
+    { key: "enko", label: "+1 striking silver shortsword, wand of environmental endurance, minor sturdy shield", where: "Enko surfaces with them at Mirror Lake" },
+    { key: "charges", label: "Six moderate ghost charges", where: "Bridge Shrine — fill the clay vials from the dippers" },
+    { key: "orchids", label: "Six doses of lesser healing vapor", where: "Garden Shrine — the blue orchids in the oak's roots" },
+    { key: "soap", label: "Four bars of invigorating soap", where: "The cave at the Mountain Shrine" },
+    { key: "thurible", label: "Lesser thurible of revelation", where: "Mountain Shrine platform", note: "Iogaka filled it with mud and dead fish — clean it before use." }
+  ],
+  7: [
+    { key: "fulus", label: "An escape fulu and two stumbling fulus", where: "E1 — the shredded gate" },
+    { key: "shield", label: "Spellguard shield", where: "E3 — among the cushions east of the statue" },
+    { key: "healer", label: "Two moderate healing potions, expanded healer's tools, healer's gloves", where: "E4 debris" },
+    { key: "toolkit", label: "Sterling artisan's toolkit for tea, and 5 doses of poison", where: "E7 kitchen, once the haunt is beaten" },
+    { key: "tea", label: "Rare tea worth 150 gp", where: "E8", note: "Using all of it gives +2 to Host Ceremony in E6." },
+    { key: "pouch", label: "Type II spacious pouch — 200 gp of stolen art", where: "E8, under the loose floor stone" },
+    { key: "ring", label: "Spiritsight ring", where: "E9 — under a mattress" },
+    { key: "prayers", label: "Book of warding prayers", where: "E10 rubble" },
+    { key: "scrolls", label: "Lesser tome of restorative cleansing and six scrolls", where: "E11 — Yen Rui's gifts" },
+    { key: "staff", label: "Primeval mistletoe and a verdant staff", where: "E12, after the fungi" },
+    { key: "axe", label: "+1 ghost touch striking silver battle axe", where: "E13 trunk", note: "Frightened-1 quirk on every draw until Xin Yue falls." },
+    { key: "chest", label: "The treasury chest — emerald grasshopper talisman, +1 chain shirt, wand of clear mind", where: "E15" }
+  ],
+  8: [
+    { key: "boots", label: "Boots of bounding", where: "Mr Jelly recovered intact" },
+    { key: "tome", label: "Moderate tome of restorative cleansing", where: "What the transmigration journal becomes" },
+    { key: "formula", label: "The resurrect formula", where: "Loose pages in the journal" }
+  ],
+  9: [
+    { key: "legacy", label: "Four heroic-legacy items", where: "Shinzo, at Event 4" },
+    { key: "collars", label: "Silver collars", where: "Ren Mei Li at Influence 12", note: "Legal passes to travel, read, and trade in Act 4." },
+    { key: "msgring", label: "Messenger's ring", where: "Ren Mei Li at Influence 12" },
+    { key: "dust", label: "Dust of corpse animation", where: "Ren Mei Li at Influence 16" }
+  ],
+  10: [
+    { key: "codex", label: "The codex explaining the warding bell", where: "C20 — Mago Kai's quarters" },
+    { key: "topup", label: "Shinzo's gear top-up — about 1,500 gp each, up to 3,000", where: "Only on the negotiated peace" }
+  ],
+  11: [
+    { key: "lantern", label: "The Eternal Lantern's skill bonus rises to +2", where: "Automatic at the return" },
+    { key: "bell", label: "The warding bell gifted back — +2 to a deity's divine skill", where: "If it was spared in Ch 10", note: "Installed at a different shrine than the lantern's, it's two skills." },
+    { key: "farewell", label: "Shinzo's parting gifts — phoenix fulu holder with an anathema fulu, a needle thousand-pains fulu, two greater potency crystals", where: "His farewell" }
+  ],
+  12: [
+    { key: "rites", label: "Rite bonus items — some at 10+ VP, all of them at 14+", where: "Across the five treasures" },
+    { key: "bombs", label: "You So-Jin's silversoul bombs and formula", where: "Stolen at her murder", note: "They pay off on the vessel in the finale." }
+  ],
+  13: [
+    { key: "hoard", label: "Hong Zhinü's hoard — the loom's red silk and court regalia at the level-12 allotment", where: "After phase two", note: "The silk becomes silkweave armour or three potent crafting components." },
+    { key: "folio", label: "Her research folio on Kugaptee", where: "The hoard", note: "Keep it, burn it, or trade it to Ren Mei Li." }
+  ]
+};
+
+/* ---------------------------------------------------------------- the cues
+   Foundry scenes, playlists, macros, and the table prep that has to happen
+   before the session rather than during it. Taken from the campaign notes. */
+const CUES = {
+  2: [
+    { key: "lantern", label: "`Eternal Lantern` loop — the ambient bed for every downtown scene" },
+    { key: "bodies", label: "Mark the hanging-body squares before session" }
+  ],
+  3: [
+    { key: "seasons", label: "`Willowshore Seasons` · `Enable Rain`" },
+    { key: "rollers", label: "Both encounter rollers armed" },
+    { key: "singing", label: "`Singing` loop for the Canary Inn approach" }
+  ],
+  4: [
+    { key: "chant", label: "`Ritual Chanting` loop underneath the approach" },
+    { key: "stop", label: "`Stop Chanting` one-shot at the disruption · `Interrupting The Ritual` SFX",
+      note: "Cut the chant audio the instant the ritual breaks — the silence is the cue for the rumble beyond the Wall." }
+  ],
+  5: [
+    { key: "consoles", label: "Fall Downtime Tracker and First Long Night Console open" },
+    { key: "seasons", label: "`Willowshore Seasons` at the fall transition" },
+    { key: "fire", label: "`Barn Fire` (week 8) · `Feast of the Kami` (week 10)" }
+  ],
+  6: [
+    { key: "console", label: "Enlightened Path Console open" },
+    { key: "wall", label: "`Open the Wall of Ghosts` · `Reveal Mandragoras` · `Terrifying Roar` · `Arms of the Drowned`" },
+    { key: "weather", label: "`Dense Fog` / `Rain` / `Thunderstorm` across days 2–3 · `Lightning Bolt` at the Mountain Shrine" },
+    { key: "raft", label: "Mirror Lake raft — map and drift counter ready before session" }
+  ],
+  7: [
+    { key: "console", label: "Ruins of Wisdom Console open" },
+    { key: "head", label: "`Return Head` at E5" },
+    { key: "season", label: "`Change Season` at the act transition" },
+    { key: "trigger", label: "Decide the Zhi Hui healing trigger before session", note: "Say, two PCs below half." }
+  ],
+  8: [
+    { key: "omens", label: "Ill Omens table ready to roll — a couple an hour" },
+    { key: "collapse", label: "Structural Collapse — the 6-round recollapse timer where you can see it" }
+  ],
+  9: [
+    { key: "loop", label: "The weekly loop written down: attrition → downtime → event → DC 16 flat for Unexpected Troubles" },
+    { key: "d44", label: "Day 44 — the sakaki slats come out" },
+    { key: "d71", label: "Day 71 — Interview with a Spider" }
+  ],
+  10: [
+    { key: "terror", label: "`Terror in Karahai` macro learned before session",
+      note: "Terror level, night state, retreated groups, cross-scene death sync, reinforcement restoration." },
+    { key: "bell", label: "`Warding Bell` · `Pan Fenfang True Form` effect" },
+    { key: "wasted", label: "Play the first wasted round — let them learn the walls block incorporeal movement" },
+    { key: "season", label: "`Change Season` at the act break" }
+  ],
+  11: [
+    { key: "fate", label: "Willowshore's Fate rolled up before session — open with the description, not the math" },
+    { key: "ancestry", label: "Warn the players about the ancestry swap a session ahead" }
+  ],
+  12: [
+    { key: "murders", label: "The three murder scenes staged with their tokens in reach" }
+  ],
+  13: [
+    { key: "freeround", label: "Decide the free-round trigger before the Weaver's second phase" },
+    { key: "stations", label: "Five sealing stations mapped before the ritual round" }
+  ]
+};
+
 /* ------------------------------------------------------ the rework tracker */
 const REWORK = {
   pitch: "The book sets jorogumo politics beside the Kugaptee plot. This welds them together: two jorogumo, one patron and one villain, turn the stewardship trials into a sealing ritual and end the campaign with a two-phase boss — so the party fights Kugaptee without breaking the lore that he cannot truly die.",
@@ -362,6 +500,8 @@ function blankState(pcs) {
     /* Seeded from the campaign notes: Act 1 complete, Chapter 5 running. */
     chapters: { 1: "done", 2: "done", 3: "done", 4: "done", 5: "active" },
     flags: {},
+    loot: {},
+    cues: {},
     rework: {},
     log: []
   };
@@ -462,9 +602,47 @@ class Campaign {
     this.touch();
   }
 
+  /* ----- treasure and cues -----
+     Same shape as flags, in their own buckets so the checklist count doesn't
+     get diluted by loot the party simply never found. */
+  lootFor(n) { return LOOT[n] ?? []; }
+  cuesFor(n) { return CUES[n] ?? []; }
+  claimed(n, key) { return !!this.s.loot[`${n}.${key}`]; }
+  cued(n, key) { return !!this.s.cues[`${n}.${key}`]; }
+
+  toggleLoot(n, key) {
+    const id = `${n}.${key}`;
+    const on = !!this.s.loot[id];
+    if (on) delete this.s.loot[id]; else this.s.loot[id] = true;
+    const it = this.lootFor(n).find(x => x.key === key);
+    this.log(`Ch ${n} loot — ${it?.label ?? key}: ${on ? "unclaimed" : "claimed"}.`);
+    this.touch();
+  }
+  toggleCue(n, key) {
+    const id = `${n}.${key}`;
+    const on = !!this.s.cues[id];
+    if (on) delete this.s.cues[id]; else this.s.cues[id] = true;
+    this.touch();
+  }
+
+  /* Everything the party could still walk away from, current chapter first. */
+  get lootLedger() {
+    const rows = [];
+    for (const c of CHAPTERS) {
+      for (const it of this.lootFor(c.n)) {
+        rows.push({ ...it, ch: c.n, claimed: this.claimed(c.n, it.key), here: c.n === this.current.n });
+      }
+    }
+    return rows;
+  }
+
   progress(n) {
     const items = chapter(n).items;
-    return { done: items.filter(i => this.flag(n, i.key)).length, total: items.length };
+    return {
+      done: items.filter(i => this.flag(n, i.key)).length, total: items.length,
+      loot: this.lootFor(n).filter(i => this.claimed(n, i.key)).length, lootTotal: this.lootFor(n).length,
+      cues: this.cuesFor(n).filter(i => this.cued(n, i.key)).length, cueTotal: this.cuesFor(n).length
+    };
   }
   get overall() {
     let done = 0, total = 0;
@@ -593,6 +771,7 @@ class CSApp extends BaseApp {
       { key: "act3", label: "Act 3", sub: ACTS[3].name },
       { key: "act4", label: "Act 4", sub: ACTS[4].name },
       { key: "threads", label: "Threads", sub: "what carries forward" },
+      { key: "loot", label: "Treasure", sub: "the loot ledger" },
       { key: "rework", label: "Two Weavers", sub: "rework continuity" }
     ];
     const actTab = /^act[1-4]$/.test(s.tab) ? Number(s.tab.slice(3)) : null;
@@ -606,6 +785,7 @@ class CSApp extends BaseApp {
         ${s.tab === "campaign" ? this.campaignTab(ro) : ""}
         ${actTab ? this.actTab(actTab, ro) : ""}
         ${s.tab === "threads" ? this.threadsTab() : ""}
+        ${s.tab === "loot" ? this.lootTab(ro) : ""}
         ${s.tab === "rework" ? this.reworkTab(ro) : ""}
       </div>`;
   }
@@ -652,6 +832,29 @@ class CSApp extends BaseApp {
         <h3>Due now, not carried <small>${od.length} thread${od.length === 1 ? "" : "s"}</small></h3>
         ${od.map(x => `<p class="alarmrow"><span class="chip">Ch ${x.from} → ${x.at}</span> ${x.label}${x.pays ? ` <em>${x.pays}</em>` : ""}</p>`).join("")}
       </section>` : ""}
+
+      ${(() => {
+        const cues = t.cuesFor(c.n), loot = t.lootFor(c.n).filter(i => !t.claimed(c.n, i.key));
+        if (!cues.length && !loot.length) return "";
+        return `
+        <section class="panel" style="--tone:var(--ember)">
+          <h3>Before this session <small>Chapter ${c.n}</small></h3>
+          <div class="cols">
+            ${cues.length ? `<div>
+              <div class="subhead"><i class="fa-solid fa-clapperboard"></i> Scenes and cues</div>
+              ${cues.map(q => `<label class="check ${t.cued(c.n, q.key) ? "on" : ""}">
+                  <input type="checkbox" data-act="cue" data-n="${c.n}" data-k="${q.key}" ${t.cued(c.n, q.key) ? "checked" : ""} ${ro ? "disabled" : ""}>
+                  <span class="lbl">${q.label}</span></label>`).join("")}
+            </div>` : ""}
+            ${loot.length ? `<div>
+              <div class="subhead"><i class="fa-solid fa-sack-xmark"></i> Treasure still on the table</div>
+              ${loot.map(it => `<label class="check">
+                  <input type="checkbox" data-act="loot" data-n="${c.n}" data-k="${it.key}" ${ro ? "disabled" : ""}>
+                  <span class="lbl">${it.label}${it.where ? `<em class="pays">${it.where}</em>` : ""}</span></label>`).join("")}
+            </div>` : ""}
+          </div>
+        </section>`;
+      })()}
 
       <div class="cols">
         <section class="panel" style="--tone:var(--plum)">
@@ -730,8 +933,65 @@ class CSApp extends BaseApp {
               ${i.note ? `<p class="itemnote">${i.note}</p>` : ""}`;
           }).join("")}
         </div>
+
+        ${p.lootTotal ? `
+        <div class="sub loot">
+          <div class="subhead"><i class="fa-solid fa-sack-xmark"></i> Treasure <span>${p.loot} of ${p.lootTotal}</span></div>
+          ${t.lootFor(c.n).map(it => {
+            const on = t.claimed(c.n, it.key);
+            return `<label class="check ${on ? "on" : ""}">
+                <input type="checkbox" data-act="loot" data-n="${c.n}" data-k="${it.key}" ${on ? "checked" : ""} ${ro ? "disabled" : ""}>
+                <span class="lbl">${it.label}${it.where ? `<em class="pays">${it.where}</em>` : ""}</span>
+              </label>
+              ${it.note ? `<p class="itemnote">${it.note}</p>` : ""}`;
+          }).join("")}
+        </div>` : ""}
+
+        ${p.cueTotal ? `
+        <div class="sub cues">
+          <div class="subhead"><i class="fa-solid fa-clapperboard"></i> Scenes and cues <span>${p.cues} of ${p.cueTotal}</span></div>
+          ${t.cuesFor(c.n).map(q => {
+            const on = t.cued(c.n, q.key);
+            return `<label class="check ${on ? "on" : ""}">
+                <input type="checkbox" data-act="cue" data-n="${c.n}" data-k="${q.key}" ${on ? "checked" : ""} ${ro ? "disabled" : ""}>
+                <span class="lbl">${q.label}</span>
+              </label>
+              ${q.note ? `<p class="itemnote">${q.note}</p>` : ""}`;
+          }).join("")}
+        </div>` : ""}
+
         <p class="hint">${p.done} of ${p.total} logged.</p>
       </section>`;
+  }
+
+  /* ---------------------------------------------------------------- loot */
+  lootTab(ro) {
+    const t = this.t, rows = t.lootLedger;
+    const open = rows.filter(r => !r.claimed);
+    const block = (list, title, tone, blurb) => list.length ? `
+      <section class="panel" style="--tone:var(--${tone})">
+        <h3>${title} <small>${list.length}</small></h3>
+        ${blurb ? `<p class="hint">${blurb}</p>` : ""}
+        <div class="items">
+          ${list.map(r => `
+            <label class="check ${r.claimed ? "on" : ""} ${r.here && !r.claimed ? "here" : ""}">
+              <input type="checkbox" data-act="loot" data-n="${r.ch}" data-k="${r.key}" ${r.claimed ? "checked" : ""} ${ro ? "disabled" : ""}>
+              <span class="lbl"><span class="chip">Ch ${r.ch}</span> ${r.label}
+                ${r.where ? `<em class="pays">${r.where}</em>` : ""}</span>
+            </label>
+            ${r.note ? `<p class="itemnote">${r.note}</p>` : ""}`).join("")}
+        </div>
+      </section>` : "";
+
+    return `
+      <section class="panel" style="--tone:var(--gold)">
+        <h3>The loot ledger <small>${rows.length - open.length} of ${rows.length} claimed</small></h3>
+        <p class="text">Every named piece of treasure in the campaign, chapter by chapter. Things already tracked as chapter decisions — Zoudou's ledger, Watchers of the Cycle, the Fang and Key — live on their act's tab instead of being counted twice here.</p>
+      </section>
+      ${block(open.filter(r => r.here), "In the chapter you're running", "ember", "Still on the table right now.")}
+      ${block(open.filter(r => r.ch < t.current.n), "Left behind", "rust", "Earlier chapters the party never emptied. Some can still be gone back for; some can't.")}
+      ${block(open.filter(r => r.ch > t.current.n), "Still ahead", "slate", "")}
+      ${block(rows.filter(r => r.claimed), "Claimed", "moss", "")}`;
   }
 
   /* ------------------------------------------------------------- threads */
@@ -829,6 +1089,8 @@ class CSApp extends BaseApp {
       const el = ev.target.closest("[data-act]");
       if (!el || el.tagName === "BUTTON") return;
       if (el.dataset.act === "flag") t.toggleFlag(el.dataset.n, el.dataset.k);
+      else if (el.dataset.act === "loot") t.toggleLoot(el.dataset.n, el.dataset.k);
+      else if (el.dataset.act === "cue") t.toggleCue(el.dataset.n, el.dataset.k);
       else if (el.dataset.act === "rework") t.toggleRework(el.dataset.k);
     });
   }
@@ -948,8 +1210,15 @@ class CSApp extends BaseApp {
       .cst .check.on .lbl { color:var(--muted); }
       .cst .check.overdue { background:rgba(149,56,31,.09); }
       .cst .check.overdue .lbl { color:var(--rust); }
+      .cst .check.here { background:rgba(164,92,20,.10); }
       .cst .lbl { flex:1; }
-      .cst .pays { color:var(--muted); font-size:.72rem; display:inline-block; }
+      .cst .pays { color:var(--muted); font-size:.72rem; display:block; }
+
+      .cst .sub { border-top:1px dashed var(--line); margin-top:.45rem; padding-top:.4rem; }
+      .cst .subhead { font-size:.64rem; text-transform:uppercase; letter-spacing:.08em; color:var(--muted);
+                      display:flex; align-items:center; gap:.35rem; margin-bottom:.25rem; }
+      .cst .subhead span { margin-left:auto; }
+      .cst .sub.loot .check.on .lbl { text-decoration:line-through; text-decoration-color:var(--line); }
       .cst .itemnote { font-size:.74rem; line-height:1.45; color:var(--muted); margin:0 0 .3rem 1.5rem; }
 
       .cst .threads { display:flex; flex-direction:column; gap:1px; }

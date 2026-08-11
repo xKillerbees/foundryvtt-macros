@@ -111,10 +111,19 @@ produced them.
   box is still empty
 - A live rollup strip read from the other four consoles' saved state — pools, week, shrine
   enlightenments, statues purified — so the campaign view doesn't need re-typing
+- A **Treasure** tab holding all 42 named pieces of loot in the campaign, grouped into what's
+  on the table in the chapter you're running, what earlier chapters were left holding, what's
+  still ahead, and what's been claimed
+- Scene and cue checklists per chapter — the Foundry playlists, macros, and scene swaps from
+  the campaign notes, plus the prep that has to happen before session rather than during it
+- A **Before this session** panel on the campaign tab surfacing the current chapter's cues and
+  unclaimed treasure without hunting through tabs
 - The Two Weavers continuity checklist, the milestone-level table, and per-PC arcs
 - A spoiler-free chat recap: act, chapter, level, and the chapters behind them
 
 ![The Threads tab](../../screenshots/season-of-ghosts/campaign-status-threads.png)
+
+![The loot ledger](../../screenshots/season-of-ghosts/campaign-status-loot.png)
 
 ## Architecture
 

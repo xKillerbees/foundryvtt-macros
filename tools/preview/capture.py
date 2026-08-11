@@ -56,6 +56,9 @@ SHOTS = {
     "campaign": (
         "season-of-ghosts/campaign-status-tracker.js", "campaign",
         "season-of-ghosts/campaign-status-tracker.png"),
+    "campaign-loot": (
+        "season-of-ghosts/campaign-status-tracker.js", "campaign-loot",
+        "season-of-ghosts/campaign-status-loot.png"),
     "campaign-threads": (
         "season-of-ghosts/campaign-status-tracker.js", "campaign-threads",
         "season-of-ghosts/campaign-status-threads.png"),

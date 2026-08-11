@@ -128,6 +128,19 @@ globalThis.FIXTURES = {
     }
   },
 
+  /* The Treasure tab — the loot ledger, with an earlier chapter's haul
+     partly claimed so all four groupings appear. */
+  "campaign-loot": {
+    "world.sogCampaign": {
+      tab: "loot",
+      chapters: { 1: "done", 2: "done", 3: "done", 4: "done", 5: "active" },
+      loot: {
+        "2.care": true, "3.pearls": true, "4.pendant": true, "4.gift": true,
+        "4.iron": true, "5.yami": true
+      }
+    }
+  },
+
   /* The Threads tab, which is where the tracker earns its keep. */
   "campaign-threads": {
     "world.sogCampaign": {
