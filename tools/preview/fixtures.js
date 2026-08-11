@@ -141,6 +141,14 @@ globalThis.FIXTURES = {
     }
   },
 
+  /* An act tab, showing the per-chapter checklist, module macros, and cues. */
+  "campaign-act4": {
+    "world.sogCampaign": {
+      tab: "act4",
+      chapters: { 1: "done", 2: "done", 3: "done", 4: "done", 5: "active" }
+    }
+  },
+
   /* The Threads tab, which is where the tracker earns its keep. */
   "campaign-threads": {
     "world.sogCampaign": {

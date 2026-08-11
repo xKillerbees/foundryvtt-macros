@@ -114,12 +114,21 @@ produced them.
 - A **Treasure** tab holding all 42 named pieces of loot in the campaign, grouped into what's
   on the table in the chapter you're running, what earlier chapters were left holding, what's
   still ahead, and what's been claimed
-- Scene and cue checklists per chapter — the Foundry playlists, macros, and scene swaps from
-  the campaign notes, plus the prep that has to happen before session rather than during it
+- Scene and cue checklists per chapter — the Foundry playlists and scene swaps from the
+  campaign notes, plus the prep that has to happen before session rather than during it
+- **Module macros** per chapter — all 57 macros from the Season of Ghosts Foundry module's
+  directory, named exactly as they appear there, with their folder. Reference only: they're
+  run from the macro directory, so there's nothing to tick
 - A **Before this session** panel on the campaign tab surfacing the current chapter's cues and
   unclaimed treasure without hunting through tabs
 - The Two Weavers continuity checklist, the milestone-level table, and per-PC arcs
 - A spoiler-free chat recap: act, chapter, level, and the chapters behind them
+
+Where a module macro's chapter couldn't be pinned down it's flagged in place — `act only` for
+the ones placeable to an act but no further, `placed by guess` for the ones inferred from the
+name. Both are one-line edits in the `MODULE_MACROS` block near the top of the macro.
+
+![An act tab, with checklist, treasure, module macros, and cues](../../screenshots/season-of-ghosts/campaign-status-act4.png)
 
 ![The Threads tab](../../screenshots/season-of-ghosts/campaign-status-threads.png)
 

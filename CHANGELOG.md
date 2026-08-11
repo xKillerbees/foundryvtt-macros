@@ -11,7 +11,8 @@
   verified against the real databases, with a tester and graceful fallbacks
 - Campaign Status Tracker — a checklist across all thirteen chapters, with a Threads view
   that flags a prerequisite the moment the table reaches the chapter that needs it, a loot
-  ledger of every named treasure, and per-chapter scene and cue lists
+  ledger of every named treasure, per-chapter scene and cue lists, and the Season of Ghosts
+  module's own macro directory mapped chapter by chapter
 - In the Ruins of Wisdom — Chapter 7's Tan Sugi monastery: statue purification with ordered
   events, sixteen areas, and an aftermath ledger feeding the Fall Downtime Tracker
 - Repository laid out for more than one collection — macros live under

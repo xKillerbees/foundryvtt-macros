@@ -451,6 +451,63 @@ const CUES = {
   ]
 };
 
+/* ------------------------------------------------- the module's own macros
+   The Season of Ghosts Foundry module ships a macro directory organised by
+   act. These are reminders that the macro exists and where it lives — nothing
+   here clicks them for you, because they're run from the directory.
+
+   `chapters` holds the ones whose chapter is certain, either because the
+   campaign notes name them or because the macro's name says so. `acts` holds
+   the ones that could only be placed to an act; move them into `chapters`
+   once you know. `always` is the Submacros folder, useful anywhere. */
+const MODULE_MACROS = {
+  chapters: {
+    1: [{ name: "Light Eternal Lantern", folder: "Act 1" }],
+    3: [{ name: "Enable Rain", folder: "Act 1" },
+        { name: "Toggle Mindscape Border Visibility", folder: "Act 1", guess: true }],
+    4: [{ name: "Stop Chanting", folder: "Act 1" }],
+    5: [{ name: "Hinterlands Control", folder: "Act 2", guess: true }],
+    6: [{ name: "Open the Wall of Ghosts", folder: "Act 2" },
+        { name: "Reveal Mandragora", folder: "Act 2" }],
+    7: [{ name: "Return Head", folder: "Act 2" },
+        { name: "Change Season", folder: "Submacros" }],
+    10: [{ name: "Terror in Karahai", folder: "Act 3" },
+         { name: "Warding Bell", folder: "Act 3" },
+         { name: "Change Season", folder: "Submacros" },
+         { group: "Terror Macros", folder: "Act 3",
+           items: ["Terror 1", "Terror 2", "Terror 3", "Terror 4", "Terror 5", "Terror 6",
+                   "Terror 7", "Terror 8", "Nighttime", "Reinforcements",
+                   "C1 Exorcists fled", "C1 Mercenaries fled", "Mago Kai fled"] }],
+    11: [{ name: "Reset Willowshore", folder: "Act 4" },
+         { name: "Toggle Governor's Manor", folder: "Act 4" },
+         { name: "The Silkwasp Camp Alert Levels", folder: "Act 4" },
+         { group: "The Silkwasp Camp Alert Levels", folder: "Act 4",
+           items: ["Bandits on the Defensive", "Bridge Bandits Defeated", "Night", "Unexpected Visit"] }],
+    12: [{ name: "The Algrievers Emerge", folder: "Act 4" },
+         { group: "Algrievers", folder: "Act 4", items: ["Emerge", "Retreat"] }],
+    13: [{ name: "Willowshore to Kugaptee's Grave", folder: "Act 4" },
+         { name: "Kugaptee's Grave Weather Control", folder: "Act 4" },
+         { group: "Kugaptee's Grave Weather Control", folder: "Act 4",
+           items: ["Summer", "Winter", "Other"] },
+         { name: "Sugi Tree Falls", folder: "Act 4", note: "D2 — the trunk's fall direction" },
+         { group: "Sugi Tree Falls", folder: "Act 4",
+           items: ["N", "NE", "E", "SE", "S", "SW", "W", "NW", "Reset"] }]
+  },
+  acts: {
+    1: [{ name: "Enable Blood Moon", folder: "Act 1" }],
+    3: [{ name: "Open Portal", folder: "Act 3" },
+        { name: "Partially Open Portal", folder: "Act 3" }]
+  },
+  always: [
+    { name: "Change Season", folder: "Submacros" },
+    { name: "Change Dynamic Ring and Turn Marker", folder: "Submacros" },
+    { name: "Landing Picker", folder: "Submacros" },
+    { name: "Roof Control", folder: "Submacros" },
+    { name: "Toggle Party Platter (4 Characters)", folder: "Submacros" },
+    { name: "Toggle Party Platter (6 Characters)", folder: "Submacros" }
+  ]
+};
+
 /* ------------------------------------------------------ the rework tracker */
 const REWORK = {
   pitch: "The book sets jorogumo politics beside the Kugaptee plot. This welds them together: two jorogumo, one patron and one villain, turn the stewardship trials into a sealing ritual and end the campaign with a two-phase boss — so the party fights Kugaptee without breaking the lore that he cannot truly die.",
@@ -607,6 +664,15 @@ class Campaign {
      get diluted by loot the party simply never found. */
   lootFor(n) { return LOOT[n] ?? []; }
   cuesFor(n) { return CUES[n] ?? []; }
+
+  /* A chapter's module macros, plus any that could only be placed to its act,
+     flagged so you can see the difference. */
+  macrosFor(n) {
+    const act = chapter(n)?.act;
+    const placed = MODULE_MACROS.chapters[n] ?? [];
+    const actOnly = (MODULE_MACROS.acts[act] ?? []).map(m => ({ ...m, actOnly: true }));
+    return [...placed, ...actOnly];
+  }
   claimed(n, key) { return !!this.s.loot[`${n}.${key}`]; }
   cued(n, key) { return !!this.s.cues[`${n}.${key}`]; }
 
@@ -809,6 +875,23 @@ class CSApp extends BaseApp {
       </header>`;
   }
 
+
+  /* Reference only — these are run from Foundry's macro directory, so there is
+     nothing to tick. Naming them exactly as they appear there is the point. */
+  macroList(list) {
+    if (!list.length) return "";
+    return `<div class="macros">
+      ${list.map(m => m.group
+        ? `<div class="mrow group"><i class="fa-solid fa-folder"></i>
+             <span class="mname">${m.group}<small>${m.folder}</small></span>
+             <span class="mitems">${m.items.join(" · ")}</span></div>`
+        : `<div class="mrow"><i class="fa-solid fa-bolt"></i>
+             <span class="mname">${m.name}<small>${m.folder}${m.note ? ` · ${m.note}` : ""}</small></span>
+             ${m.actOnly ? `<span class="pip">act only</span>` : m.guess ? `<span class="pip">placed by guess</span>` : ""}</div>`
+      ).join("")}
+    </div>`;
+  }
+
   /* ------------------------------------------------------------ campaign */
   campaignTab(ro) {
     const t = this.t, c = t.current, roll = t.rollup;
@@ -835,7 +918,8 @@ class CSApp extends BaseApp {
 
       ${(() => {
         const cues = t.cuesFor(c.n), loot = t.lootFor(c.n).filter(i => !t.claimed(c.n, i.key));
-        if (!cues.length && !loot.length) return "";
+        const macros = t.macrosFor(c.n);
+        if (!cues.length && !loot.length && !macros.length) return "";
         return `
         <section class="panel" style="--tone:var(--ember)">
           <h3>Before this session <small>Chapter ${c.n}</small></h3>
@@ -845,6 +929,10 @@ class CSApp extends BaseApp {
               ${cues.map(q => `<label class="check ${t.cued(c.n, q.key) ? "on" : ""}">
                   <input type="checkbox" data-act="cue" data-n="${c.n}" data-k="${q.key}" ${t.cued(c.n, q.key) ? "checked" : ""} ${ro ? "disabled" : ""}>
                   <span class="lbl">${q.label}</span></label>`).join("")}
+            </div>` : ""}
+            ${macros.length ? `<div>
+              <div class="subhead"><i class="fa-solid fa-bolt"></i> Module macros for this chapter</div>
+              ${this.macroList(macros)}
             </div>` : ""}
             ${loot.length ? `<div>
               <div class="subhead"><i class="fa-solid fa-sack-xmark"></i> Treasure still on the table</div>
@@ -864,6 +952,11 @@ class CSApp extends BaseApp {
               <img src="${pc.img}" alt="" onerror="this.src='icons/svg/mystery-man.svg'">
               <div><b>${esc(pc.name)}</b>${ARCS[pc.name] ? `<small>${ARCS[pc.name]}</small>` : ""}</div>
             </div>`).join("")}
+        </section>
+
+        <section class="panel" style="--tone:var(--ember)">
+          <h3>Submacros <small>useful in any chapter</small></h3>
+          ${this.macroList(MODULE_MACROS.always)}
         </section>
 
         <section class="panel" style="--tone:var(--slate)">
@@ -945,6 +1038,12 @@ class CSApp extends BaseApp {
               </label>
               ${it.note ? `<p class="itemnote">${it.note}</p>` : ""}`;
           }).join("")}
+        </div>` : ""}
+
+        ${t.macrosFor(c.n).length ? `
+        <div class="sub">
+          <div class="subhead"><i class="fa-solid fa-bolt"></i> Module macros <span>${t.macrosFor(c.n).length}</span></div>
+          ${this.macroList(t.macrosFor(c.n))}
         </div>` : ""}
 
         ${p.cueTotal ? `
@@ -1220,6 +1319,14 @@ class CSApp extends BaseApp {
       .cst .subhead span { margin-left:auto; }
       .cst .sub.loot .check.on .lbl { text-decoration:line-through; text-decoration-color:var(--line); }
       .cst .itemnote { font-size:.74rem; line-height:1.45; color:var(--muted); margin:0 0 .3rem 1.5rem; }
+
+      .cst .macros { display:flex; flex-direction:column; gap:1px; }
+      .cst .mrow { display:flex; gap:.45rem; align-items:baseline; font-size:.79rem; padding:.12rem 0; }
+      .cst .mrow i { color:var(--muted); font-size:.7rem; width:.9rem; flex:none; }
+      .cst .mname { font-weight:600; }
+      .cst .mname small { display:block; font-weight:400; font-size:.68rem; color:var(--muted); }
+      .cst .mitems { color:var(--muted); font-size:.72rem; flex:1; }
+      .cst .mrow.group .mname { color:var(--ember); }
 
       .cst .threads { display:flex; flex-direction:column; gap:1px; }
       .cst .thread { display:grid; grid-template-columns:3.4rem 1fr 12rem 5rem; gap:.5rem; align-items:baseline;
