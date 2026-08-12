@@ -251,6 +251,59 @@ const journalCollection = {
   [Symbol.iterator]: () => STUB_JOURNAL_DOCS[Symbol.iterator]()
 };
 
+/* --------------------------------------------------------------- playlists
+
+   Two of the Season of Ghosts module's fifteen playlists, with their real
+   document ids and sound names, so a console's play buttons resolve and
+   toggle the way they will in a world that has the adventure. Nothing is
+   decoded or played — `playing` is a flag, and starting a sound fires
+   `updatePlaylistSound` so anything listening repaints. */
+const SAMPLE_PLAYLISTS = [
+  { id: "HgqDtdyAVJFT3Dr1", name: "Ambience", sounds: [
+    "Woods", "Mist Urban", "Mist Nature", "Indoors", "Occupied Willowshore", "Willowshore",
+    "Willowshore Hinterlands", "Dense Fog", "Canary Inn", "Wind", "The Lumber Camp"
+  ] },
+  { id: "jXKZ6O8NnYJaazKE", name: "Ambiance", sounds: [
+    "Indoors", "Feast Of The Kami", "Willowshore", "Willowshore Hinterlands", "Mist Indoors",
+    "Mist Outdoors", "Dense Fog", "Woods", "Festival", "Barn Fire", "Rain", "Thunderstorm",
+    "Old Large Monastery", "Kugaptees Grave"
+  ] },
+  { id: "e2Pf6JGVba202cFB", name: "Loop", sounds: ["River", "Waterfall"] },
+  { id: "dbfW0zvQ2tf5VOCx", name: "Looped Soundtrack", sounds: [
+    "09 Let The Leaves Fall Loop", "10 Researching The Curse Loop", "13 First Long Night Loop",
+    "01 Season of Ghosts Loop"
+  ] }
+];
+
+class StubPlaylist {
+  constructor(spec) {
+    this.id = spec.id;
+    this.name = spec.name;
+    const sounds = spec.sounds.map((name, i) => ({ id: `${spec.id}s${i}`, name, playing: false }));
+    this.sounds = {
+      getName: (n) => sounds.find(s => s.name === n) ?? null,
+      get: (id) => sounds.find(s => s.id === id) ?? null,
+      [Symbol.iterator]: () => sounds[Symbol.iterator]()
+    };
+    this._sounds = sounds;
+  }
+  async playSound(sound) { sound.playing = true; this._changed(sound); }
+  async stopSound(sound) { sound.playing = false; this._changed(sound); }
+  _changed(sound) {
+    console.log("[playlist]", `${sound.playing ? "play" : "stop"} ${this.name} / ${sound.name}`);
+    Hooks.callAll("updatePlaylistSound", sound, { playing: sound.playing }, {}, "gm");
+  }
+}
+
+const STUB_PLAYLIST_DOCS = SAMPLE_PLAYLISTS.map(s => new StubPlaylist(s));
+const playlistCollection = {
+  get size() { return STUB_PLAYLIST_DOCS.length; },
+  get: (id) => STUB_PLAYLIST_DOCS.find(p => p.id === id) ?? null,
+  getName: (name) => STUB_PLAYLIST_DOCS.find(p => p.name === name) ?? null,
+  find: (fn) => STUB_PLAYLIST_DOCS.find(fn) ?? null,
+  [Symbol.iterator]: () => STUB_PLAYLIST_DOCS[Symbol.iterator]()
+};
+
 /* ----------------------------------------------------------------- globals */
 
 const settingStore = new Map();
@@ -261,6 +314,7 @@ globalThis.game = {
   users: [{ id: "gm", isGM: true, character: null }],
   actors: actorCollection,
   journal: journalCollection,
+  playlists: playlistCollection,
   packs: [],   /* no compendiums out here; the world lookup is what's exercised */
   settings: {
     settings: settingDefs,
@@ -278,7 +332,20 @@ globalThis.ui = {
   }
 };
 
-globalThis.Hooks = { on: () => 0, once: () => 0, off: () => {}, call: () => true, callAll: () => true };
+/* Hooks really dispatch here: a console that repaints itself when something
+   outside it changes — a playlist starting, say — can only be exercised if
+   the hook it listens on actually fires. */
+const hookHandlers = new Map();
+let hookId = 0;
+globalThis.Hooks = {
+  on: (name, fn) => { const id = ++hookId;
+    if (!hookHandlers.has(name)) hookHandlers.set(name, new Map());
+    hookHandlers.get(name).set(id, fn); return id; },
+  once: (name, fn) => globalThis.Hooks.on(name, fn),
+  off: (name, id) => { hookHandlers.get(name)?.delete(id); },
+  call: (name, ...args) => { for (const fn of hookHandlers.get(name)?.values() ?? []) fn(...args); return true; },
+  callAll: (name, ...args) => globalThis.Hooks.call(name, ...args)
+};
 
 globalThis.ChatMessage = {
   getSpeaker: () => ({ alias: "Gamemaster" }),

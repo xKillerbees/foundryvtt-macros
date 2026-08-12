@@ -36,7 +36,7 @@
   table doesn't name still link if their label carries an area code. Entries resolve by id,
   then by name, then through the compendiums, and the links hide themselves entirely when the
   adventure isn't in the world
-- `tools/journal-check/` — re-checks the tracker's journal tables against an installed copy of
+- `tools/module-check/` — re-checks the tracker's journal tables against an installed copy of
   the module, so a module update that moves an id is caught rather than discovered at the table
 
 - The other four consoles carry the same reading system as the campaign tracker — panel titles
@@ -46,7 +46,11 @@
   Enlightened Path's encounters resolve from their own area codes, the Fall Downtime Tracker
   links each week's event and each preparation activity, and the First Long Night reaches both
   the module's festival entry and the chapter's week 3 page
-- `tools/journal-check/` covers all five macros, not just the tracker
+- `tools/module-check/` covers all five macros, not just the tracker
+
+- Campaign tracker: every audio name is a play button. It starts and stops the sound in the
+  module's own playlist, shows what's currently running, and repaints when playback changes
+  anywhere — including from the sidebar
 
 ### Changed
 - Campaign tracker: only **required** items can go overdue. An unticked box in a finished

@@ -79,6 +79,56 @@ const JOURNAL_BY_ORD = {
   "22": "pf2apsog22sogpgh", "23": "pf2apsog23artgal"
 };
 
+/* ------------------------------------------------------------ the playlists
+   Resolving a sound: the playlist by its module id, then by the name the
+   sidebar shows, then any playlist at all that has a sound by this name. The
+   last step is what makes `act.amb` work when a world reorganised the
+   playlists, and what makes a bed named the same in four acts still play.
+
+   `act.*` is resolved against whichever act the table is in, which is why
+   these take the current act rather than reading it themselves. */
+function playlistId(ref, act) {
+  const [group, kind] = String(ref ?? "").split(".");
+  if (!kind) return PLAYLISTS[group] ?? null;
+  const g = group === "act" ? PLAYLISTS[`a${act}`] : PLAYLISTS[group];
+  return g?.[kind] ?? null;
+}
+
+function findSound(ref, act, name) {
+  const id = playlistId(ref, act);
+  const lists = [...(game.playlists ?? [])];
+  const named = (pl) => pl?.sounds?.getName?.(name)
+    ?? [...(pl?.sounds ?? [])].find(x => x.name === name) ?? null;
+
+  const byId = id ? game.playlists?.get?.(id) : null;
+  let sound = named(byId);
+  if (sound) return { playlist: byId, sound };
+
+  const label = (PLAYLIST_NAMES[ref] ?? "").split(" · ").pop();
+  for (const pl of lists) {
+    if (label && pl.name !== label) continue;
+    sound = named(pl);
+    if (sound) return { playlist: pl, sound };
+  }
+  for (const pl of lists) {
+    sound = named(pl);
+    if (sound) return { playlist: pl, sound };
+  }
+  return { playlist: null, sound: null };
+}
+
+/* Toggle, not play: the same button stops what it started, which is the only
+   sane behaviour for an ambient bed you started three scenes ago. */
+async function toggleSound(ref, act, name) {
+  const { playlist, sound } = findSound(ref, act, name);
+  if (!sound) {
+    ui.notifications.warn(`No sound named "${name}" in ${playlistLabel(ref, act)}, or anywhere else in this world's playlists.`);
+    return;
+  }
+  if (sound.playing) await playlist.stopSound(sound);
+  else await playlist.playSound(sound);
+}
+
 /* ------------------------------------------------------- item → journal page
    Read out of the module's own pack (`packs/adventures`), not inferred: every
    id below is a real JournalEntryPage in the shipped adventure. Kept as one
@@ -733,83 +783,121 @@ const MODULE_MACROS = {
 
 /* -------------------------------------------------- the module's playlists
    The same module ships playlists per act — Ambience, Loop, and SFX — plus a
-   22-track looped soundtrack whose names line up with the chapters almost
-   exactly. Listed the same way as the macros: reference, not remote control.
+   soundtrack and a looped soundtrack whose track names line up with the
+   chapters almost exactly.
 
-   `always` holds the generic beds that appear in nearly every act's Ambience
-   list, so they aren't repeated against all thirteen chapters. */
+   Unlike the macros, these are remote control: every sound below carries the
+   id of the playlist it lives in, so the console can start and stop it. The
+   ids are the module's own and a Foundry adventure import keeps them.
+
+   `always` holds the generic beds that appear in nearly every act's ambience
+   list, so they aren't repeated against all thirteen chapters. Those resolve
+   against whichever act the table is in — `act.amb` means "this act's
+   ambience playlist". */
+const PLAYLISTS = {
+  a1: { amb: "HgqDtdyAVJFT3Dr1", sfx: "PM69203E3Y3UrHfA", loop: "zLGowtHaJW7U2VZM" },
+  a2: { amb: "jXKZ6O8NnYJaazKE", sfx: "kcrfM86DAcpOfBrs", loop: "e2Pf6JGVba202cFB" },
+  a3: { amb: "gTnkl7DUH19mzyJj", sfx: "0GuH1kstxWaqGSJx", loop: "TmxsF1RiQJ0m8o5M",
+        seance: "h82ztCVRXELKQI8K" },
+  a4: { amb: "FGK5jsYreqU1AR5o", sfx: "Mv66f1NNleR53M5o", loop: "xYqkP4IEtZhyaILa" },
+  track: "7AzVaYG1M2yMtzIu", looped: "dbfW0zvQ2tf5VOCx"
+};
+/* What each playlist is called in the sidebar. Act 2 spells it "Ambiance"
+   and Act 3 "Ambiances"; both are the module's own spelling, not a typo
+   here. */
+const PLAYLIST_NAMES = {
+  "a1.amb": "Act 1 · Ambience", "a1.sfx": "Act 1 · SFX", "a1.loop": "Act 1 · Loop",
+  "a2.amb": "Act 2 · Ambiance", "a2.sfx": "Act 2 · SFX", "a2.loop": "Act 2 · Loop",
+  "a3.amb": "Act 3 · Ambiances", "a3.sfx": "Act 3 · SFX", "a3.loop": "Act 3 · Loop",
+  "a3.seance": "Act 3 · Seance",
+  "a4.amb": "Act 4 · Ambience", "a4.sfx": "Act 4 · SFX", "a4.loop": "Act 4 · Loop",
+  "track": "Soundtrack", "looped": "Looped Soundtrack"
+};
+/* `act.amb` is whichever act the table is in, so its label is too. */
+const playlistLabel = (ref, act) => PLAYLIST_NAMES[String(ref).replace(/^act\./, `a${act}.`)] ?? ref;
+
 const AUDIO = {
+  /* `acts` narrows a row to the acts whose playlist actually has the sound —
+     the generic beds are not as uniform across the four as they look. */
   always: [
-    { name: "Indoors · Woods · Willowshore · Willowshore Hinterlands", from: "Ambience, every act" },
-    { name: "Mist Indoors · Mist Outdoors · Dense Fog", from: "Ambience, every act" },
-    { name: "River", from: "Loop, Acts 1–2 and 4" }
+    { pl: "act.amb", sounds: ["Indoors", "Woods", "Willowshore", "Willowshore Hinterlands"] },
+    { pl: "act.amb", sounds: ["Mist Indoors", "Mist Outdoors"], acts: [2, 3, 4] },
+    { pl: "a1.amb", sounds: ["Mist Urban", "Mist Nature"], acts: [1],
+      note: "Act 1's names for the same two beds" },
+    { pl: "act.amb", sounds: ["Dense Fog"], acts: [1, 2, 3] },
+    { pl: "a4.sfx", sounds: ["Dense Fog"], acts: [4], note: "Act 4 files it under SFX" },
+    { pl: "act.loop", sounds: ["River"], acts: [1, 2, 4] }
   ],
   chapters: {
-    1: [{ name: "Occupied Willowshore", from: "Act 1 · Ambience" },
-        { name: "Eternal Lantern", from: "Act 1 · Loop" },
-        { name: "Lighting The Eternal Lantern", from: "Act 1 · SFX" }],
-    2: [{ name: "Occupied Willowshore", from: "Act 1 · Ambience" },
-        { name: "Rowdy Celebration", from: "Act 1 · Loop" },
-        { name: "Rowdy Celebration 1", from: "Act 1 · SFX" }],
-    3: [{ name: "Canary Inn", from: "Act 1 · Ambience" },
-        { name: "Singing", from: "Act 1 · Loop", note: "the Canary Inn approach" },
-        { name: "Wind", from: "Act 1 · Ambience" }],
-    4: [{ name: "The Lumber Camp", from: "Act 1 · Ambience" },
-        { name: "Ritual Chanting", from: "Act 1 · Loop" },
-        { name: "Interrupting The Ritual", from: "Act 1 · SFX", note: "cut the chant the instant it breaks" }],
-    5: [{ name: "Festival", from: "Act 2 · Ambience", note: "week 3" },
-        { name: "Barn Fire", from: "Act 2 · Ambience", note: "week 8" },
-        { name: "Feast Of The Kami", from: "Act 2 · Ambience", note: "week 10" }],
-    6: [{ name: "Rain · Thunderstorm", from: "Act 2 · Ambience", note: "days 2 and 3" },
-        { name: "Waterfall", from: "Act 2 · Loop", note: "the Mountain Shrine" },
-        { name: "Arms of the Drowned", from: "Act 2 · SFX", note: "the Bridge Shrine haunt" },
-        { name: "Terrifying Roar", from: "Act 2 · SFX" },
-        { name: "Lightning Bolt", from: "Act 2 · SFX", note: "Iogaka" }],
-    7: [{ name: "Old Large Monastery", from: "Act 2 · Ambience" },
-        { name: "Kugaptees Grave", from: "Act 2 · Ambience", note: "E16" }],
-    8: [{ name: "Governor's Manor", from: "Act 3 · Ambiances" },
-        { name: "Dark Willowshore", from: "Act 3 · Ambiances" },
-        { name: "Buildings Collapsing", from: "Act 3 · Loop", note: "the Structural Collapse" },
-        { name: "Pounding at the Manor Walls · Howling Crowd", from: "Act 3 · Loop", note: "the nightly crowd" },
-        { name: "Mindscape Shift", from: "Act 3 · SFX" },
-        { name: "The Manor is Breached", from: "Act 3 · SFX" }],
-    9: [{ name: "Seance 1 · Seance 2", from: "Act 3 · Seance", note: "Event 12" },
-        { name: "Ending the Seance", from: "Act 3 · SFX" },
-        { name: "Borderlands", from: "Act 3 · Ambiances", note: "Between Life and Death" },
-        { name: "Portal Opens", from: "Act 3 · SFX", guess: true }],
-    10: [{ name: "Karahai Village Day · Karahai Village Night", from: "Act 3 · Ambiances" },
-         { name: "Karahai Fortress", from: "Act 3 · Ambiances and Loop" },
-         { name: "Dining Hall · Shrine · Baths", from: "Act 3 · Loop", note: "fortress rooms" },
-         { name: "Invisible Flames", from: "Act 3 · Ambiances", guess: true },
-         { name: "Warding Bell", from: "Act 3 · SFX", note: "C11" }],
-    11: [{ name: "Dark Willowshore · Governors Manor", from: "Act 4 · Ambience" },
-         { name: "Creek · Coastline", from: "Act 4 · Ambience and Loop", note: "the bridge and the camp" },
-         { name: "Clouds Of Butterflies", from: "Act 4 · SFX", note: "the False Governor in A8" }],
-    12: [{ name: "Softly Playing Flute", from: "Act 4 · Ambience", note: "the yohoi fears it" },
-         { name: "Creaky Building", from: "Act 4 · Ambience", guess: true }],
-    13: [{ name: "Below Kugaptees Claw · Kuraptees Rise", from: "Act 4 · Ambience" },
-         { name: "Old Tree Falling", from: "Act 4 · SFX", note: "D2, with the Sugi Tree Falls macros" },
-         { name: "Crashing Arms", from: "Act 4 · SFX", note: "Kugaptee's Final Death — the Sealing's pulses" },
-         { name: "Death Roar · Demonic Roar", from: "Act 4 · SFX" },
-         { name: "Mindscape Shift", from: "Act 4 · SFX" }]
+    1: [{ pl: "a1.amb", sounds: ["Occupied Willowshore"] },
+        { pl: "a1.loop", sounds: ["Eternal Lantern"] },
+        { pl: "a1.sfx", sounds: ["Lighting The Eternal Lantern"] }],
+    2: [{ pl: "a1.amb", sounds: ["Occupied Willowshore"] },
+        { pl: "a1.loop", sounds: ["Rowdy Celebration"] },
+        { pl: "a1.sfx", sounds: ["Rowdy Celebration 1"] }],
+    3: [{ pl: "a1.amb", sounds: ["Canary Inn"] },
+        { pl: "a1.loop", sounds: ["Singing"], note: "the Canary Inn approach" },
+        { pl: "a1.amb", sounds: ["Wind"] }],
+    4: [{ pl: "a1.amb", sounds: ["The Lumber Camp"] },
+        { pl: "a1.loop", sounds: ["Ritual Chanting"] },
+        { pl: "a1.sfx", sounds: ["Interrupting The Ritual"], note: "cut the chant the instant it breaks" }],
+    5: [{ pl: "a2.amb", sounds: ["Festival"], note: "week 3" },
+        { pl: "a2.amb", sounds: ["Barn Fire"], note: "week 8" },
+        { pl: "a2.amb", sounds: ["Feast Of The Kami"], note: "week 10" }],
+    6: [{ pl: "a2.amb", sounds: ["Rain", "Thunderstorm"], note: "days 2 and 3" },
+        { pl: "a2.loop", sounds: ["Waterfall"], note: "the Mountain Shrine" },
+        { pl: "a2.sfx", sounds: ["Arms of the Drowned"], note: "the Bridge Shrine haunt" },
+        { pl: "a2.sfx", sounds: ["Terrifying Roar"] },
+        { pl: "a2.sfx", sounds: ["Lightning Bolt"], note: "Iogaka" }],
+    7: [{ pl: "a2.amb", sounds: ["Old Large Monastery"] },
+        { pl: "a2.amb", sounds: ["Kugaptees Grave"], note: "E16" }],
+    8: [{ pl: "a3.amb", sounds: ["Governor's Manor"] },
+        { pl: "a3.amb", sounds: ["Dark Willowshore"] },
+        { pl: "a3.loop", sounds: ["Buildings Collapsing"], note: "the Structural Collapse" },
+        { pl: "a3.loop", sounds: ["Pounding at the Manor Walls", "Howling Crowd"], note: "the nightly crowd" },
+        { pl: "a3.sfx", sounds: ["Mindscape Shift"] },
+        { pl: "a3.sfx", sounds: ["The Manor is Breached"] }],
+    9: [{ pl: "a3.seance", sounds: ["Seance 1", "Seance 2"], note: "Event 12" },
+        { pl: "a3.sfx", sounds: ["Ending the Seance"] },
+        { pl: "a3.amb", sounds: ["Borderlands"], note: "Between Life and Death" },
+        { pl: "a3.sfx", sounds: ["Portal Opens"], note: "Between Life and Death, with the portal macros" }],
+    10: [{ pl: "a3.amb", sounds: ["Karahai Village Day", "Karahai Village Night"] },
+         { pl: "a3.amb", sounds: ["Karahai Fortress"], note: "also in Act 3 · Loop" },
+         { pl: "a3.loop", sounds: ["Dining Hall", "Shrine", "Baths"], note: "fortress rooms" },
+         { pl: "a3.amb", sounds: ["Invisible Flames"], guess: true },
+         { pl: "a3.sfx", sounds: ["Warding Bell"], note: "C11" }],
+    11: [{ pl: "a4.amb", sounds: ["Dark Willowshore", "Governors Manor"] },
+         { pl: "a4.amb", sounds: ["Creek"], note: "the bridge" },
+         { pl: "a4.loop", sounds: ["Coastline"], note: "the camp" },
+         { pl: "a4.sfx", sounds: ["Clouds Of Butterflies"], note: "the False Governor in A8" }],
+    12: [{ pl: "a4.amb", sounds: ["Softly Playing Flute"], note: "the yohoi fears it" },
+         { pl: "a4.amb", sounds: ["Creaky Building"], guess: true }],
+    13: [{ pl: "a4.amb", sounds: ["Below Kugaptees Claw", "Kuraptees Rise"] },
+         { pl: "a4.sfx", sounds: ["Old Tree Falling"], note: "D2, with the Sugi Tree Falls macros" },
+         { pl: "a4.sfx", sounds: ["Crashing Arms"], note: "Kugaptee's Final Death — the Sealing's pulses" },
+         { pl: "a4.sfx", sounds: ["Death Roar", "Demonic Roar"] },
+         { pl: "a4.sfx", sounds: ["Mindscape Shift"] }]
   },
-  /* The looped soundtrack, by the chapter each track was clearly written for. */
+  /* The looped soundtrack, by the chapter each track was clearly written for.
+     Named exactly as the Looped Soundtrack playlist has them, trailing "Loop"
+     and all — the plain Soundtrack playlist holds one-shot versions of the
+     same pieces under slightly different names. */
   track: {
-    1: ["02 The Summer That Never Was", "03 Relight the Eternal Lantern"],
-    2: ["04 Town of Willowshore"],
-    3: ["06 The Hinterlands", "05 The Mysterious Merchant"],
-    4: ["07 The Wall of Ghosts", "08 Horror From Beyond"],
-    5: ["09 Let The Leaves Fall", "10 Researching The Curse", "13 First Long Night"],
-    6: ["11 The Pilgrim's Path"],
-    7: ["12 Tan Sugi Monastery"],
-    8: ["14 Oblivion of Truth", "17 Worlds Within the Mind"],
-    9: ["15 The Ritual"],
-    10: ["16 Fortress of Karahai"],
-    11: ["18 The Plum Knows Before The Snow", "19 Bridges and Bandits"],
-    12: ["20 The Princess's Web"],
-    13: ["21 Into the Corruption", "22 The Governor's Den"]
+    1: ["02 The Summer That Never Was Loop", "03 Relight the Eternal Lantern Loop"],
+    2: ["04 Town of Willowshore Loop"],
+    3: ["06 The Hinterlands Loop", "05 The Mysterious Merchant Loop"],
+    4: ["07 The Wall of Ghosts Loop", "08 Horror From Beyond Loop"],
+    5: ["09 Let The Leaves Fall Loop", "10 Researching The Curse Loop", "13 First Long Night Loop"],
+    6: ["11 The Pilgrim's Path Loop"],
+    7: ["12 Tan Sugi Monastery Loop"],
+    8: ["14 Oblivion of Truth Loop", "17 Worlds Within the Mind Loop"],
+    9: ["15 The Ritual Loop"],
+    10: ["16 Fortress of Karahai Loop"],
+    11: ["18 The Plum Knows Before The Cherry Loop", "19 Bridges and Bandits Loop"],
+    12: ["20 The Princess's Web Loop"],
+    13: ["21 Into The Corruption Loop", "22 The Governor's Den Loop"]
   },
-  theme: "01 Season of Ghosts"
+  theme: "01 Season of Ghosts Loop"
 };
 
 /* ------------------------------------------------------ the rework tracker */
@@ -1409,14 +1497,36 @@ class CSApp extends BaseApp {
       </div>`;
   }
 
+  /* One button per sound rather than per row, because a row like
+     "Dining Hall · Shrine · Baths" is three separate beds. The icon is the
+     sound's own state, so a bed you started three scenes ago is visibly
+     still running. */
+  playBtn(ref, name) {
+    const act = ACTS[this.t.current.act] ? this.t.current.act : 1;
+    const { sound } = findSound(ref, act, name);
+    const on = !!sound?.playing;
+    const missing = !sound;
+    return `<button type="button" class="playbtn ${on ? "on" : ""} ${missing ? "gone" : ""}"
+      data-act="sound" data-pl="${esc(ref)}" data-s="${esc(name)}"
+      title="${missing ? `Not found in this world: ${esc(name)}` : on ? `Stop ${esc(name)}` : `Play ${esc(name)}`}">
+      <i class="fa-solid ${missing ? "fa-volume-xmark" : on ? "fa-stop" : "fa-play"}"></i>${esc(name)}</button>`;
+  }
+
   audioList(list, tracks) {
     if (!list.length && !tracks.length) return "";
+    const act = ACTS[this.t.current.act] ? this.t.current.act : 1;
+    const havePlaylists = !!game.playlists?.size;
+    list = list.filter(a => !a.acts || a.acts.includes(act));
+    if (!list.length && !tracks.length) return "";
+    const row = (icon, ref, names, sub, pip) => `<div class="mrow"><i class="fa-solid ${icon}"></i>
+        <span class="mname">${havePlaylists
+          ? `<span class="plays">${names.map(n => this.playBtn(ref, n)).join("")}</span>`
+          : names.join(" · ")}<small>${sub}</small></span>${pip ?? ""}</div>`;
     return `<div class="macros">
-      ${tracks.map(t => `<div class="mrow"><i class="fa-solid fa-music"></i>
-          <span class="mname">${t}<small>Soundtrack · Looped Soundtrack</small></span></div>`).join("")}
-      ${list.map(a => `<div class="mrow"><i class="fa-solid fa-volume-high"></i>
-          <span class="mname">${a.name}<small>${a.from}${a.note ? ` · ${a.note}` : ""}</small></span>
-          ${a.guess ? `<span class="pip">placed by guess</span>` : ""}</div>`).join("")}
+      ${tracks.map(t => row("fa-music", "looped", [t], "Looped Soundtrack")).join("")}
+      ${list.map(a => row("fa-volume-high", a.pl, a.sounds,
+        `${playlistLabel(a.pl, act)}${a.note ? ` · ${a.note}` : ""}`,
+        a.guess ? `<span class="pip">placed by guess</span>` : "")).join("")}
     </div>`;
   }
 
@@ -1801,6 +1911,10 @@ class CSApp extends BaseApp {
       if (a === "tab") { t.s.tab = btn.dataset.k; t.touch(); }
       else if (a === "gotoact") { t.s.tab = `act${btn.dataset.k}`; t.touch(); }
       else if (a === "cycle") t.cycleStatus(btn.dataset.n);
+      else if (a === "sound") {
+        const act = ACTS[t.current.act] ? t.current.act : 1;
+        toggleSound(btn.dataset.pl, act, btn.dataset.s);
+      }
       else if (a === "journal") {
         const id = btn.dataset.e;
         const desc = Object.values(JOURNAL.chapters).find(d => d.id === id)
@@ -1949,6 +2063,17 @@ class CSApp extends BaseApp {
       .cst .items { display:flex; flex-direction:column; }
       .cst .itemrow { display:flex; align-items:flex-start; gap:.25rem; }
       .cst .itemrow .check { flex:1; }
+      /* A sound, as a button. Filled while it's playing, struck through and
+         muted when this world hasn't got it. */
+      .cst .plays { display:flex; flex-wrap:wrap; gap:.2rem; margin-bottom:.1rem; }
+      .cst .playbtn { font-size:.72rem; font-weight:600; padding:1px 7px 1px 5px; border-radius:3px;
+                      border-color:var(--line); color:var(--ink); gap:.3rem; letter-spacing:0; }
+      .cst .playbtn i { font-size:.6rem; color:var(--muted); }
+      .cst .playbtn.on { background:var(--moss); border-color:var(--moss); color:var(--paper); }
+      .cst .playbtn.on i { color:var(--paper); }
+      .cst .playbtn.gone { color:var(--muted); border-style:dashed; text-decoration:line-through;
+                           text-decoration-color:var(--line); }
+
       .cst .jbtn { font-size:.62rem; padding:1px 5px; border-radius:3px; color:var(--slate);
                    border-color:var(--line); flex:none; margin-top:.15rem; letter-spacing:.04em; }
       .cst .jbtn i { font-size:.66rem; }
@@ -2075,6 +2200,14 @@ if (AppV2) {
       const fresh = typeof setting.value === "string" ? JSON.parse(setting.value) : setting.value;
       if (fresh) { campaign.state = fresh; campaign.render(); }
     });
+  }
+
+  /* Playback state lives on the playlist, not in this console's state, so the
+     play buttons only look right if something repaints them when a sound
+     starts or stops — including when it was started from the sidebar. */
+  if (!globalThis.__cstSoundHook) {
+    globalThis.__cstSoundHook = Hooks.on("updatePlaylistSound", () => campaign.render());
+    globalThis.__cstPlaylistHook = Hooks.on("updatePlaylist", () => campaign.render());
   }
   app.render(true);
 })();

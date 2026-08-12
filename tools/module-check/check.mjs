@@ -1,10 +1,11 @@
-/* Checks the Campaign Status Tracker's journal tables against a real install
-   of the Season of Ghosts Foundry module.
+/* Checks the macros' references into the Season of Ghosts Foundry module —
+   journal entries, journal pages, and playlist sounds — against a real
+   install of it.
 
-   The tracker links each chapter and item to a JournalEntry / JournalEntryPage
-   by document id. Those ids are stable — a Foundry adventure import preserves
-   them — but they were transcribed, and a transcription can rot. This reads
-   the module's own compendium pack and reports anything that no longer exists.
+   The macros link to documents by id, and name playlist sounds exactly. Ids
+   are stable — a Foundry adventure import preserves them — but they were
+   transcribed, and a transcription can rot. This reads the module's own
+   compendium pack and reports anything that no longer exists.
 
      npm install classic-level
      node check.mjs /path/to/modules/pf2e-season-of-ghosts
@@ -39,9 +40,13 @@ await db.close();
 
 const entries = new Map();
 const pages = new Map();
+const playlists = new Map();
 for (const j of adventure?.journal ?? []) {
   entries.set(j._id, j);
   for (const p of j.pages ?? []) pages.set(p._id, { entry: j._id, entryName: j.name, name: p.name });
+}
+for (const pl of adventure?.playlists ?? []) {
+  playlists.set(pl._id, { name: pl.name, sounds: new Set((pl.sounds ?? []).map(x => x.name)) });
 }
 
 /* ---- the tracker's tables ----
@@ -127,7 +132,40 @@ for (const name of OTHERS) {
   console.log(`${name}: ${entryIds.size} entr${entryIds.size === 1 ? "y" : "ies"}, ${pageIds.size} pages`);
 }
 
-console.log(`\n${entries.size} entries and ${pages.size} pages in ${adventure?.name ?? "the pack"}`);
+/* ---- playlist sounds ----
+   Every sound the tracker offers a play button for has to exist, in the
+   playlist the tracker thinks it's in. `act.*` rows resolve against each act
+   they claim, which is the whole point of pinning them down. */
+const PLAYLISTS = table("PLAYLISTS", "{", "}");
+const AUDIO = table("AUDIO", "{", "}");
+const ACT_OF = { 1: 1, 2: 1, 3: 1, 4: 1, 5: 2, 6: 2, 7: 2, 8: 3, 9: 3, 10: 3, 11: 4, 12: 4, 13: 4 };
+const playlistId = (ref, act) => {
+  const [group, kind] = String(ref).split(".");
+  if (!kind) return PLAYLISTS[group];
+  return (group === "act" ? PLAYLISTS[`a${act}`] : PLAYLISTS[group])?.[kind];
+};
+let soundsOk = 0;
+const checkSounds = (ref, names, act, where) => {
+  const pl = playlists.get(playlistId(ref, act));
+  if (!pl) return fail(`${where}: no playlist for ${ref} in act ${act}`);
+  for (const n of names) {
+    if (pl.sounds.has(n)) soundsOk++;
+    else fail(`${where}: "${n}" is not in ${pl.name} (${ref}, act ${act})`);
+  }
+};
+for (const a of AUDIO.always) for (const act of a.acts ?? [1, 2, 3, 4]) {
+  checkSounds(a.pl, a.sounds, act, "always");
+}
+for (const [ch, rows] of Object.entries(AUDIO.chapters)) {
+  for (const a of rows) checkSounds(a.pl, a.sounds, ACT_OF[ch], `chapter ${ch}`);
+}
+for (const [ch, tracks] of Object.entries(AUDIO.track)) {
+  checkSounds("looped", tracks, ACT_OF[ch], `track ${ch}`);
+}
+checkSounds("looped", [AUDIO.theme], 1, "theme");
+
+console.log(`\n${entries.size} entries, ${pages.size} pages and ${playlists.size} playlists in ${adventure?.name ?? "the pack"}`);
+console.log(`sounds ${soundsOk} references resolve`);
 console.log(`items  ${itemsLinked}/${itemKeys.size} linked`);
 console.log(`loot   ${lootLinked}/${lootKeys.size} linked`);
 if (unlinked.length) console.log(`\nno page (expected for Two Weavers beats, which aren't in the book):\n  ${unlinked.join(", ")}`);

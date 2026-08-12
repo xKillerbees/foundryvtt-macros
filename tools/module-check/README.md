@@ -1,9 +1,9 @@
-# Journal id check
+# Module reference check
 
-The Campaign Status Tracker links each chapter and item to a journal entry and page in the
-[Season of Ghosts Foundry module](https://paizo.com/) by document id. Those ids are stable —
-a Foundry adventure import preserves them — but the tables in the macro were transcribed from
-the module, and a transcription can rot when the module updates.
+The macros reach into the [Season of Ghosts Foundry module](https://paizo.com/): journal
+entries and pages by document id, and playlist sounds by exact name. Ids are stable — a
+Foundry adventure import preserves them — but everything here was transcribed from the module,
+and a transcription can rot when the module updates.
 
 This script reads the module's own compendium pack and reports anything that no longer
 resolves.
@@ -19,6 +19,8 @@ It exits non-zero on the first kind of problem worth acting on:
 - a page id in `PAGES` or `LOOT_PAGES` that isn't in the pack
 - a page id whose leading ordinal doesn't match the entry it actually lives in
 - a table key that doesn't correspond to any item or loot row in the tracker
+- a playlist sound the tracker offers a play button for that isn't in the playlist it names,
+  checked against every act an `act.*` row claims
 
 It also prints coverage. Items with no page are expected — the Two Weavers rework beats are
 invented, so there is nothing in the book to point at.

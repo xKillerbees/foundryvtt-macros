@@ -143,7 +143,7 @@ produced them.
   8's page on them.
 
   Every id was read out of the module's pack, not inferred, and
-  [`tools/journal-check/`](../../tools/journal-check) re-checks the whole table against an
+  [`tools/module-check/`](../../tools/module-check) re-checks the whole table against an
   installed copy. Items the table doesn't name still link if their label carries an area
   code — that's resolved by page id, since the module builds page ids as
   `<entry ordinal><area code><name slug>`, so `C1` can't be confused with `C11`. Entries
@@ -154,8 +154,12 @@ produced them.
   what's actually out there, the two finite populations, and the book's instruction not to
   scale the table up as the party levels
 - **Audio** per chapter — the module's ambience, loops, and SFX matched to the beats that want
-  them, plus the looped soundtrack: all 21 numbered tracks placed against the chapter each was
-  written for, from *02 The Summer That Never Was* to *22 The Governor's Den*
+  them, plus the looped soundtrack placed against the chapter each track was written for. Every
+  sound is a **play button**: it starts and stops that sound in the module's own playlist, fills
+  in while it's running, and repaints when a sound is started or stopped from the sidebar
+  instead. The generic beds resolve against whichever act the table is in, and are listed only
+  for the acts whose playlist actually has them — Act 1 calls the mists *Urban* and *Nature*,
+  and Act 4 files Dense Fog under SFX rather than Ambience
 - A **Before this session** panel on the campaign tab surfacing the current chapter's cues and
   unclaimed treasure without hunting through tabs
 - The Two Weavers continuity checklist, the milestone-level table, and per-PC arcs
