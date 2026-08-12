@@ -111,7 +111,7 @@ globalThis.FIXTURES = {
       rep: { southbank: 1, northridge: 2 },
       research: { sojin: 2, igawa: 0, willow: 0, solo: 4, zoudou: 0 },
       opts: { expansion: true, teaware: false },
-      yami: { bonded: true, pc: "Re Tang", lockUntil: 0 }
+      yami: { bonded: true, pc: "Tenzo", lockUntil: 0 }
     },
     /* Week 3's festival, resolved — so the party panel has titles to show.
        `pcs` is spelled out because this fixture is read by a macro other than
@@ -191,8 +191,8 @@ globalThis.FIXTURES = {
   "campaign-hinterlands": {
     "world.sogCampaign": {
       tab: "campaign",
-      /* 4 and 5 are spelled out because blankState() seeds them played, and
-         two chapters must never read as running at once. */
+      /* Spelled out past the running chapter so nothing reads as played
+         that shouldn't, and so two chapters never read as running at once. */
       chapters: { 1: "done", 2: "done", 3: "active", 4: "todo", 5: "todo" },
       flags: {
         "1.lantern": true, "1.kappas": true, "1.elders": true,
@@ -277,14 +277,16 @@ globalThis.FIXTURES = {
     }
   },
 
-  /* The effects tab with the Sequencer stand-in switched on, so the cue list
-     shows what it looks like once the modules are installed. */
+  /* The bridge with the Sequencer stand-in switched on, so the effect cues
+     beside each battle-damage face show what they look like once the modules
+     are installed. */
   "novarush-fx": {
     __sequencer: true,
     "world.sf2eNovaRush": {
-      tab: "fx",
+      tab: "bridge",
       repairs: { reactor: true, launcher: true },
-      allies: { brinn: true, polly: true }
+      allies: { brinn: true, polly: true },
+      round: 2, lastDamage: 1
     }
   },
 

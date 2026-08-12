@@ -39,6 +39,20 @@ const UUIDS = {
    Both modules are optional. With neither installed nothing here fires and
    nothing else in the console is affected. The Effects tab reports what
    resolved and can test each cue. */
+/* ------------------------------------------------------------- the effects
+   Optional cues: animation from JB2A and sound from PSFX, both through
+   Sequencer. Everything in this console works without any of them.
+
+   Each cue sits on a button beside the beat it belongs to rather than in a
+   list of its own, and each reports its own state — a cue with no installed
+   art is disabled and says so. Keys are verified against the full JB2A and
+   PSFX libraries with fallbacks for the free release, and a cue plays the
+   first key your world actually has.
+
+   If one says no matching file, open Sequencer's Database Viewer, find
+   something you like, and put its key at the top of that cue's `files` list.
+   `where` is the beat the cue belongs to, kept so a cue can be traced back to
+   its button. */
 const FX = {
   attack: {
     label: "We're Under Attack", where: "A1 — the Corpse Fleet's first volley",
@@ -129,8 +143,7 @@ const TABS = [
   { key: "lower", label: "Lower deck", sub: "A2 – A8", tone: "moss", icon: "fa-stairs" },
   { key: "upper", label: "Upper deck", sub: "B1 – B4", tone: "plum", icon: "fa-box-open" },
   { key: "bridge", label: "B5 Bridge", sub: "the finale", tone: "rust", icon: "fa-satellite-dish" },
-  { key: "escape", label: "Escape", sub: "the last check", tone: "gold", icon: "fa-rocket" },
-  { key: "fx", label: "Effects", sub: "Sequencer · JB2A", tone: "ember", icon: "fa-wand-sparkles" }
+  { key: "escape", label: "Escape", sub: "the last check", tone: "gold", icon: "fa-rocket" }
 ];
 
 /* ------------------------------------------------------------------- brig */
@@ -837,7 +850,6 @@ class NRApp extends BaseApp {
         ${s.tab === "upper" ? this.deckTab("upper", ro) : ""}
         ${s.tab === "bridge" ? this.bridgeTab(ro) : ""}
         ${s.tab === "escape" ? (s.mode === "cinematic" ? this.sceneTab(ro) : this.escapeTab(ro)) : ""}
-        ${s.tab === "fx" ? this.fxTab(ro) : ""}
       </div>`;
   }
 
@@ -851,6 +863,9 @@ class NRApp extends BaseApp {
           ${lamp(r.launcher, "Launcher", "B2 — adds a second gunner slot")}
           ${lamp(al.brinn, "Brinn", "A6 — +1 circumstance to the escape")}
           ${lamp(al.polly, "Polly", "B1 — +1 circumstance, and soaks the reactor's shock")}
+          ${lamp(t.fxReady, "FX", t.fxReady
+            ? "Sequencer detected — the effect buttons beside each beat will fire"
+            : "Sequencer not detected. Everything here works without it; install Sequencer and a JB2A module for the optional cues.")}
         </div>
         <div class="dcbox">
           <span>Escape DC</span><b>${t.escapeDC}${t.escapeBonus ? ` −${t.escapeBonus}` : ""}</b>
@@ -858,6 +873,20 @@ class NRApp extends BaseApp {
         <button type="button" class="say" data-act="poststatus" title="Post ship status"><i class="fa-solid fa-comment"></i></button>
         <button type="button" class="say" data-act="reset" title="Reset the adventure" ${ro ? "disabled" : ""}><i class="fa-solid fa-rotate-left"></i></button>
       </header>`;
+  }
+
+  /* Every effect cue is a button beside the beat it belongs to, and each one
+     reports its own state: enabled when Sequencer has art (or a shake) for it,
+     disabled with the reason in its tooltip when it hasn't. */
+  fxBtn(key, label, { icon = "fa-wand-sparkles", cls = "ghost" } = {}) {
+    const st = this.t.fxStatus(key);
+    const off = st.state !== "ok";
+    const why = st.state === "off" ? "Sequencer not detected — the cue is optional"
+      : st.state === "missing" ? "No matching JB2A file installed. Put a key you do have at the top of this cue's list in the FX block."
+      : `${st.detail}${st.sound ? ` · ${st.sound}` : ""}`;
+    return `<button type="button" class="${cls} fxbtn ${st.state}" data-act="fx" data-k="${key}"
+      ${off ? "disabled" : ""} title="${esc(FX[key].label)} — ${esc(why)}">
+      <i class="fa-solid ${icon}"></i> ${label}</button>`;
   }
 
   creatureRow(list) {
@@ -921,9 +950,7 @@ class NRApp extends BaseApp {
         <p class="boxed">${BRIG.attack.boxed}</p>
         <p class="note">${BRIG.attack.fail}</p>
         <div class="btnrow">
-          <button type="button" class="primary" data-act="fx" data-k="attack">
-            <i class="fa-solid fa-wand-sparkles"></i> Play the hit
-          </button>
+          ${this.fxBtn("attack", "Play the hit", { cls: "primary" })}
         </div>
       </section>`;
   }
@@ -1002,7 +1029,7 @@ class NRApp extends BaseApp {
         ${r.polly ? `<p class="note">${t.s.allies.polly ? "<b>Polly is helping</b> — " : ""}${r.polly}</p>` : ""}
         <p class="bonus">${r.pays}</p>
         <div class="btnrow">
-          ${key === "reactor" ? `<button type="button" class="ghost" data-act="fx" data-k="reactor"><i class="fa-solid fa-bolt"></i> Shock</button>` : ""}
+          ${key === "reactor" ? this.fxBtn("reactor", "Shock", { icon: "fa-bolt" }) : ""}
           <button type="button" class="${done ? "ghost" : "primary"}" data-act="repair" data-k="${key}" ${ro ? "disabled" : ""}>
             ${done ? "Mark unrepaired" : "Mark repaired"}
           </button>
@@ -1057,7 +1084,7 @@ class NRApp extends BaseApp {
             <button type="button" class="ghost" data-act="sinktoggle" ${ro ? "disabled" : ""}>
               ${sw.active ? "Stand it down" : "Trigger the wave"}
             </button>
-            <button type="button" class="ghost" data-act="fx" data-k="sinkwell"><i class="fa-solid fa-wand-sparkles"></i> Effect</button>
+            ${this.fxBtn("sinkwell", "Effect")}
           </div>
           ${sw.defeated ? `<p class="bonus">Disabled — “Guess I owe you one!” Polly will help with the reactor.</p>` : ""}
         </div>
@@ -1092,6 +1119,7 @@ class NRApp extends BaseApp {
           ${BRIDGE.damage.map(d => `
             <div class="face ${s.lastDamage === d.roll ? "hit" : ""}">
               <b>${d.roll}</b><span><i>${d.label}</i> ${d.text}</span>
+              ${d.fx ? this.fxBtn(d.fx, "Play", { cls: "opt sm" }) : ""}
             </div>`).join("")}
         </div>
       </section>`;
@@ -1147,11 +1175,7 @@ class NRApp extends BaseApp {
           ? "Nova Rush breaks away without sustaining further damage — the adventure's better ending."
           : "Nova Rush escapes severely damaged. She is disabled, never destroyed, and she is still theirs."}</p>
         <p class="quote">${ESCAPE.win}</p>
-        <div class="btnrow">
-          <button type="button" class="primary" data-act="fx" data-k="escape">
-            <i class="fa-solid fa-wand-sparkles"></i> Play the breakaway
-          </button>
-        </div>
+        <div class="btnrow">${this.fxBtn("escape", "Play the breakaway", { cls: "primary" })}</div>
       </section>` : ""}
 
       <section class="panel">
@@ -1218,34 +1242,6 @@ class NRApp extends BaseApp {
   }
 
   /* ------------------------------------------------------------------ fx */
-  fxTab(ro) {
-    const t = this.t, ready = t.fxReady;
-    return `
-      <section class="panel" style="--tone:var(--${ready ? "moss" : "muted"})">
-        <h3>Sequencer and JB2A <small>${ready ? "detected" : "not detected"}</small></h3>
-        <p class="text">Animation comes from <b>JB2A</b> and sound from <b>PSFX</b>, both through Sequencer, and all of it is optional — everything in this console works without them. When they're active, the cues below fire from their buttons, and the bridge's battle damage plays its own effect as you roll it.</p>
-        ${ready ? "" : `<p class="note">Install and enable <b>Sequencer</b> and a <b>JB2A</b> module (the free library covers most of these) and reopen this macro.</p>`}
-        <p class="hint">Every key ships verified against the full JB2A and PSFX libraries, with fallbacks for JB2A's free release. Each cue uses the first key your world actually has. If one reads “no matching file”, open Sequencer's Database Viewer, find something you like, and put its key at the top of that cue's list in the <code>FX</code> block near the top of this macro.</p>
-      </section>
-
-      <section class="panel">
-        <h3>Cues</h3>
-        <div class="fxlist">
-          ${Object.entries(FX).map(([k, cue]) => {
-            const st = t.fxStatus(k);
-            return `
-              <div class="fxrow">
-                <span class="dot ${st.state}"></span>
-                <div class="fxname"><b>${cue.label}</b><small>${cue.where}</small></div>
-                <code class="fxfile">${st.detail}${st.sound ? ` · ${st.sound}` : ""}</code>
-                <button type="button" class="opt sm" data-act="fx" data-k="${k}" ${ro || !ready ? "disabled" : ""}>Test</button>
-              </div>`;
-          }).join("")}
-        </div>
-        <p class="hint">Cues marked “selected” play on the tokens you have selected; ship-wide ones play in screen space and don't need a selection.</p>
-      </section>`;
-  }
-
   escapeTab(ro) {
     const t = this.t, e = t.escapeState, dc = t.escapeDC, bonus = t.escapeBonus;
     return `

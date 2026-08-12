@@ -162,7 +162,9 @@ produced them.
   and Act 4 files Dense Fog under SFX rather than Ambience
 - A **Before this session** panel on the campaign tab surfacing the current chapter's cues and
   unclaimed treasure without hunting through tabs
-- The Two Weavers continuity checklist, the milestone-level table, and per-PC arcs
+- The Two Weavers continuity checklist and the milestone-level table. `ARCS` near the top of
+  the macro is empty by design — put a line per PC in it and it shows under them on the party
+  panel; it's the one thing here that can't come from the book
 - A spoiler-free chat recap: act, chapter, level, and the chapters behind them
 
 Two levels of heading, and they don't compete. A panel is titled in large ink over a thick

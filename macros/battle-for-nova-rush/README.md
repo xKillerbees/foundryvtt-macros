@@ -42,7 +42,6 @@ console keeps those four lit across the top and does the arithmetic for you.
     ally's +1, and the launcher's second gunner slot, warns if nobody took Piloting or there
     are more gunners than slots, and calls the result against the half-the-party threshold.
   - **Cinematic starship scene** — the same escape run under the SF2e framework, below.
-- **Effects** — the optional Sequencer / JB2A cue list, with a Test button per cue.
 
 ![The bridge, with the battle damage roller](../../screenshots/battle-for-nova-rush/nova-rush-bridge.png)
 
@@ -76,7 +75,8 @@ Animation comes from **JB2A**, sound from **PSFX**, both driven through **Sequen
 it is **optional**: without the modules every button still works and the console says the
 effect didn't play.
 
-Eight cues, each with an animation and a sound:
+Eight cues, each with an animation and a sound. Every one sits on a button beside the beat it
+belongs to rather than in a list of its own:
 
 | Cue | Fires at | Animation | Sound |
 |---|---|---|---|
@@ -89,22 +89,24 @@ Eight cues, each with an animation and a sound:
 | Battle damage — Concierge | B5, the 4 result | `jb2a.energy_field.02.above.blue` | dancing lights |
 | Breaking away | the end of the escape | `jb2a.fire_jet.blue.30ft` | misty step |
 
-The four battle-damage cues fire automatically as you roll the d4 — no extra click.
+The four battle-damage cues also fire automatically as you roll the d4; the buttons on the
+faces are for replaying one, or firing it without rolling.
 
 PSFX is a fantasy library rather than a science-fiction one, so its sounds are picked for what
 they sound like rather than what they're named after: a fireball's explosion for a hull hit,
 Arms of Hadar for the sinkwell's void tentacles, a gust for a ruptured steam pipe.
 
 Every key ships **verified against the full JB2A and PSFX databases**, with fallbacks for
-JB2A's free release. Each cue uses the first key your world actually has; the **Effects** tab
-reports which one resolved, flags any that found nothing, and gives you a Test button. To
-substitute your own, open Sequencer's Database Viewer and put its key at the top of that cue's
-list in the `FX` block near the top of the macro.
+JB2A's free release. Each cue uses the first key your world actually has, and each button
+carries its own state: it names the key that resolved in its tooltip, and greys itself out with
+the reason when Sequencer is absent or nothing matched. The **FX** lamp in the header says
+whether Sequencer was detected at all. To substitute your own key, open Sequencer's Database
+Viewer and put it at the top of that cue's list in the `FX` block near the top of the macro.
 
 Cues aimed at tokens play on whatever you have selected, and fall back to a screen-space
 effect when nothing is selected, so nothing is ever silently skipped.
 
-![The effects tab](../../screenshots/battle-for-nova-rush/nova-rush-fx.png)
+![The battle damage faces, each with its own cue](../../screenshots/battle-for-nova-rush/nova-rush-fx.png)
 
 ## Statblocks
 

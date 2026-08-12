@@ -55,7 +55,7 @@ const THROUGHLINES = {
 const MOVEMENTS = [
   { id: "I", name: "The Setting", sub: "raising the house", tag: "Stagecraft",
     check: "DC 17 Crafting or DC 17 Society",
-    text: "Hang the backdrops, place the lanterns, seat the crowd, read the room. Aid magnet — Re Tang's venue prep.",
+    text: "Hang the backdrops, place the lanterns, seat the crowd, read the room. Aid magnet — whoever runs the venue.",
     botch: "A lantern line sags and threatens the cloth. A quick DC 15 Reflex, or the show starts on a smell of singe." },
   { id: "II", name: "The Overture", sub: "first notes on the harp", tag: "Performance",
     check: "DC 19 Performance",
@@ -139,7 +139,7 @@ const BOOTHS = [
     rp: "Your mouthpiece for ominous foreshadowing of Acts 3 and 4 — a man wears your face; you have walked among the dead and not known it; the lantern's light will leave Willowshore.",
     payoff: "No points. Pure flavour, dread, and player paranoia.",
     awards: [] },
-  { key: "tea", tone: "gold", name: "The Moonlit Tea Ceremony", tag: "Reputation · Re Tang",
+  { key: "tea", tone: "gold", name: "The Moonlit Tea Ceremony", tag: "Reputation · the teahouse",
     run: "DC 18 Tea Lore or DC 20 Diplomacy to host visiting elders, merchants, and a priest gracefully.",
     rp: "The teahouse as community hearth, and a chance to charm both factions at one table. A quiet word with a mysterious traveller.",
     payoff: "1–2 Reputation and a standing discount with a merchant. Sets the teahouse up as the venue for the show.",

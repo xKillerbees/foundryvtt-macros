@@ -52,6 +52,11 @@
   module's own playlist, shows what's currently running, and repaints when playback changes
   anywhere — including from the sidebar
 
+- Nova Rush: the Effects tab is gone — each cue is now a button beside the beat it belongs to,
+  reporting its own state, with an FX lamp in the header for whether Sequencer was detected
+- Macros ship with no campaign of their own: the tracker starts at Chapter 1 with nothing
+  ticked, `ARCS` is empty for you to fill in, and no note names another table's PCs
+
 ### Changed
 - Campaign tracker: only **required** items can go overdue. An unticked box in a finished
   chapter is now **skipped** — the party killed the Abacus Sisters rather than saving them,

@@ -65,12 +65,12 @@ SHOTS = {
     "novarush-escape": (
         "battle-for-nova-rush/nova-rush-console.js", "novarush-escape",
         "battle-for-nova-rush/nova-rush-escape.png"),
-    "novarush-scene": (
-        "battle-for-nova-rush/nova-rush-console.js", "novarush-scene",
-        "battle-for-nova-rush/nova-rush-scene.png"),
     "novarush-fx": (
         "battle-for-nova-rush/nova-rush-console.js", "novarush-fx",
         "battle-for-nova-rush/nova-rush-fx.png"),
+    "novarush-scene": (
+        "battle-for-nova-rush/nova-rush-console.js", "novarush-scene",
+        "battle-for-nova-rush/nova-rush-scene.png"),
     "campaign-loot": (
         "season-of-ghosts/campaign-status-tracker.js", "campaign-loot",
         "season-of-ghosts/campaign-status-loot.png"),

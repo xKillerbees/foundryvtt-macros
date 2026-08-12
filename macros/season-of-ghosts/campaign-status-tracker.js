@@ -9,7 +9,8 @@
    the Threads tab, which turns red once the party reaches the chapter that
    needs it. Reads the four chapter consoles' saved state for a live rollup.
 
-   Defaults match the campaign notes as of 2026-08-04: Act 2, Chapter 5, week 3.
+   Starts at Chapter 1 with nothing ticked. Click a chapter's status button to
+   move the table forward; everything else keys off wherever it says you are.
    ============================================================================ */
 
 const CS_NS = "world";
@@ -275,7 +276,7 @@ const STATUS_ORDER = ["todo", "active", "done"];
 const CHAPTERS = [
   { n: 1, act: 1, title: "To Light the Night", level: 1, console: null,
     spine: "The party wakes in the woods after the festival to a monster-held Willowshore. Ends with Gurglegut dead and the Eternal Lantern relit.",
-    note: "No deep guide and no source text — the vault page is reconstructed from downstream references.",
+    note: "The one chapter with no encounter-by-encounter breakdown here — the items below are reconstructed from what later chapters refer back to.",
     items: [
       { key: "lantern", label: "Eternal Lantern relit — Gurglegut dead", pays: "Level 2 milestone" },
       { key: "abacus", label: "Abacus Sisters (Midori, Murasaki) survived", pays: "Ch 4 · E13", at: 4 },
@@ -384,7 +385,7 @@ const CHAPTERS = [
         pays: "Ch 8–9 research DCs", at: 8 },
       { key: "head", label: "Pharasma's head recovered from the Tan Sugi (E13)", pays: "E5 purification", at: 7 },
       { key: "tea", label: "E6 refectory settled with a tea ceremony rather than a fight",
-        note: "A critical success also reveals where Pharasma's head went. Re Tang's chapter." },
+        note: "A critical success also reveals where Pharasma's head went. If a PC owns the teahouse, this is their scene." },
       { key: "yuni", label: "Yuni laid to rest with Yeri's bracelet (E2)" },
       { key: "xinyue", label: "Xin Yue defeated — both phases" },
       { key: "truth", label: "The truth told to Willowshore", danger: true,
@@ -490,7 +491,7 @@ const CHAPTERS = [
       { key: "summer", label: "Summer rite — Fiery Flowers · anchor of Vigor" },
       { key: "autumn", label: "Autumn rite — Sweet Fruits · anchor of Harvest" },
       { key: "winter", label: "Winter rite — Spiced Tea · anchor of Endurance", danger: true,
-        note: "Severe 11 if it turns violent, and the rework adds +2 to the social DCs. Re Tang's chapter — push toward the ceremony." },
+        note: "Severe 11 if it turns violent, and the rework adds +2 to the social DCs. If a PC owns the teahouse, this is their scene — push toward the ceremony." },
       { key: "beyond", label: "Beyond rite — Gossamer Path · anchor of Passage",
         note: "Arrive via the sash or it's DC 34 Diplomacy to stay the path maiden's attack." },
       { key: "witness", label: "The red-clad witness planted at Elizeth's murder", rework: true },
@@ -960,20 +961,24 @@ const FESTIVAL_SWEEPS = {
   heart: "Champion of Heart", daring: "Champion of Daring"
 };
 
-/* Arcs from the campaign notes, matched to whatever the party actor holds. */
-const ARCS = {
-  "Lotus Leaf-Flower": "Created by Master Zhi Hui — The Unfinished Lesson, landing in Ch 7",
-  "Lysander Vargas": "Thief-bartender, ward Erin, smuggling ties. Leads Faceless Evil in Ch 9.",
-  "Re Tang": "Cerulean Teahouse owner — the tea ceremonies in Ch 7 and Ch 12 are hers",
-  "Zhu Chao": "Harpist, 17, tool-shop family"
-};
+/* Your own PCs' campaign arcs, keyed by the actor's name, shown under them on
+   the party panel. Empty by design — this is the one place in the macro that
+   can't be filled in from the book. A line each is enough:
+
+     const ARCS = {
+       "Some Bard": "Harpist, 17, tool-shop family",
+       "Some Monk": "Created by Master Zhi Hui — the Unfinished Lesson lands in Ch 7"
+     };
+
+   A name with no entry simply shows no arc line. */
+const ARCS = {};
 
 /* ------------------------------------------------------------------ state */
 function blankState(pcs) {
   return {
     v: 1, tab: "campaign", pcs,
-    /* Seeded from the campaign notes: Act 1 complete, Chapter 5 running. */
-    chapters: { 1: "done", 2: "done", 3: "done", 4: "done", 5: "active" },
+    /* Chapter 1, running. Advance it from the act tabs. */
+    chapters: { 1: "active" },
     flags: {},
     loot: {},
     cues: {},
