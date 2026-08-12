@@ -107,18 +107,30 @@ produced them.
   **required** when a later chapter can't proceed without them, **consequence** when the
   choice is permanent, **rework** when it belongs to the Two Weavers changes
 - A **Threads** tab built from those items: anything with a downstream payoff, sorted by when
-  it comes due, and turning red the moment the table reaches the chapter that wants it and the
-  box is still empty
+  it comes due. Only **required** items go red — everything else the table walked past is
+  listed as **skipped**, because most of these are choices rather than obligations. The Abacus
+  Sisters don't survive if the party kills them, and nothing downstream breaks; an unticked box
+  in a finished chapter is the shape the campaign took, not a warning
 - A live rollup strip read from the other four consoles' saved state — pools, week, shrine
   enlightenments, statues purified — so the campaign view doesn't need re-typing
+- The party panel reads the **First Long Night** console too: the titles and keepsakes each PC
+  won at the games, so *Iron-Gut* and the gourd flask are still on the table's mind in Act 4.
+  Clicking a name opens that character's sheet
 - A **Treasure** tab holding all 42 named pieces of loot in the campaign, grouped into what's
   on the table in the chapter you're running, what earlier chapters were left holding, what's
   still ahead, and what's been claimed
 - Scene and cue checklists per chapter — the Foundry playlists and scene swaps from the
   campaign notes, plus the prep that has to happen before session rather than during it
-- **Module macros** per chapter — all 57 macros from the Season of Ghosts Foundry module's
+- **Module macros** per chapter — all 58 macros from the Season of Ghosts Foundry module's
   directory, named exactly as they appear there, with their folder. Reference only: they're
   run from the macro directory, so there's nothing to tick
+- **Consoles in this collection** per chapter — the other four macros here, against the
+  chapters they're for, so the Enlightened Path console is named where Chapter 6 is on screen
+  rather than remembered
+- **Running procedures** — the loops you keep turning for a whole chapter rather than tick
+  once. Chapter 3 carries the hinterlands wandering-monster table: the daily DC 17 flat check,
+  what's actually out there, the two finite populations, and the book's instruction not to
+  scale the table up as the party levels
 - **Audio** per chapter — the module's ambience, loops, and SFX matched to the beats that want
   them, plus the looped soundtrack: all 21 numbered tracks placed against the chapter each was
   written for, from *02 The Summer That Never Was* to *22 The Governor's Den*
@@ -134,9 +146,14 @@ thirteen chapters, alongside the Submacros folder and the campaign theme.
 Where a macro or audio cue couldn't be pinned to a chapter it's flagged in place — `act only`
 for the ones placeable to an act but no further, `placed by guess` for the ones inferred from
 the name. Both are one-line edits in the `MODULE_MACROS` and `AUDIO` blocks near the top of
-the macro.
+the macro. Three audio cues still carry `placed by guess`; everything else has since been
+pinned by the scene-notes blocks in the adventure text.
+
+![Chapter 3 running, with the hinterlands encounter procedure](../../screenshots/season-of-ghosts/campaign-status-hinterlands.png)
 
 ![An act tab, with checklist, treasure, module macros, and cues](../../screenshots/season-of-ghosts/campaign-status-act4.png)
+
+![Act 1, with skipped items marked as skipped rather than overdue](../../screenshots/season-of-ghosts/campaign-status-act1.png)
 
 ![The Threads tab](../../screenshots/season-of-ghosts/campaign-status-threads.png)
 

@@ -52,6 +52,8 @@ class StubActor {
         ancestry: { name: spec.ancestry }
       }
     };
+    /* Character sheets don't exist out here, so opening one is a log line. */
+    this.sheet = { render: () => console.log("[sheet]", this.name) };
   }
 }
 

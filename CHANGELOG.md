@@ -26,6 +26,21 @@
   twelve PC games with medal tracking, GM kit
 - Enlightened Path Console — ritual, vision beats, three shrine days, enlightenment tracking
 
+- Campaign tracker: clicking a party member opens their character sheet, and the party panel
+  shows the titles and keepsakes each PC won at the First Long Night
+- Campaign tracker: the four consoles in this collection are listed against the chapters
+  they're for, and Chapter 3 carries the hinterlands wandering-monster procedure
+- Campaign tracker: a legend under the chapter list explaining the spider icon and the columns
+
+### Changed
+- Campaign tracker: only **required** items can go overdue. An unticked box in a finished
+  chapter is now **skipped** — the party killed the Abacus Sisters rather than saving them,
+  and nothing downstream breaks
+- Campaign tracker: the `Change Season` cues say which transition they are and which two
+  scenes they repaint, instead of naming a playlist that doesn't exist under that name
+- Campaign tracker: seven module macros and one audio cue moved off `placed by guess` and
+  `act only` onto the chapters the adventure's scene-notes blocks actually link them from
+
 ### Fixed
 - Scoped all CSS under root classes; unscoped selectors were bleeding into PF2e sheets
 - Moved persistence from journal flags to world settings to stop update notifications

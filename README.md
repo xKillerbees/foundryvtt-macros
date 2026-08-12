@@ -63,8 +63,9 @@ aftermath ledger that pushes Hope and Reputation back into the Fall Downtime Tra
 ### [Campaign Status Tracker](macros/season-of-ghosts/campaign-status-tracker.js)
 
 A checklist for the whole Adventure Path. All thirteen chapters, the decisions and items that
-outlive them, and a Threads view that turns red when the table reaches a chapter whose
-prerequisite was never ticked. Reads the four chapter consoles for a live rollup.
+outlive them, and a Threads view that separates a required prerequisite the table has walked
+past from the far more common case — a choice the party simply didn't take. Reads the four
+chapter consoles for a live rollup, down to the titles each PC won at the First Long Night.
 
 ![The campaign tab, on Act 2 Chapter 5](screenshots/season-of-ghosts/campaign-status-tracker.png)
 

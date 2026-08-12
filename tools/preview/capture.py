@@ -80,6 +80,12 @@ SHOTS = {
     "campaign-threads": (
         "season-of-ghosts/campaign-status-tracker.js", "campaign-threads",
         "season-of-ghosts/campaign-status-threads.png"),
+    "campaign-act1": (
+        "season-of-ghosts/campaign-status-tracker.js", "campaign-act1",
+        "season-of-ghosts/campaign-status-act1.png"),
+    "campaign-hinterlands": (
+        "season-of-ghosts/campaign-status-tracker.js", "campaign-hinterlands",
+        "season-of-ghosts/campaign-status-hinterlands.png"),
 }
 
 

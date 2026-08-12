@@ -113,6 +113,23 @@ globalThis.FIXTURES = {
       opts: { expansion: true, teaware: false },
       yami: { bonded: true, pc: "Re Tang", lockUntil: 0 }
     },
+    /* Week 3's festival, resolved — so the party panel has titles to show.
+       `pcs` is spelled out because this fixture is read by a macro other than
+       the one that wrote it, so nothing fills the roster in for it. */
+    "world.sogFirstLongNight": {
+      pcs: [
+        { name: "Aiko", actorId: "pc1" }, { name: "Daizen", actorId: "pc2" },
+        { name: "Miyu", actorId: "pc3" }, { name: "Tenzo", actorId: "pc4" }
+      ],
+      games: {
+        sprint:  { gold: 2, silver: 0 },
+        pole:    { gold: 0, silver: 2 },
+        cricket: { gold: 2, silver: 3 },
+        riddle:  { gold: 1, silver: 3 },
+        stones:  { gold: 3, silver: 1 },
+        drinking: { gold: 3, silver: 1 }
+      }
+    },
     "world.sogCampaign": {
       tab: "campaign",
       chapters: { 1: "done", 2: "done", 3: "done", 4: "done", 5: "active" },
@@ -138,6 +155,41 @@ globalThis.FIXTURES = {
         "2.care": true, "3.pearls": true, "4.pendant": true, "4.gift": true,
         "4.iron": true, "5.yami": true
       }
+    }
+  },
+
+  /* Act 1, which is where the finished chapters are: skipped items, and the
+     hinterlands wandering-monster procedure on Chapter 3. */
+  "campaign-act1": {
+    "world.sogCampaign": {
+      tab: "act1",
+      chapters: { 1: "done", 2: "done", 3: "done", 4: "done", 5: "active" },
+      flags: {
+        "1.lantern": true, "1.kappas": true, "1.elders": true,
+        "2.butcher": true, "2.douqiu": true, "2.prison": true, "2.will": true,
+        "3.governor": true, "3.xungu": true, "3.willow": true, "3.teahouse": true,
+        "3.teafarm": true, "3.expansion": true, "3.duel": true, "3.shinzo": true, "3.lesson1": true,
+        "4.ledger": true, "4.advance": true, "4.bargain": true, "4.gift": true,
+        "4.intime": true, "4.mengsung": true, "4.abductees": true
+      },
+      cues: { "3.rollers": true, "3.seasons": true }
+    }
+  },
+
+  /* The campaign tab wound back to Chapter 3, the one chapter that carries a
+     running procedure — the hinterlands wandering-monster table. */
+  "campaign-hinterlands": {
+    "world.sogCampaign": {
+      tab: "campaign",
+      /* 4 and 5 are spelled out because blankState() seeds them played, and
+         two chapters must never read as running at once. */
+      chapters: { 1: "done", 2: "done", 3: "active", 4: "todo", 5: "todo" },
+      flags: {
+        "1.lantern": true, "1.kappas": true, "1.elders": true,
+        "2.butcher": true, "2.douqiu": true, "2.prison": true, "2.will": true,
+        "3.governor": true, "3.xungu": true
+      },
+      cues: { "3.singing": true }
     }
   },
 

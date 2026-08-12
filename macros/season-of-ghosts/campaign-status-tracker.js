@@ -396,8 +396,10 @@ const CUES = {
     { key: "bodies", label: "Mark the hanging-body squares before session" }
   ],
   3: [
-    { key: "seasons", label: "`Willowshore Seasons` · `Enable Rain`" },
-    { key: "rollers", label: "Both encounter rollers armed" },
+    { key: "seasons", label: "Both scenes confirmed on Summer · `Enable Rain` for the rainy summer",
+      note: "`Change Season` (Submacros) is what sets it — the campaign notes call the pair of scenes `Willowshore Seasons`." },
+    { key: "rollers", label: "Both encounter rollers armed — the town table and the hinterlands table",
+      note: "The town table died the moment the Eternal Lantern was relit; from here it's the hinterlands table that runs. See the procedure below." },
     { key: "singing", label: "`Singing` loop for the Canary Inn approach" }
   ],
   4: [
@@ -407,7 +409,8 @@ const CUES = {
   ],
   5: [
     { key: "consoles", label: "Fall Downtime Tracker and First Long Night Console open" },
-    { key: "seasons", label: "`Willowshore Seasons` at the fall transition" },
+    { key: "seasons", label: "`Change Season` run once — summer to fall",
+      note: "It repaints both the Willowshore and Willowshore Hinterlands scenes; the campaign notes call that pair `Willowshore Seasons`. It belongs at the end of Chapter 4, so if fall is already on the maps this is nothing to do." },
     { key: "fire", label: "`Barn Fire` (week 8) · `Feast of the Kami` (week 10)" }
   ],
   6: [
@@ -419,7 +422,8 @@ const CUES = {
   7: [
     { key: "console", label: "Ruins of Wisdom Console open" },
     { key: "head", label: "`Return Head` at E5" },
-    { key: "season", label: "`Change Season` at the act transition" },
+    { key: "season", label: "`Change Season` at the act transition — fall to winter",
+      note: "Same submacro as the fall swap: both the Willowshore and Willowshore Hinterlands scenes, run at Return to Willowshore." },
     { key: "trigger", label: "Decide the Zhi Hui healing trigger before session", note: "Say, two PCs below half." }
   ],
   8: [
@@ -436,7 +440,8 @@ const CUES = {
       note: "Terror level, night state, retreated groups, cross-scene death sync, reinforcement restoration." },
     { key: "bell", label: "`Warding Bell` · `Pan Fenfang True Form` effect" },
     { key: "wasted", label: "Play the first wasted round — let them learn the walls block incorporeal movement" },
-    { key: "season", label: "`Change Season` at the act break" }
+    { key: "season", label: "`Change Season` at the act break — winter to spring",
+      note: "The last of the four seasons on the Willowshore and Willowshore Hinterlands scenes, run at Running out of Time." }
   ],
   11: [
     { key: "fate", label: "Willowshore's Fate rolled up before session — open with the description, not the math" },
@@ -451,29 +456,87 @@ const CUES = {
   ]
 };
 
+/* ------------------------------------------------------- table procedures
+   Running rules that aren't a decision to tick — they're a loop you keep
+   turning for a whole chapter. Kept out of `items` so they don't dilute the
+   checklist count, and rendered wherever the chapter is on screen. */
+const PROCEDURES = {
+  3: [{
+    key: "wander",
+    title: "Hinterlands random encounters",
+    sub: "the wandering monster table, D1–D13",
+    lines: [
+      "<b>Once per day</b> the party spends in the hinterlands, roll a <b>DC 17 flat check</b>. On a success, an encounter happens — you decide whether it lands while they travel or while they camp.",
+      "Roll on the <b>Hinterlands Random Encounters</b> table. The book uses one die within <b>2 hexes of Willowshore</b> and another further out into the wilderness; the two rolls are not the same.",
+      "Threats run <b>Trivial 2 to Moderate 2</b> and are written for a 2nd-level party, because that's when the hexploration happens."
+    ],
+    what: [
+      "<b>Animals</b> — wary, and they only fight if attacked first. There is exactly <b>one</b> giant stag beetle in the region.",
+      "<b>Jinkins</b> — survivors of the invasion. One shrieks and flees into the wild the moment it takes any damage.",
+      "<b>Noppera-bos</b> — outcasts who never got into the lumber camp gathering. They fight to the death hoping the party's heads buy them a place.",
+      "<b>Slime molds</b> — wandered out of the fungal infestation at D7. <b>Six</b> in the whole hinterlands, and no more.",
+      "<b>Thatchlings</b> — not the ones at Canary Inn."
+    ],
+    note: "Don't power the table up as the party levels. The book is explicit: a hinterlands that scales with them stops reading like somewhere a town could survive. Once Act 2 starts, either drop wandering monsters or narrate them without rolling initiative.",
+    foundry: "`Hinterlands Control` (Act 1) drives every tile on the Willowshore Hinterlands scene, and the module ships a party token for the hexploration."
+  }]
+};
+
+/* ---------------------------------------------------- this repo's consoles
+   The other macros in this collection, against the chapters they're for. The
+   tracker can't launch them — they're separate macros in your directory — so
+   this is a pointer, the same as the module macro lists. */
+const OUR_MACROS = {
+  5: [
+    { name: "Fall Downtime Tracker", file: "fall-downtime-tracker.js",
+      what: "the whole twelve weeks — Hope, Food, Security, teahouse restoration, the research caps, and every weekly event" },
+    { name: "First Long Night Console", file: "first-long-night-console.js",
+      what: "week 3's festival — the grand show, the three contests, the twelve games, and the titles they hand out" }
+  ],
+  6: [
+    { name: "Enlightened Path Console", file: "enlightened-path-console.js",
+      what: "the soul-seed ritual and the four days — the three shrines and their enlightenment conditions" }
+  ],
+  7: [
+    { name: "Ruins of Wisdom Console", file: "ruins-of-wisdom-console.js",
+      what: "the four statue purifications, Zhi Hui's manifestations, the per-area beats, and the aftermath ledger back into the downtime tracker" }
+  ],
+  10: [
+    { name: "Fall Downtime Tracker", file: "fall-downtime-tracker.js",
+      what: "still worth opening — the pools it banked are the Preparation Points counted when Transmigrate fires" }
+  ]
+};
+
 /* ------------------------------------------------- the module's own macros
    The Season of Ghosts Foundry module ships a macro directory organised by
    act. These are reminders that the macro exists and where it lives — nothing
    here clicks them for you, because they're run from the directory.
 
    `chapters` holds the ones whose chapter is certain, either because the
-   campaign notes name them or because the macro's name says so. `acts` holds
-   the ones that could only be placed to an act; move them into `chapters`
-   once you know. `always` is the Submacros folder, useful anywhere. */
+   campaign notes name them or because the adventure text links them from a
+   scene-notes block. `acts` holds the ones that could only be placed to an
+   act; move them into `chapters` once you know. `always` is the Submacros
+   folder, useful anywhere. */
 const MODULE_MACROS = {
   chapters: {
-    1: [{ name: "Light Eternal Lantern", folder: "Act 1" }],
+    1: [{ name: "Light Eternal Lantern", folder: "Act 1" },
+        { name: "Enable Blood Moon", folder: "Act 1", note: "Maze of Mist, Rain of Blood" },
+        { name: "Enable Rain", folder: "Act 1", note: "same encounter" }],
     3: [{ name: "Enable Rain", folder: "Act 1" },
-        { name: "Toggle Mindscape Border Visibility", folder: "Act 1", guess: true }],
-    4: [{ name: "Stop Chanting", folder: "Act 1" }],
-    5: [{ name: "Hinterlands Control", folder: "Act 2", guess: true }],
+        { name: "Toggle Mindscape Border Visibility", folder: "Act 1", note: "The Mindscape Border" },
+        { name: "Hinterlands Control", folder: "Act 1", note: "every tile on the Willowshore Hinterlands scene" }],
+    4: [{ name: "Stop Chanting", folder: "Act 1" },
+        { name: "Change Season", folder: "Submacros", note: "Concluding Act 1 — summer to fall" }],
     6: [{ name: "Open the Wall of Ghosts", folder: "Act 2" },
         { name: "Reveal Mandragora", folder: "Act 2" }],
     7: [{ name: "Return Head", folder: "Act 2" },
-        { name: "Change Season", folder: "Submacros" }],
+        { name: "Change Season", folder: "Submacros", note: "Return to Willowshore — fall to winter" }],
+    9: [{ name: "Open Portal", folder: "Act 3", note: "Between Life and Death" },
+        { name: "Partially Open Portal", folder: "Act 3", note: "Between Life and Death" }],
     10: [{ name: "Terror in Karahai", folder: "Act 3" },
          { name: "Warding Bell", folder: "Act 3" },
-         { name: "Change Season", folder: "Submacros" },
+         { name: "Pan Fenfang True Form", folder: "Act 3", note: "General Storage — C14" },
+         { name: "Change Season", folder: "Submacros", note: "Running out of Time — winter to spring" },
          { group: "Terror Macros", folder: "Act 3",
            items: ["Terror 1", "Terror 2", "Terror 3", "Terror 4", "Terror 5", "Terror 6",
                    "Terror 7", "Terror 8", "Nighttime", "Reinforcements",
@@ -493,11 +556,7 @@ const MODULE_MACROS = {
          { group: "Sugi Tree Falls", folder: "Act 4",
            items: ["N", "NE", "E", "SE", "S", "SW", "W", "NW", "Reset"] }]
   },
-  acts: {
-    1: [{ name: "Enable Blood Moon", folder: "Act 1" }],
-    3: [{ name: "Open Portal", folder: "Act 3" },
-        { name: "Partially Open Portal", folder: "Act 3" }]
-  },
+  acts: {},
   always: [
     { name: "Change Season", folder: "Submacros" },
     { name: "Change Dynamic Ring and Turn Marker", folder: "Submacros" },
@@ -566,7 +625,7 @@ const AUDIO = {
          { name: "Creaky Building", from: "Act 4 · Ambience", guess: true }],
     13: [{ name: "Below Kugaptees Claw · Kuraptees Rise", from: "Act 4 · Ambience" },
          { name: "Old Tree Falling", from: "Act 4 · SFX", note: "D2, with the Sugi Tree Falls macros" },
-         { name: "Crashing Arms", from: "Act 4 · SFX", note: "the Sealing's pulses", guess: true },
+         { name: "Crashing Arms", from: "Act 4 · SFX", note: "Kugaptee's Final Death — the Sealing's pulses" },
          { name: "Death Roar · Demonic Roar", from: "Act 4 · SFX" },
          { name: "Mindscape Shift", from: "Act 4 · SFX" }]
   },
@@ -622,6 +681,32 @@ const MILESTONES = [
   [6, "Reach the monastery"], [7, "Xin Yue falls"], [8, "The truth"], [9, "Cast Transmigrate"],
   [10, "Return to life — ancestry swap"], [11, "Before Ren Mei Li's missions"], [12, "Claim the Fang and Key"]
 ];
+
+/* ------------------------------------------------ what the festival handed out
+   The First Long Night console awards a gold medal per game, and each gold
+   carries a title and a keepsake. Mirrored here — key, title, prize and
+   discipline — so the party panel can name what each PC walked away with
+   without the festival console being open. Sweeping a discipline's events
+   adds its champion title on top. Keep in step with GAMES and DISCIPLINES in
+   `first-long-night-console.js`. */
+const FESTIVAL_TITLES = {
+  sprint:   { disc: "body", title: "The Quick-Hand", prize: "A frayed-rope bracelet" },
+  pole:     { disc: "body", title: "The High-Reacher", prize: "The Crown Lantern, released at dawn" },
+  cricket:  { disc: "body", title: "Cricket-Friend", prize: "A carved cricket-cage" },
+  riddle:   { disc: "wit", title: "The Sharp-Tongue", prize: "A brushed riddle-scroll" },
+  stones:   { disc: "wit", title: "Luck of the Moon", prize: "A pouch of moon-tokens" },
+  cipher:   { disc: "wit", title: "The Far-Speaker", prize: "First pick of any released lantern" },
+  poetry:   { disc: "heart", title: "Moon-Poet", prize: "A lacquered fan", favor: "First toast at the feast" },
+  boast:    { disc: "heart", title: "Teller of Tall Tales", prize: "Free drinks all night" },
+  catwalk:  { disc: "heart", title: "Forest-Clad", prize: "A fine straw-and-bamboo cape" },
+  drinking: { disc: "daring", title: "Iron-Gut", prize: "A gourd flask" },
+  toss:     { disc: "daring", title: "True-Aim", prize: "A granted wish — a small story boon", favor: "Your festival wish is granted" },
+  ghost:    { disc: "daring", title: "The Unseen, or Ghost-Catcher", prize: "The paper ghost-mask itself" }
+};
+const FESTIVAL_SWEEPS = {
+  body: "Champion of Body", wit: "Champion of Wit",
+  heart: "Champion of Heart", daring: "Champion of Daring"
+};
 
 /* Arcs from the campaign notes, matched to whatever the party actor holds. */
 const ARCS = {
@@ -745,6 +830,8 @@ class Campaign {
      get diluted by loot the party simply never found. */
   lootFor(n) { return LOOT[n] ?? []; }
   cuesFor(n) { return CUES[n] ?? []; }
+  procsFor(n) { return PROCEDURES[n] ?? []; }
+  oursFor(n) { return OUR_MACROS[n] ?? []; }
 
   audioFor(n) { return AUDIO.chapters[n] ?? []; }
   trackFor(n) { return AUDIO.track[n] ?? []; }
@@ -801,25 +888,62 @@ class Campaign {
   }
 
   /* ----- threads -----
-     Anything with a downstream payoff, sorted by when it comes due. A thread
-     is overdue once the table has reached the chapter that needs it. */
+     Anything with a downstream payoff, sorted by when it comes due.
+
+     Only `hard` items can go overdue. Everything else is a thing the party
+     could have done and didn't — the Abacus Sisters don't survive if the
+     party kills them — so once its chapter is behind you it reads as skipped,
+     not as a failure. A thread that's still due but whose chapter is still
+     running stays pending: there's time. */
+  itemState(n, item) {
+    if (this.flag(n, item.key)) return "ok";
+    if (!item.at || this.current.n < item.at) return "pending";
+    if (item.hard) return "overdue";
+    return this.statusOf(n) === "done" ? "skipped" : "pending";
+  }
+
   get threads() {
     const out = [];
     for (const c of CHAPTERS) {
       for (const item of c.items) {
         if (!item.at) continue;
-        const carried = this.flag(c.n, item.key);
-        const due = this.current.n >= item.at;
+        const state = this.itemState(c.n, item);
         out.push({
           from: c.n, at: item.at, label: item.label, pays: item.pays ?? "",
-          hard: !!item.hard, rework: !!item.rework, carried,
-          state: carried ? "ok" : due ? "overdue" : "pending"
+          hard: !!item.hard, rework: !!item.rework, carried: state === "ok", state
         });
       }
     }
     return out.sort((a, b) => a.at - b.at || a.from - b.from);
   }
   get overdue() { return this.threads.filter(t => t.state === "overdue"); }
+
+  /* ----- the festival -----
+     Titles and keepsakes a PC won at the First Long Night, read straight from
+     that console's saved medals. Matched on actor id, falling back to name,
+     because the two macros detect the party independently. */
+  festivalFor(pc) {
+    const fln = this.consoleState("festival");
+    const games = fln?.games;
+    if (!games || !pc) return null;
+    const list = fln.pcs ?? [];
+    let idx = list.findIndex(p => pc.actorId && p.actorId === pc.actorId);
+    if (idx < 0) idx = list.findIndex(p => p.name === pc.name);
+    if (idx < 0) return null;
+
+    const golds = Object.entries(games).filter(([, g]) => g?.gold === idx).map(([k]) => k);
+    if (!golds.length) return null;
+
+    const titles = golds.map(k => FESTIVAL_TITLES[k]?.title).filter(Boolean);
+    for (const [disc, sweep] of Object.entries(FESTIVAL_SWEEPS)) {
+      const events = Object.keys(FESTIVAL_TITLES).filter(k => FESTIVAL_TITLES[k].disc === disc);
+      if (events.length && events.every(k => games[k]?.gold === idx)) titles.push(sweep);
+    }
+    const keeps = golds.map(k => FESTIVAL_TITLES[k]).filter(Boolean)
+      .map(g => g.favor ? `${g.prize} · ${g.favor}` : g.prize);
+    const silver = Object.values(games).filter(g => g?.silver === idx).length;
+    return { titles, keeps, gold: golds.length, silver };
+  }
 
   /* ----- the chapter consoles ----- */
   consoleState(which) { return game.settings.get("world", CONSOLES[which].split(".")[1]); }
@@ -976,6 +1100,28 @@ class CSApp extends BaseApp {
     </div>`;
   }
 
+  /* The other consoles in this collection. Also reference only — they're
+     separate macros in your own directory, not something this one can open. */
+  ourList(list) {
+    if (!list.length) return "";
+    return `<div class="macros">
+      ${list.map(m => `<div class="mrow ours"><i class="fa-solid fa-ghost"></i>
+          <span class="mname">${m.name}<small>${m.what}</small></span></div>`).join("")}
+    </div>`;
+  }
+
+  /* A running procedure — the loop you keep turning for a whole chapter. */
+  procBlock(p) {
+    return `
+      <div class="proc">
+        <div class="subhead"><i class="fa-solid fa-dice-d20"></i> ${p.title} <span>${p.sub}</span></div>
+        ${p.lines.map(l => `<p class="text">${l}</p>`).join("")}
+        ${p.what?.length ? `<ul class="bullets">${p.what.map(w => `<li>${w}</li>`).join("")}</ul>` : ""}
+        ${p.note ? `<p class="note">${p.note}</p>` : ""}
+        ${p.foundry ? `<p class="hint"><i class="fa-solid fa-bolt"></i> ${p.foundry}</p>` : ""}
+      </div>`;
+  }
+
   audioList(list, tracks) {
     if (!list.length && !tracks.length) return "";
     return `<div class="macros">
@@ -1007,15 +1153,16 @@ class CSApp extends BaseApp {
 
       ${od.length ? `
       <section class="panel" style="--tone:var(--rust)">
-        <h3>Due now, not carried <small>${od.length} thread${od.length === 1 ? "" : "s"}</small></h3>
+        <h3>Required, due now, not carried <small>${od.length} thread${od.length === 1 ? "" : "s"}</small></h3>
         ${od.map(x => `<p class="alarmrow"><span class="chip">Ch ${x.from} → ${x.at}</span> ${x.label}${x.pays ? ` <em>${x.pays}</em>` : ""}</p>`).join("")}
+        <p class="hint">Only items tagged <b>required</b> appear here. Anything else the party left undone is on the Threads tab as skipped.</p>
       </section>` : ""}
 
       ${(() => {
         const cues = t.cuesFor(c.n), loot = t.lootFor(c.n).filter(i => !t.claimed(c.n, i.key));
-        const macros = t.macrosFor(c.n);
+        const macros = t.macrosFor(c.n), ours = t.oursFor(c.n), procs = t.procsFor(c.n);
         const audio = t.audioFor(c.n), tracks = t.trackFor(c.n);
-        if (!cues.length && !loot.length && !macros.length && !audio.length) return "";
+        if (!cues.length && !loot.length && !macros.length && !audio.length && !ours.length && !procs.length) return "";
         return `
         <section class="panel" style="--tone:var(--ember)">
           <h3>Before this session <small>Chapter ${c.n}</small></h3>
@@ -1025,6 +1172,10 @@ class CSApp extends BaseApp {
               ${cues.map(q => `<label class="check ${t.cued(c.n, q.key) ? "on" : ""}">
                   <input type="checkbox" data-act="cue" data-n="${c.n}" data-k="${q.key}" ${t.cued(c.n, q.key) ? "checked" : ""} ${ro ? "disabled" : ""}>
                   <span class="lbl">${q.label}</span></label>`).join("")}
+            </div>` : ""}
+            ${ours.length ? `<div>
+              <div class="subhead"><i class="fa-solid fa-ghost"></i> Consoles for this chapter</div>
+              ${this.ourList(ours)}
             </div>` : ""}
             ${macros.length ? `<div>
               <div class="subhead"><i class="fa-solid fa-bolt"></i> Module macros for this chapter</div>
@@ -1044,14 +1195,30 @@ class CSApp extends BaseApp {
         </section>`;
       })()}
 
+      ${t.procsFor(c.n).length ? `
+      <section class="panel" style="--tone:var(--moss)">
+        <h3>Running all chapter <small>Chapter ${c.n}</small></h3>
+        ${t.procsFor(c.n).map(p => this.procBlock(p)).join("")}
+      </section>` : ""}
+
       <div class="cols">
         <section class="panel" style="--tone:var(--plum)">
-          <h3>The party</h3>
-          ${t.s.pcs.map(pc => `
-            <div class="pc">
+          <h3>The party <small>click a name for the sheet</small></h3>
+          ${t.s.pcs.map(pc => {
+            const fest = t.festivalFor(pc);
+            const body = `
               <img src="${pc.img}" alt="" onerror="this.src='icons/svg/mystery-man.svg'">
-              <div><b>${esc(pc.name)}</b>${ARCS[pc.name] ? `<small>${ARCS[pc.name]}</small>` : ""}</div>
-            </div>`).join("")}
+              <div><b>${esc(pc.name)}</b>${ARCS[pc.name] ? `<small>${ARCS[pc.name]}</small>` : ""}
+                ${fest ? `<small class="fest"><i class="fa-solid fa-medal"></i> ${fest.titles.join(" · ")}</small>
+                  ${fest.keeps.length ? `<small class="keep">${fest.keeps.join(" · ")}</small>` : ""}` : ""}
+              </div>`;
+            return pc.actorId
+              ? `<button type="button" class="pc" data-act="sheet" data-id="${pc.actorId}"
+                   title="Open ${esc(pc.name)}'s character sheet">${body}</button>`
+              : `<div class="pc">${body}</div>`;
+          }).join("")}
+          ${t.s.pcs.some(pc => t.festivalFor(pc)) ? `
+          <p class="hint"><i class="fa-solid fa-medal"></i> Titles and keepsakes won at the First Long Night, read from that console. They cost the winter ledger nothing — but a PC who is <em>Iron-Gut</em> to the whole town is worth remembering in Act 4.</p>` : ""}
         </section>
 
         <section class="panel" style="--tone:var(--ember)">
@@ -1070,7 +1237,13 @@ class CSApp extends BaseApp {
       </div>
 
       <section class="panel">
-        <h3>All thirteen chapters</h3>
+        <h3>All thirteen chapters <small>click a row for its act</small></h3>
+        <p class="legend">
+          <span><i class="fa-solid fa-spider"></i> a chapter the <b>Two Weavers</b> rework changes — see that tab</span>
+          <span><b>Lv</b> the level the party should be at</span>
+          <span><b>0/0</b> decisions logged, out of the chapter's checklist</span>
+          <span><b>Not started · Running · Done</b> where the table is</span>
+        </p>
         <div class="chaplist">
           ${CHAPTERS.map(x => {
             const st = t.statusOf(x.n), p = t.progress(x.n);
@@ -1112,15 +1285,16 @@ class CSApp extends BaseApp {
         ${c.note ? `<p class="note">${c.note}</p>` : ""}
         <div class="items">
           ${c.items.map(i => {
-            const on = t.flag(c.n, i.key);
-            const overdue = !on && i.at && t.current.n >= i.at;
+            const st = t.itemState(c.n, i);
+            const on = st === "ok";
             return `
-              <label class="check ${on ? "on" : ""} ${overdue ? "overdue" : ""}">
+              <label class="check ${on ? "on" : ""} ${st === "overdue" ? "overdue" : ""} ${st === "skipped" ? "skipped" : ""}">
                 <input type="checkbox" data-act="flag" data-n="${c.n}" data-k="${i.key}" ${on ? "checked" : ""} ${ro ? "disabled" : ""}>
                 <span class="lbl">${i.label}
                   ${i.hard ? `<span class="pip hard" title="A later chapter depends on this">required</span>` : ""}
                   ${i.danger ? `<span class="pip danger" title="Permanent or costly consequence">consequence</span>` : ""}
                   ${i.rework ? `<span class="pip web" title="Two Weavers rework">rework</span>` : ""}
+                  ${st === "skipped" ? `<span class="pip" title="Nothing later requires it, and the chapter is behind you">skipped</span>` : ""}
                   ${i.pays ? `<em class="pays">→ ${i.pays}</em>` : ""}
                 </span>
               </label>
@@ -1139,6 +1313,17 @@ class CSApp extends BaseApp {
               </label>
               ${it.note ? `<p class="itemnote">${it.note}</p>` : ""}`;
           }).join("")}
+        </div>` : ""}
+
+        ${t.procsFor(c.n).length ? `
+        <div class="sub">
+          ${t.procsFor(c.n).map(p => this.procBlock(p)).join("")}
+        </div>` : ""}
+
+        ${t.oursFor(c.n).length ? `
+        <div class="sub">
+          <div class="subhead"><i class="fa-solid fa-ghost"></i> Consoles in this collection <span>${t.oursFor(c.n).length}</span></div>
+          ${this.ourList(t.oursFor(c.n))}
         </div>` : ""}
 
         ${t.macrosFor(c.n).length ? `
@@ -1227,9 +1412,10 @@ class CSApp extends BaseApp {
     return `
       <section class="panel" style="--tone:var(--gold)">
         <h3>What carries forward</h3>
-        <p class="text">Every item whose payoff lands in a later chapter, sorted by when it comes due. A thread goes red once the table reaches the chapter that needs it and the box is still empty.</p>
+        <p class="text">Every item whose payoff lands in a later chapter, sorted by when it comes due. Only the ones tagged <b>required</b> go red — a later chapter genuinely cannot proceed without them. Everything else the party left undone is listed as skipped, because most of these are choices rather than obligations: the Abacus Sisters don't survive if the party kills them, and nothing downstream breaks.</p>
       </section>
-      ${group("overdue", "Overdue", "rust", "The table has reached the chapter that wanted these. Either they happened and want ticking, or you need a workaround.")}
+      ${group("overdue", "Overdue", "rust", "Required, and the table has reached the chapter that wanted them. Either they happened and want ticking, or you need a workaround.")}
+      ${group("skipped", "Skipped", "muted", "The chapter that offered these is behind you and the box is empty. Nothing later requires them — this is the shape the campaign actually took. Tick any that did happen.")}
       ${group("pending", "Still ahead", "slate", "Not due yet. Worth a glance before the chapter that needs them.")}
       ${group("ok", "Carried", "moss", "Logged and in hand.")}`;
   }
@@ -1264,11 +1450,12 @@ class CSApp extends BaseApp {
         <div class="items">
           ${REWORK.checklist.map(r => {
             const on = !!t.s.rework[r.key];
-            const overdue = !on && t.current.n >= r.ch;
-            return `<label class="check ${on ? "on" : ""} ${overdue ? "overdue" : ""}">
+            const past = !on && t.current.n >= r.ch;
+            return `<label class="check ${on ? "on" : ""} ${past && !r.optional ? "overdue" : ""} ${past && r.optional ? "skipped" : ""}">
               <input type="checkbox" data-act="rework" data-k="${r.key}" ${on ? "checked" : ""} ${ro ? "disabled" : ""}>
               <span class="lbl"><span class="chip">Ch ${r.ch}</span> ${r.label}
-                ${r.optional ? `<span class="pip">optional</span>` : ""}</span>
+                ${r.optional ? `<span class="pip">optional</span>` : ""}
+                ${past && r.optional ? `<span class="pip" title="Its chapter has passed and nothing depends on it">skipped</span>` : ""}</span>
             </label>`;
           }).join("")}
         </div>
@@ -1288,6 +1475,11 @@ class CSApp extends BaseApp {
       if (a === "tab") { t.s.tab = btn.dataset.k; t.touch(); }
       else if (a === "gotoact") { t.s.tab = `act${btn.dataset.k}`; t.touch(); }
       else if (a === "cycle") t.cycleStatus(btn.dataset.n);
+      else if (a === "sheet") {
+        const actor = game.actors.get(btn.dataset.id);
+        if (actor) actor.sheet?.render(true);
+        else ui.notifications.warn("That character's actor is no longer in this world.");
+      }
       else if (a === "postrecap") t.postRecap();
       else if (a === "reset") t.reset();
     });
@@ -1381,10 +1573,16 @@ class CSApp extends BaseApp {
       .cst .alarmrow { font-size:.79rem; line-height:1.45; margin:.25rem 0; }
       .cst .alarmrow em { color:var(--muted); font-size:.74rem; }
 
-      .cst .pc { display:flex; gap:.5rem; align-items:center; margin-bottom:.4rem; }
+      .cst .pc { display:flex; gap:.5rem; align-items:center; margin-bottom:.4rem; width:100%;
+                 text-align:left; justify-content:flex-start; padding:.2rem .25rem;
+                 border-color:transparent; background:transparent; }
+      .cst button.pc:hover:not(:disabled) { border-color:var(--line); background:var(--hover); }
       .cst .pc img { width:30px; height:30px; border-radius:3px; object-fit:cover; border:1px solid var(--line); flex:none; }
       .cst .pc b { font-size:.82rem; display:block; }
       .cst .pc small { font-size:.7rem; color:var(--muted); line-height:1.35; display:block; }
+      .cst .pc .fest { color:var(--gold); }
+      .cst .pc .fest i { font-size:.62rem; margin-right:.2rem; }
+      .cst .pc .keep { font-style:italic; }
 
       .cst .miles { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:.2rem .5rem; }
       .cst .mile { display:flex; gap:.35rem; align-items:baseline; font-size:.74rem; color:var(--muted); }
@@ -1416,6 +1614,8 @@ class CSApp extends BaseApp {
       .cst .check.on .lbl { color:var(--muted); }
       .cst .check.overdue { background:rgba(149,56,31,.09); }
       .cst .check.overdue .lbl { color:var(--rust); }
+      .cst .check.skipped .lbl { color:var(--muted); }
+      .cst .check.skipped .lbl > em.pays { opacity:.7; }
       .cst .check.here { background:rgba(164,92,20,.10); }
       .cst .lbl { flex:1; }
       .cst .pays { color:var(--muted); font-size:.72rem; display:block; }
@@ -1434,6 +1634,19 @@ class CSApp extends BaseApp {
       .cst .mname small { display:block; font-weight:400; font-size:.68rem; color:var(--muted); }
       .cst .mitems { color:var(--muted); font-size:.72rem; flex:1; }
       .cst .mrow.group .mname { color:var(--ember); }
+      .cst .mrow.ours i { color:var(--plum); }
+      .cst .mrow.ours .mname { color:var(--plum); }
+
+      .cst .proc { border-top:1px dashed var(--line); margin-top:.45rem; padding-top:.4rem; }
+      .cst .proc:first-child { border-top:0; margin-top:0; padding-top:0; }
+      .cst .proc .subhead span { margin-left:.35rem; text-transform:none; letter-spacing:0; font-style:italic; }
+      .cst .bullets { margin:.2rem 0 .4rem; padding-left:1.1rem; font-size:.79rem; line-height:1.5; }
+      .cst .bullets li { margin-bottom:.15rem; }
+
+      .cst .legend { display:flex; flex-wrap:wrap; gap:.2rem 1rem; font-size:.7rem; color:var(--muted);
+                     margin:0 0 .4rem; line-height:1.5; }
+      .cst .legend b { color:var(--ink); }
+      .cst .legend i { color:var(--plum); }
 
       .cst .threads { display:flex; flex-direction:column; gap:1px; }
       .cst .thread { display:grid; grid-template-columns:3.4rem 1fr 12rem 5rem; gap:.5rem; align-items:baseline;
