@@ -154,6 +154,10 @@ produced them.
 - The Two Weavers continuity checklist, the milestone-level table, and per-PC arcs
 - A spoiler-free chat recap: act, chapter, level, and the chapters behind them
 
+Everything inside a chapter card is the same shape — a tinted well with a coloured spine and
+a labelled head carrying its own count — so decisions, treasure, consoles, module macros,
+audio, and cues can be told apart without reading any of them.
+
 Generic beds that appear in every act — Indoors, Woods, Willowshore, the Mist and Fog set, the
 River loop — sit on the campaign tab under **Always to hand** rather than repeating against all
 thirteen chapters, alongside the Submacros folder and the campaign theme.

@@ -1450,29 +1450,32 @@ class CSApp extends BaseApp {
         <section class="panel" style="--tone:var(--ember)">
           <h3>Before this session <small>Chapter ${c.n}</small></h3>
           <div class="cols">
-            ${cues.length ? `<div>
-              <div class="subhead"><i class="fa-solid fa-clapperboard"></i> Scenes and cues</div>
+            ${cues.length ? `<div class="sub cues">
+              <div class="subhead"><i class="fa-solid fa-clapperboard"></i> Scenes and cues <span>${t.cuesFor(c.n).filter(q => t.cued(c.n, q.key)).length} of ${cues.length}</span></div>
               ${cues.map(q => `<label class="check ${t.cued(c.n, q.key) ? "on" : ""}">
                   <input type="checkbox" data-act="cue" data-n="${c.n}" data-k="${q.key}" ${t.cued(c.n, q.key) ? "checked" : ""} ${ro ? "disabled" : ""}>
                   <span class="lbl">${q.label}</span></label>`).join("")}
             </div>` : ""}
-            ${ours.length ? `<div>
-              <div class="subhead"><i class="fa-solid fa-ghost"></i> Consoles for this chapter</div>
+            ${ours.length ? `<div class="sub ours">
+              <div class="subhead"><i class="fa-solid fa-ghost"></i> Consoles for this chapter <span>${ours.length}</span></div>
               ${this.ourList(ours)}
             </div>` : ""}
-            ${macros.length ? `<div>
-              <div class="subhead"><i class="fa-solid fa-bolt"></i> Module macros for this chapter</div>
+            ${macros.length ? `<div class="sub macros">
+              <div class="subhead"><i class="fa-solid fa-bolt"></i> Module macros <span>${macros.length}</span></div>
               ${this.macroList(macros)}
             </div>` : ""}
-            ${(audio.length || tracks.length) ? `<div>
-              <div class="subhead"><i class="fa-solid fa-headphones"></i> Audio to have queued</div>
+            ${(audio.length || tracks.length) ? `<div class="sub audio">
+              <div class="subhead"><i class="fa-solid fa-headphones"></i> Audio to have queued <span>${audio.length + tracks.length}</span></div>
               ${this.audioList(audio, tracks)}
             </div>` : ""}
-            ${loot.length ? `<div>
-              <div class="subhead"><i class="fa-solid fa-sack-xmark"></i> Treasure still on the table</div>
-              ${loot.map(it => `<label class="check">
-                  <input type="checkbox" data-act="loot" data-n="${c.n}" data-k="${it.key}" ${ro ? "disabled" : ""}>
-                  <span class="lbl">${it.label}${it.where ? `<em class="pays">${it.where}</em>` : ""}</span></label>`).join("")}
+            ${loot.length ? `<div class="sub loot">
+              <div class="subhead"><i class="fa-solid fa-sack-xmark"></i> Treasure still on the table <span>${loot.length}</span></div>
+              ${loot.map(it => `<div class="itemrow">
+                  <label class="check">
+                    <input type="checkbox" data-act="loot" data-n="${c.n}" data-k="${it.key}" ${ro ? "disabled" : ""}>
+                    <span class="lbl">${it.label}${it.where ? `<em class="pays">${it.where}</em>` : ""}</span></label>
+                  ${this.journalBtn(targetFor(c.n, it, { loot: true }), "Open")}
+                </div>`).join("")}
             </div>` : ""}
           </div>
         </section>`;
@@ -1587,7 +1590,10 @@ class CSApp extends BaseApp {
         </h3>
         <p class="text">${c.spine}</p>
         ${c.note ? `<p class="note">${c.note}</p>` : ""}
-        <div class="items">
+
+        <div class="sub decisions">
+          <div class="subhead"><i class="fa-solid fa-list-check"></i> Decisions <span>${p.done} of ${p.total}</span></div>
+          <div class="items">
           ${c.items.map(i => {
             const st = t.itemState(c.n, i);
             const on = st === "ok";
@@ -1610,6 +1616,7 @@ class CSApp extends BaseApp {
               </div>
               ${i.note ? `<p class="itemnote">${i.note}</p>` : ""}`;
           }).join("")}
+          </div>
         </div>
 
         ${p.lootTotal ? `
@@ -1629,24 +1636,24 @@ class CSApp extends BaseApp {
         </div>` : ""}
 
         ${t.procsFor(c.n).length ? `
-        <div class="sub">
+        <div class="sub proc">
           ${t.procsFor(c.n).map(p => this.procBlock(p)).join("")}
         </div>` : ""}
 
         ${t.oursFor(c.n).length ? `
-        <div class="sub">
+        <div class="sub ours">
           <div class="subhead"><i class="fa-solid fa-ghost"></i> Consoles in this collection <span>${t.oursFor(c.n).length}</span></div>
           ${this.ourList(t.oursFor(c.n))}
         </div>` : ""}
 
         ${t.macrosFor(c.n).length ? `
-        <div class="sub">
+        <div class="sub macros">
           <div class="subhead"><i class="fa-solid fa-bolt"></i> Module macros <span>${t.macrosFor(c.n).length}</span></div>
           ${this.macroList(t.macrosFor(c.n))}
         </div>` : ""}
 
         ${(t.audioFor(c.n).length || t.trackFor(c.n).length) ? `
-        <div class="sub">
+        <div class="sub audio">
           <div class="subhead"><i class="fa-solid fa-headphones"></i> Audio <span>${t.audioFor(c.n).length + t.trackFor(c.n).length}</span></div>
           ${this.audioList(t.audioFor(c.n), t.trackFor(c.n))}
         </div>` : ""}
@@ -1664,7 +1671,6 @@ class CSApp extends BaseApp {
           }).join("")}
         </div>` : ""}
 
-        <p class="hint">${p.done} of ${p.total} logged.</p>
       </section>`;
   }
 
@@ -1951,12 +1957,35 @@ class CSApp extends BaseApp {
       .cst .lbl { flex:1; }
       .cst .pays { color:var(--muted); font-size:.72rem; display:block; }
 
-      .cst .sub { border-top:1px dashed var(--line); margin-top:.45rem; padding-top:.4rem; }
-      .cst .subhead { font-size:.64rem; text-transform:uppercase; letter-spacing:.08em; color:var(--muted);
-                      display:flex; align-items:center; gap:.35rem; margin-bottom:.25rem; }
-      .cst .subhead span { margin-left:auto; }
+      /* Every block inside a card is the same shape — a tinted well with a
+         coloured spine and a labelled head — so the eye can sort decisions
+         from treasure from audio without reading any of it. Each block sets
+         its own accent in --sub, which the head and spine both read. */
+      .cst .sub { --sub:var(--line); background:var(--stripe); border:1px solid var(--line);
+                  border-left:3px solid var(--sub); border-radius:4px;
+                  padding:.4rem .5rem .45rem; margin-top:.5rem; }
+      .cst .sub.decisions { --sub:var(--tone, var(--ember)); }
+      .cst .sub.loot   { --sub:var(--gold); }
+      .cst .sub.proc   { --sub:var(--moss); }
+      .cst .sub.ours   { --sub:var(--plum); }
+      .cst .sub.macros { --sub:var(--ember); }
+      .cst .sub.audio  { --sub:var(--slate); }
+      .cst .sub.cues   { --sub:var(--rust); }
+
+      .cst .subhead { font-size:.64rem; text-transform:uppercase; letter-spacing:.08em; color:var(--sub, var(--muted));
+                      font-weight:700; display:flex; align-items:center; gap:.35rem;
+                      margin:0 0 .35rem; padding-bottom:.25rem; border-bottom:1px solid var(--line); }
+      .cst .subhead i { color:var(--sub, var(--muted)); font-size:.72rem; }
+      .cst .subhead span { margin-left:auto; font-weight:400; color:var(--muted); letter-spacing:.04em;
+                           border:1px solid var(--line); border-radius:8px; padding:0 6px; background:var(--card); }
       .cst .sub.loot .check.on .lbl { text-decoration:line-through; text-decoration-color:var(--line); }
-      .cst .itemnote { font-size:.74rem; line-height:1.45; color:var(--muted); margin:0 0 .3rem 1.5rem; }
+      .cst .itemnote { font-size:.74rem; line-height:1.45; color:var(--muted); margin:.1rem 0 .35rem 1.55rem;
+                       padding-left:.5rem; border-left:1px solid var(--line); }
+
+      /* On the campaign tab the blocks sit in a grid rather than stacked. They
+         start level with each other and size to their contents, rather than
+         stretching a short block to match a tall neighbour. */
+      .cst .cols > .sub { margin-top:0; align-self:start; }
 
       .cst .macros { display:flex; flex-direction:column; gap:1px; }
       .cst .mrow { display:flex; gap:.45rem; align-items:baseline; font-size:.79rem; padding:.12rem 0; }
@@ -1968,9 +1997,12 @@ class CSApp extends BaseApp {
       .cst .mrow.ours i { color:var(--plum); }
       .cst .mrow.ours .mname { color:var(--plum); }
 
-      .cst .proc { border-top:1px dashed var(--line); margin-top:.45rem; padding-top:.4rem; }
-      .cst .proc:first-child { border-top:0; margin-top:0; padding-top:0; }
-      .cst .proc .subhead span { margin-left:.35rem; text-transform:none; letter-spacing:0; font-style:italic; }
+      /* A procedure is the same block, whether it's nested in a chapter card
+         or standing alone in a panel on the campaign tab. */
+      .cst .proc { --sub:var(--moss); }
+      .cst .proc + .proc { border-top:1px dashed var(--line); margin-top:.5rem; padding-top:.45rem; }
+      .cst .proc .subhead span { margin-left:.35rem; text-transform:none; letter-spacing:0; font-style:italic;
+                                 border:0; padding:0; background:none; }
       .cst .bullets { margin:.2rem 0 .4rem; padding-left:1.1rem; font-size:.79rem; line-height:1.5; }
       .cst .bullets li { margin-bottom:.15rem; }
 

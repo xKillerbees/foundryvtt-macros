@@ -47,6 +47,10 @@
   scenes they repaint, instead of naming a playlist that doesn't exist under that name
 - Campaign tracker: seven module macros and one audio cue moved off `placed by guess` and
   `act only` onto the chapters the adventure's scene-notes blocks actually link them from
+- Campaign tracker: each block inside a chapter card — decisions, treasure, procedures,
+  consoles, module macros, audio, cues — is now a tinted well with its own accent colour and
+  a labelled head, rather than a dashed rule and a small grey caption. The chapter's own
+  checklist gained a head too, which is where its count moved to
 
 ### Fixed
 - Scoped all CSS under root classes; unscoped selectors were bleeding into PF2e sheets
