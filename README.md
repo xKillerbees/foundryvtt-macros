@@ -102,6 +102,7 @@ sample data — no adventure art or campaign content is stored in this repositor
 macros/<collection>/   the macros themselves, one file each, plus a collection README
 screenshots/           README images, one directory per collection
 tools/preview/         the harness that renders a macro outside Foundry for screenshots
+tools/journal-check/   checks the campaign tracker's journal ids against the installed module
 ```
 
 ## Contributing

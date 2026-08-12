@@ -36,29 +36,157 @@ const CONSOLES = {
    name match and then to the compendiums, and says what it looked for. */
 const JOURNAL = {
   chapters: {
-    1:  { id: "pf2apsog03toligh", name: "To Light the Night" },
-    2:  { id: "pf2apsog04reclai", name: "Reclaiming Willowshire" },
-    3:  { id: "pf2apsog05thewil", name: "The Willowshore Curse" },
-    4:  { id: "pf2apsog06thewal", name: "The Wall of Ghosts" },
-    5:  { id: "pf2apsog07turnin", name: "Turning of the Seasons" },
-    6:  { id: "pf2apsog08theenl", name: "The Enlightened Path" },
-    7:  { id: "pf2apsog09inther", name: "In the Ruins of Wisdom" },
-    8:  { id: "pf2apsog10oblivi", name: "Oblivion of Truth" },
-    9:  { id: "pf2apsog11faceto", name: "Face-to-Face with Death" },
-    10: { id: "pf2apsog12thispl", name: "This Place is Ours" },
-    11: { id: "pf2apsog13willow", name: "Willowshore's Return" },
-    12: { id: "pf2apsog14thepri", name: "The Princess's Web" },
-    13: { id: "pf2apsog15afiend", name: "A Fiend in Two Worlds" }
+    1:  { id: "pf2apsog03toligh", name: "Act 1.1: To Light the Night" },
+    2:  { id: "pf2apsog04reclai", name: "Act 1.2: Reclaiming Willowshire" },
+    3:  { id: "pf2apsog05thewil", name: "Act 1.3: The Willowshore Curse" },
+    4:  { id: "pf2apsog06thewal", name: "Act 1.4: The Wall of Ghosts" },
+    5:  { id: "pf2apsog07turnin", name: "Act 2.1: Turning of the Seasons" },
+    6:  { id: "pf2apsog08theenl", name: "Act 2.2: The Enlightened Path" },
+    7:  { id: "pf2apsog09inther", name: "Act 2.3: In the Ruins of Wisdom" },
+    8:  { id: "pf2apsog10oblivi", name: "Act 3.1: Oblivion of Truth" },
+    9:  { id: "pf2apsog11faceto", name: "Act 3.2: Face-to-Face with Death" },
+    10: { id: "pf2apsog12thispl", name: "Act 3.3: This Place is Ours" },
+    11: { id: "pf2apsog13willow", name: "Act 4.1: Willowshore’s Return" },
+    12: { id: "pf2apsog14thepri", name: "Act 4.2: The Princess’s Web" },
+    13: { id: "pf2apsog15afiend", name: "Act 4.3: A Fiend in Two Worlds" }
   },
   /* Worth a button of their own — none of them belong to one chapter. */
   reference: [
     { id: "pf2apsog02willow", name: "Willowshore",
       what: "the town gazetteer — every W-numbered building, shop, and shrine" },
+    { id: "pf2apsog17firstl", name: "First Long Night", what: "the festival, in full — Chapter 5, week 3" },
     { id: "pf2apsog21bestia", name: "Bestiary and NPCs", what: "who everyone is, in one place" },
     { id: "pf2apsog20advent", name: "Adventure Toolbox", what: "the subsystems and the new rules" },
     { id: "pf2apsog18sangpo", name: "Sangpotshi", what: "the cycle of souls the whole AP turns on" },
+    { id: "pf2apsog19cycles", name: "Cycles of Destruction", what: "Kugaptee, and what he is" },
+    { id: "pf2apsog16contin", name: "Continuing the Campaign", what: "after the Dusklight Torch" },
     { id: "pf2apsog22sogpgh", name: "Player's Guide", what: "safe to show the table" }
   ]
+};
+
+/* Every entry in the adventure, keyed by the two-digit ordinal its documents
+   carry. A page id begins with that ordinal, so a page alone is enough to say
+   which entry to open — which is what lets a Chapter 1 item point at the
+   Chapter 2 page where its payoff actually lives. */
+const JOURNAL_BY_ORD = {
+  "01": "pf2apsog01frontm", "02": "pf2apsog02willow", "03": "pf2apsog03toligh",
+  "04": "pf2apsog04reclai", "05": "pf2apsog05thewil", "06": "pf2apsog06thewal",
+  "07": "pf2apsog07turnin", "08": "pf2apsog08theenl", "09": "pf2apsog09inther",
+  "10": "pf2apsog10oblivi", "11": "pf2apsog11faceto", "12": "pf2apsog12thispl",
+  "13": "pf2apsog13willow", "14": "pf2apsog14thepri", "15": "pf2apsog15afiend",
+  "16": "pf2apsog16contin", "17": "pf2apsog17firstl", "18": "pf2apsog18sangpo",
+  "19": "pf2apsog19cycles", "20": "pf2apsog20advent", "21": "pf2apsog21bestia",
+  "22": "pf2apsog22sogpgh", "23": "pf2apsog23artgal"
+};
+
+/* ------------------------------------------------------- item → journal page
+   Read out of the module's own pack (`packs/adventures`), not inferred: every
+   id below is a real JournalEntryPage in the shipped adventure. Kept as one
+   table rather than a field on each item so the whole mapping can be checked
+   against the module in one place.
+
+   A few items are deliberately cross-chapter — Chapter 1's kappas point at
+   Chapter 2's bathhouse, Chapter 10's cash-out points at Chapter 8's
+   Preparation Points — because that's where the text that matters is.
+
+   Items with no row here still get a link when their label names an area:
+   `hintFor` reads the code off the label and resolves it by page id. */
+const PAGES = {
+  "1.lantern": "03lightthenigh00",   "1.abacus": "03a1thetrapped00",
+  "1.sumika": "03a1thetrapped00",    "1.kappas": "04b15mostlyhap00",
+  "1.elders": "03meetinggrann00",    "1.returning": "03returninghom00",
+
+  "2.butcher": "04liberatingdo00",   "2.douqiu": "04c3privateban00",
+  "2.prison": "04b4prison000000",    "2.will": "04c1publicfloo00",
+  "2.elope": "04b11mudwallho00",
+
+  "3.governor": "05themissinggo00",  "3.xungu": "05d7infestedgr00",
+  "3.willow": "05talkingwithg00",    "3.teahouse": "05d9eyesoffume00",
+  "3.teafarm": "05opportunitie00",   "3.expansion": "05d8oldvillage00",
+  "3.duel": "05wholeadswill00",      "3.peachwood": "05ppeachwoodgr00",
+  "3.cloak": "05songsatcanar00",     "3.shinzo": "05themysteriou00",
+  "3.lesson1": "05talkingwithg00",
+
+  "4.ledger": "06zoudousrite000",    "4.advance": "06advanceknowl00",
+  "4.bargain": "06e14workersdo00",   "4.gift": "06themerchantr00",
+  "4.effigy": "06e14workersdo00",    "4.irondoor": "06e11campoffic00",
+  "4.intime": "06theritualsit00",    "4.mengsung": "06interrupting00",
+  "4.pledge": "06zoudousrite000",    "4.abductees": "06concludingac00",
+
+  "5.research": "07researchingt00",  "5.restored": "07restoringthe00",
+  "5.food": "07gatheringfoo00",      "5.security": "07increasingse00",
+  "5.yami": "07week5themiss00",      "5.festival": "07week3firstlo00",
+  "5.feast": "07week10feasto00",     "5.curse": "07week11thefac00",
+  "5.vanishing": "07week12vanish00", "5.lesson2": "07researchingt00",
+
+  "6.seed": "08plantingthes00",      "6.bridge": "08b3bridgeshri00",
+  "6.garden": "08c3gardenshri00",    "6.mountain": "08d3mountainsh00",
+  "6.iogaka": "08d3mountainsh00",    "6.enko": "08b1tormentedk00",
+  "6.bracelet": "08c2thegirlint00",  "6.gifts": "08thefinalday000",
+  "6.lesson3": "08thepilgrimsp00",
+
+  "7.statues": "09purifyingthe00",   "7.yenrui": "09e11hiddenlib00",
+  "7.watchers": "09e11hiddenlib00",  "7.head": "09e13thetansug00",
+  "7.tea": "09e6refectory000",       "7.yuni": "09e2courtyard000",
+  "7.xinyue": "09e16kugaptees00",    "7.truth": "09returntowill00",
+  "7.lesson": "09purifyingthe00",
+
+  "8.clock": "10weeklyattrit00",     "8.rescue": "10event1struct00",
+  "8.jelly": "10event1struct00",     "8.mill": "10event1struct00",
+  "8.shift": "10anotherwillo00",     "8.talked": "10knowanddespa00",
+  "8.journal": "10endofthedrea00",   "8.jorogumo": "10knowanddespa00",
+
+  "9.answers": "11event4shinzo00",   "9.told": "11spreadingthe00",
+  "9.faceless": "11event5facele00",  "9.chen": "11event12these00",
+  "9.fenfang": "11event12these00",   "9.guanghao": "11event12these00",
+  "9.renmeili": "11event13inter00",  "9.transres": "11researchingt00",
+  "9.kiln": "11researchingt00",      "9.feathers": "11researchingt00",
+  "9.slats": "11researchingt00",     "9.emotions": "11transmigrati00",
+  "9.between": "11betweenlifea00",
+
+  "10.teach": "12thehauntingo00",    "10.sweet": "12thehauntingo00",
+  "10.shrine": "12c11shrine00000",   "10.ringer": "12c20kaisquart00",
+  "10.relit": "12concludingth00",    "10.peace": "12runningoutof00",
+  "10.bell": "12concludingth00",     "10.uglycute": "12ontokarahai000",
+  "10.transmigrate": "12runningoutof00", "10.cashout": "10preparationp00",
+
+  "11.fate": "13determiningw00",     "11.ancestry": "13wakinginwill00",
+  "11.pass": "13approachingt00",     "11.false": "13a8primarysui00",
+  "11.bridge": "13rebuildingth00",   "11.clues": "13thesilkwaspc00",
+  "11.lokuon": "13thesilkwaspc00",   "11.farewell": "13shinzosfarew00",
+
+  "12.alliance": "14meetingthepr00", "12.collars": "13silvercollar00",
+  "12.spring": "14event1bright00",   "12.summer": "14event2fieryf00",
+  "12.autumn": "14event3fallss00",   "12.winter": "14event5spiced00",
+  "12.beyond": "14walkingthego00",   "12.witness": "14event6thesec00",
+  "12.tokens": "14treasureandm00",   "12.prevented": "14treasureandm00",
+  "12.fang": "14thefangandke00",     "12.door": "14thefangandke00",
+
+  "13.portrait": "15c2courtyard000", "13.sages": "15c4meetingare00",
+  "13.letter": "15c4meetingare00",   "13.camellia": "15c8masterbedr00",
+  "13.mantra": "15c4meetingare00",   "13.souls": "15thechainedsp00",
+  "13.redeem": "15speakingwith00",   "13.breach": "15hehshanbaofr00",
+  "13.ending": "15concludingth00"
+};
+
+/* The same, for the loot ledger. Most rows say their area in `where` and are
+   resolved from that; these are the ones that don't. */
+const LOOT_PAGES = {
+  "2.care": "04liberatingdo00",
+  "3.peachwood": "05ppeachwoodgr00",
+  "4.gift": "06themerchantr00",
+  "5.yami": "07restoringthe00",    "5.shinzo": "07week3firstlo00",
+  "6.enko": "08b1tormentedk00",    "6.charges": "08b3bridgeshri00",
+  "6.orchids": "08c3gardenshri00", "6.soap": "08d3mountainsh00",
+  "6.thurible": "08d3mountainsh00",
+  "8.boots": "10event1struct00",   "8.tome": "10endofthedrea00",
+  "8.formula": "10endofthedrea00",
+  "9.legacy": "11event4shinzo00",  "9.collars": "11event13inter00",
+  "9.msgring": "11event13inter00", "9.dust": "11event13inter00",
+  "10.topup": "12runningoutof00",
+  "11.lantern": "13theeternalla00", "11.bell": "13thewardingbe00",
+  "11.farewell": "13shinzosfarew00",
+  "12.rites": "14treasureandm00",  "12.bombs": "14event8thethi00"
 };
 
 const THEME = "parchment";
@@ -122,15 +250,15 @@ const CHAPTERS = [
   { n: 3, act: 1, title: "The Willowshore Curse", level: 2, console: null,
     spine: "The sandbox chapter. Three investigations plus an Opportunities menu fill the summer, ending with the leadership duel.",
     items: [
-      { key: "governor", label: "Missing Governor thread closed at Canary Inn", page: "Canary Inn", note: "A dead end by design — say so through fiction." },
+      { key: "governor", label: "Missing Governor thread closed at Canary Inn", note: "A dead end by design — say so through fiction." },
       { key: "xungu", label: "Xungu killed at the Infested Grove (D7)", hard: true, pays: "gates the Great Willow" },
-      { key: "willow", label: "Great Willow made friendly", page: "Talking with Great Willow", pays: "Ch 5 research · Ch 9 expert consult", at: 5 },
-      { key: "teahouse", label: "Cerulean Teahouse claimed (two pearls from the Eyes of Fumeiyoshi)", area: "D9",
+      { key: "willow", label: "Great Willow made friendly", pays: "Ch 5 research · Ch 9 expert consult", at: 5 },
+      { key: "teahouse", label: "Cerulean Teahouse claimed (two pearls from the Eyes of Fumeiyoshi)",
         pays: "Ch 5 restoration and Host Ceremony", at: 5 },
       { key: "teafarm", label: "Tea Farm Infestation cleared" },
-      { key: "expansion", label: "Investigate the Old Expansion — 8 VP", area: "D8", pays: "Act 2 food", at: 5 },
+      { key: "expansion", label: "Investigate the Old Expansion — 8 VP", pays: "Act 2 food", at: 5 },
       { key: "duel", label: "Leadership duel resolved — a leader named", pays: "Level 3 milestone" },
-      { key: "peachwood", label: "Peachwood grove intact", danger: true, page: "Opportunities",
+      { key: "peachwood", label: "Peachwood grove intact", danger: true,
         note: "A critical failure while Collecting Peachwood kills a grove for the whole campaign." },
       { key: "cloak", label: "Hongrui's gratitude earned before claiming the red cloak", danger: true,
         note: "Claimed without it, the cloak swells to 5 Bulk and fuses to the wearer after a minute." },
@@ -144,16 +272,16 @@ const CHAPTERS = [
       { key: "ledger", label: "Zoudou's ledger recovered", hard: true, danger: true,
         pays: "Ch 6 · teaches Consecrate, opens the Wall", at: 6,
         note: "Aklo and Chthonian. Do not let this walk out of the session in a corpse pile." },
-      { key: "advance", label: "Advance Knowledge used before the assault", page: "Advance Knowledge",
+      { key: "advance", label: "Advance Knowledge used before the assault",
         note: "Success is a map; a critical success drops the E6 secret door from DC 18 to DC 8." },
       { key: "bargain", label: "A faction bargain struck (E14 occultists or Mugirou)",
         note: "The two cancel each other. E14 pays a pendant of the occult; Mugirou frees the prisoners." },
       { key: "gift", label: "Shinzo's gift fork answered — cape of justice or noppera-bo hood" },
       { key: "effigy", label: "The Three Faces effigy solved (E14)" },
       { key: "irondoor", label: "The E11→E12 iron door opened (Thievery DC 20, three successes)" },
-      { key: "intime", label: "Reached the Ritual Site in time — 3 blessings rather than 4", page: "The Ritual Site" },
+      { key: "intime", label: "Reached the Ritual Site in time — 3 blessings rather than 4" },
       { key: "mengsung", label: "Meng-sung saved" },
-      { key: "pledge", label: "A PC took Zoudou's soul-pledge", danger: true, page: "Zoudou's Rite",
+      { key: "pledge", label: "A PC took Zoudou's soul-pledge", danger: true,
         pays: "Atone, or a rescue in Act 4", at: 11,
         note: "Cuts that PC's soul from the cycle — if they die they cannot be raised. Make sure the player understood before they said the words." },
       { key: "abductees", label: "Abductees returned — +3 Rep with both factions" }
@@ -163,18 +291,18 @@ const CHAPTERS = [
     spine: "Twelve weeks of downtime building Hope, Food, and Security while researching the ritual that opens the Wall. Ends with the first vanishing.",
     note: "Every supernatural event is caused by Mago Kai's exorcists 115 years away — not by Kugaptee. The book says don't correct the party.",
     items: [
-      { key: "research", label: "10 Research Points banked", hard: true, page: "Researching the Curse", pays: "Ch 6 gate, with 5th level", at: 6,
+      { key: "research", label: "10 Research Points banked", hard: true, pays: "Ch 6 gate, with 5th level", at: 6,
         note: "No single source reaches 10. Show the players the caps or they'll grind one and stall." },
-      { key: "restored", label: "Teahouse restored — 5 Restoration Points", hard: true, page: "Restoring the Teahouse",
+      { key: "restored", label: "Teahouse restored — 5 Restoration Points", hard: true,
         pays: "Host Ceremony · the week 10 Feast of the Kami", at: 5 },
-      { key: "food", label: "Food at 12", page: "Gathering Food" },
-      { key: "security", label: "Security at 12", page: "Increasing Security" },
+      { key: "food", label: "Food at 12" },
+      { key: "security", label: "Security at 12" },
       { key: "yami", label: "Yami bonded", note: "Also the culprit in week 5 — handle her carefully or she leaves town." },
-      { key: "festival", label: "Week 3 — First Long Night resolved", page: "Week 3: First Long Night" },
-      { key: "feast", label: "Week 10 — Feast of the Kami held (needs the restored teahouse)", page: "Week 10: Feast of the Kami" },
-      { key: "curse", label: "Week 11 — a random PC cursed", danger: true, page: "Week 11: The Face at the Foot of the Bed",
+      { key: "festival", label: "Week 3 — First Long Night resolved" },
+      { key: "feast", label: "Week 10 — Feast of the Kami held (needs the restored teahouse)" },
+      { key: "curse", label: "Week 11 — a random PC cursed", danger: true,
         note: "DC 19 Will or a permanent −1 to fear saves and stupefied 1 whenever they hit 0 HP. Roll randomly, as written." },
-      { key: "vanishing", label: "Week 12 — the vanishing, ending the act", page: "Week 12: Vanishings",
+      { key: "vanishing", label: "Week 12 — the vanishing, ending the act",
         note: "Someone the party likes, but nobody load-bearing for Acts 3–4." },
       { key: "lesson2", label: "Unfinished Lesson seed 2 — Zhi Hui named in Solo Investigation", pays: "Ch 7 · Lotus", at: 7 }
     ] },
@@ -182,7 +310,7 @@ const CHAPTERS = [
   { n: 6, act: 2, title: "The Enlightened Path", level: 5, console: "path",
     spine: "Into the Wall for Kugaptee's dream, then four days along the Pilgrim's Path and its three shrines.",
     items: [
-      { key: "seed", label: "The soul seed planted — the road opens permanently", page: "Through the Wall of Ghosts" },
+      { key: "seed", label: "The soul seed planted — the road opens permanently" },
       { key: "bridge", label: "Bridge Shrine enlightenment — +1 Reflex", note: "Win the fight, then sleep there." },
       { key: "garden", label: "Garden Shrine enlightenment — +1 Will", note: "Six lanterns lit, then sleep there." },
       { key: "mountain", label: "Mountain Shrine enlightenment — +1 Fortitude", note: "Iogaka dead, bathe in the lake, then sleep." },
@@ -234,32 +362,32 @@ const CHAPTERS = [
   { n: 9, act: 3, title: "Face-to-Face with Death", level: 8, console: null, rework: true,
     spine: "Seventy-two in-game days, the longest chapter in the AP. Shinzo's answers, the winter events, and the ritual that kills the party on purpose.",
     items: [
-      { key: "answers", label: "Event 4 — Shinzo's Answers run as questions, not a monologue", page: "Event 4: Shinzo's Answers",
+      { key: "answers", label: "Event 4 — Shinzo's Answers run as questions, not a monologue",
         note: "He's a shinigami; 115 loops; jorogumo rule Shenmen. Four heroic-legacy items, 120 XP." },
       { key: "told", label: "The town told the two truths — they're dead, and Heh caused it",
         note: "Hiding either costs 2 Rep with both factions per truth when it leaks." },
-      { key: "faceless", label: "Event 5 — all four impersonators killed before prank five", danger: true, page: "Event 5: Faceless Evil",
+      { key: "faceless", label: "Event 5 — all four impersonators killed before prank five", danger: true,
         note: "At prank five they escalate to murder: 3 Rep with both factions and 1 population each." },
-      { key: "chen", label: "Seance — Cao Chen pushed to Influence 4", hard: true, page: "Event 12: The Seance",
+      { key: "chen", label: "Seance — Cao Chen pushed to Influence 4", hard: true,
         pays: "Ch 10 · C11 — he stays the shrine maiden's attack", at: 10,
         note: "The single best thing they can do to make Chapter 10 easier." },
-      { key: "fenfang", label: "Seance — Pan Fenfang revealed as nindoru-corrupted", page: "Event 12: The Seance", pays: "Ch 10 · C14", at: 10 },
-      { key: "guanghao", label: "Seance — Sha Guanghao blurts out the bell ringer", page: "Event 12: The Seance", pays: "Ch 10 · C13", at: 10 },
-      { key: "renmeili", label: "Interview with a Spider — Influence 12 or better", hard: true, page: "Event 13: Interview with a Spider",
+      { key: "fenfang", label: "Seance — Pan Fenfang revealed as nindoru-corrupted", pays: "Ch 10 · C14", at: 10 },
+      { key: "guanghao", label: "Seance — Sha Guanghao blurts out the bell ringer", pays: "Ch 10 · C13", at: 10 },
+      { key: "renmeili", label: "Interview with a Spider — Influence 12 or better", hard: true,
         pays: "Silver collars — legal passes for Act 4", at: 11,
         note: "Below 6 she attacks, and Parting Ways is Extreme 9 against a level 13 creature." },
       { key: "seed1", label: "Rework seed 1 — an exorcist mutters about a woman in crimson silks", rework: true,
         pays: "Ch 11 · the Silkwasp camp", at: 11 },
       { key: "seed2", label: "Rework seed 2 — Ren Mei Li's \"owed a quarrel\" warning", rework: true,
         pays: "Ch 11 roses · Ch 12 alliance", at: 11 },
-      { key: "transres", label: "8 RP — Transmigration research complete", hard: true, page: "Researching Transmigration" },
+      { key: "transres", label: "8 RP — Transmigration research complete", hard: true },
       { key: "kiln", label: "Component — the kiln", note: "Free if the party supported Eternal Blaze Ironworks in Act 1." },
       { key: "feathers", label: "Component — heron feathers", note: "Free from Silvermist Lodge or Nine Ear Shrine." },
       { key: "slats", label: "Component — sakaki slats soaking", danger: true,
         note: "Six weeks, unshortenable, and it sets day 44. Start them the moment research hits 4 RP." },
       { key: "emotions", label: "Each player stated their character's strongest driving emotion at the kiln",
         pays: "Ch 10 · their ghost powers", at: 10 },
-      { key: "between", label: "Between Life and Death survived — at least one PC stepped through", page: "Between Life and Death" }
+      { key: "between", label: "Between Life and Death survived — at least one PC stepped through" }
     ] },
 
   { n: 10, act: 3, title: "This Place Is Ours", level: 9, console: null,
@@ -854,8 +982,12 @@ async function loadEntry(desc) {
   return null;
 }
 
-function findPage(entry, { area, page } = {}) {
+function findPage(entry, { area, pageId } = {}) {
   const pages = entry?.pages?.contents ?? entry?.pages ?? [];
+  if (pageId) {
+    const hit = pages.find(p => p.id === pageId);
+    if (hit) return hit;
+  }
   if (area) {
     /* The entry ordinal is the two digits in the middle of its id. */
     const ord = String(entry.id ?? "").slice(8, 10);
@@ -866,13 +998,6 @@ function findPage(entry, { area, page } = {}) {
       const hit = pages.find(p => p.id.toLowerCase().startsWith(head) && !/\d/.test(p.id.charAt(head.length)));
       if (hit) return hit;
     }
-  }
-  if (page) {
-    const want = norm(page);
-    return pages.find(p => norm(p.name) === want)
-        ?? pages.find(p => norm(p.name).includes(want))
-        ?? pages.find(p => want.includes(norm(p.name)) && norm(p.name).length > 6)
-        ?? null;
   }
   return null;
 }
@@ -887,21 +1012,32 @@ async function openJournal(desc, hint = {}) {
   }
   const page = findPage(entry, hint);
   entry.sheet.render(true, page ? { pageId: page.id } : {});
-  if ((hint.area || hint.page) && !page) {
-    ui.notifications.info(`Opened "${entry.name}" — no page matched ${hint.area ? `area ${hint.area}` : `"${hint.page}"`}.`);
+  if ((hint.area || hint.pageId) && !page) {
+    ui.notifications.info(`Opened "${entry.name}" — no page in it matched ${hint.area ? `area ${hint.area}` : hint.pageId}.`);
   }
 }
 
-/* An item's page hint: an explicit one wins, else an area code read off the
-   label. The labels name areas the way the book does — "(D7)", "B4 —",
-   "(E11) found" — so a standalone code is safe to pick up, and anything the
-   regex misses can be spelled out with `area:` or `page:`. */
+/* An item's link target. The mapped page wins; failing that, an area code
+   read off the label — the labels name areas the way the book does, "(D7)",
+   "B4 —", "(E11) found", so a standalone code is safe to pick up.
+
+   A mapped page can belong to a different entry than the item's chapter, so
+   the descriptor comes back with the hint rather than being assumed. */
 const AREA_RE = /(?:^|[\s(])([A-E]\d{1,2}[a-d]?)(?=[\s),.:—→]|$)/;
-function hintFor(item) {
-  if (item.page) return { page: item.page };
-  if (item.area) return { area: item.area };
-  const m = AREA_RE.exec(item.label ?? "");
-  return m ? { area: m[1] } : null;
+
+function targetFor(n, item, { loot = false } = {}) {
+  const pageId = loot ? LOOT_PAGES[`${n}.${item.key}`] : PAGES[`${n}.${item.key}`];
+  if (pageId) {
+    const id = JOURNAL_BY_ORD[pageId.slice(0, 2)];
+    const known = Object.values(JOURNAL.chapters).find(d => d.id === id)
+      ?? JOURNAL.reference.find(d => d.id === id);
+    return { desc: known ?? { id, name: id }, pageId };
+  }
+  /* A loot row says where it is in `where`; a checklist item says it in the
+     label. Either way the code is read off the book's own phrasing. */
+  const m = AREA_RE.exec((loot ? item.where : item.label) ?? "");
+  if (m && journalOf(n)) return { desc: journalOf(n), area: m[1] };
+  return null;
 }
 
 /* ----------------------------------------------------------------- engine */
@@ -1217,12 +1353,18 @@ class CSApp extends BaseApp {
   /* A journal link, or nothing at all when the adventure isn't in this world.
      Rendering a button that can only ever say "not found" would be worse than
      rendering none — but the reference panel explains the absence once. */
-  journalBtn(n, hint, title) {
-    if (!findEntry(journalOf(n))) return "";
-    const h = hint ? ` data-p="${esc(hint.page ?? "")}" data-a="${esc(hint.area ?? "")}"` : "";
-    const label = hint?.area ? ` ${hint.area}` : "";
-    return `<button type="button" class="jbtn${label ? " coded" : ""}" data-act="journal" data-n="${n}"${h}
-      title="${title}"><i class="fa-solid fa-book-open"></i>${label}</button>`;
+  journalBtn(target, title) {
+    if (!target?.desc) return "";
+    const entry = findEntry(target.desc);
+    if (!entry) return "";
+    const page = findPage(entry, target);
+    /* An area code is worth showing on the button; a page name is not — the
+       item label beside it already says what the page is. */
+    const label = target.area ? ` ${target.area}` : "";
+    const where = page ? `${entry.name} — ${page.name}` : entry.name;
+    return `<button type="button" class="jbtn${label ? " coded" : ""}" data-act="journal"
+      data-e="${esc(target.desc.id)}" data-p="${esc(target.pageId ?? "")}" data-a="${esc(target.area ?? "")}"
+      title="${title}: ${esc(where)}"><i class="fa-solid fa-book-open"></i>${label}</button>`;
   }
 
   /* Reference only — these are run from Foundry's macro directory, so there is
@@ -1379,10 +1521,10 @@ class CSApp extends BaseApp {
           return `
             <section class="panel" style="--tone:var(--slate)">
               <h3>The adventure's journals <small>the book itself</small></h3>
-              ${here ? `<div class="jrow">${this.journalBtn(c.n, null, "Open this chapter's journal")}
+              ${here ? `<div class="jrow">${this.journalBtn({ desc: journalOf(c.n) }, "Open")}
                 <span class="mname">${esc(here.name)}<small>Chapter ${c.n}, where the table is</small></span></div>` : ""}
               ${found.map(r => `<div class="jrow">
-                <button type="button" class="jbtn" data-act="journalref" data-k="${r.id}" title="Open ${esc(r.name)}"><i class="fa-solid fa-book-open"></i></button>
+                ${this.journalBtn({ desc: r }, "Open")}
                 <span class="mname">${esc(r.name)}<small>${r.what}</small></span></div>`).join("")}
               <p class="hint">Area links jump to the page itself — <b>D7</b> on a Chapter 3 item opens the Infested Grove, not the chapter's first page.</p>
             </section>`;
@@ -1437,7 +1579,7 @@ class CSApp extends BaseApp {
         <h3>
           <span class="eid">Ch ${c.n}</span>${c.title}
           <span class="lvl">Level ${c.level}</span>
-          ${this.journalBtn(c.n, null, "Open this chapter's journal")}
+          ${this.journalBtn({ desc: journalOf(c.n) }, "Open this chapter's journal")}
           ${c.rework ? `<span class="tag web">Two Weavers</span>` : ""}
           ${c.console ? `<span class="tag">${c.console} console</span>` : ""}
           <button type="button" class="statbtn ${st}" data-act="cycle" data-n="${c.n}" ${ro ? "disabled" : ""}
@@ -1449,7 +1591,7 @@ class CSApp extends BaseApp {
           ${c.items.map(i => {
             const st = t.itemState(c.n, i);
             const on = st === "ok";
-            const hint = hintFor(i);
+            const target = targetFor(c.n, i);
             /* The link sits outside the <label>, or clicking it would also
                toggle the checkbox the label wraps. */
             return `
@@ -1464,7 +1606,7 @@ class CSApp extends BaseApp {
                     ${i.pays ? `<em class="pays">→ ${i.pays}</em>` : ""}
                   </span>
                 </label>
-                ${hint ? this.journalBtn(c.n, hint, hint.area ? `Open area ${hint.area} in the journal` : `Open &quot;${esc(hint.page)}&quot; in the journal`) : ""}
+                ${this.journalBtn(target, "Open")}
               </div>
               ${i.note ? `<p class="itemnote">${i.note}</p>` : ""}`;
           }).join("")}
@@ -1475,10 +1617,13 @@ class CSApp extends BaseApp {
           <div class="subhead"><i class="fa-solid fa-sack-xmark"></i> Treasure <span>${p.loot} of ${p.lootTotal}</span></div>
           ${t.lootFor(c.n).map(it => {
             const on = t.claimed(c.n, it.key);
-            return `<label class="check ${on ? "on" : ""}">
-                <input type="checkbox" data-act="loot" data-n="${c.n}" data-k="${it.key}" ${on ? "checked" : ""} ${ro ? "disabled" : ""}>
-                <span class="lbl">${it.label}${it.where ? `<em class="pays">${it.where}</em>` : ""}</span>
-              </label>
+            return `<div class="itemrow">
+                <label class="check ${on ? "on" : ""}">
+                  <input type="checkbox" data-act="loot" data-n="${c.n}" data-k="${it.key}" ${on ? "checked" : ""} ${ro ? "disabled" : ""}>
+                  <span class="lbl">${it.label}${it.where ? `<em class="pays">${it.where}</em>` : ""}</span>
+                </label>
+                ${this.journalBtn(targetFor(c.n, it, { loot: true }), "Open")}
+              </div>
               ${it.note ? `<p class="itemnote">${it.note}</p>` : ""}`;
           }).join("")}
         </div>` : ""}
@@ -1533,11 +1678,14 @@ class CSApp extends BaseApp {
         ${blurb ? `<p class="hint">${blurb}</p>` : ""}
         <div class="items">
           ${list.map(r => `
-            <label class="check ${r.claimed ? "on" : ""} ${r.here && !r.claimed ? "here" : ""}">
-              <input type="checkbox" data-act="loot" data-n="${r.ch}" data-k="${r.key}" ${r.claimed ? "checked" : ""} ${ro ? "disabled" : ""}>
-              <span class="lbl"><span class="chip">Ch ${r.ch}</span> ${r.label}
-                ${r.where ? `<em class="pays">${r.where}</em>` : ""}</span>
-            </label>
+            <div class="itemrow">
+              <label class="check ${r.claimed ? "on" : ""} ${r.here && !r.claimed ? "here" : ""}">
+                <input type="checkbox" data-act="loot" data-n="${r.ch}" data-k="${r.key}" ${r.claimed ? "checked" : ""} ${ro ? "disabled" : ""}>
+                <span class="lbl"><span class="chip">Ch ${r.ch}</span> ${r.label}
+                  ${r.where ? `<em class="pays">${r.where}</em>` : ""}</span>
+              </label>
+              ${this.journalBtn(targetFor(r.ch, r, { loot: true }), "Open")}
+            </div>
             ${r.note ? `<p class="itemnote">${r.note}</p>` : ""}`).join("")}
         </div>
       </section>` : "";
@@ -1644,11 +1792,11 @@ class CSApp extends BaseApp {
       else if (a === "gotoact") { t.s.tab = `act${btn.dataset.k}`; t.touch(); }
       else if (a === "cycle") t.cycleStatus(btn.dataset.n);
       else if (a === "journal") {
-        openJournal(journalOf(btn.dataset.n),
-          { page: btn.dataset.p || undefined, area: btn.dataset.a || undefined });
-      }
-      else if (a === "journalref") {
-        openJournal(JOURNAL.reference.find(r => r.id === btn.dataset.k));
+        const id = btn.dataset.e;
+        const desc = Object.values(JOURNAL.chapters).find(d => d.id === id)
+          ?? JOURNAL.reference.find(d => d.id === id)
+          ?? { id, name: id };
+        openJournal(desc, { pageId: btn.dataset.p || undefined, area: btn.dataset.a || undefined });
       }
       else if (a === "sheet") {
         const actor = game.actors.get(btn.dataset.id);

@@ -127,14 +127,21 @@ produced them.
 - **Consoles in this collection** per chapter — the other four macros here, against the
   chapters they're for, so the Enlightened Path console is named where Chapter 6 is on screen
   rather than remembered
-- **Journal links** — every chapter card opens the module's own journal entry for that
-  chapter, and an item that names an area opens *that page*: the `D7` button on Xungu opens
-  the Infested Grove, not the chapter's front page. Area lookup goes through the page id
-  rather than its title, because the module builds page ids as
-  `<entry ordinal><area code><name slug>` — `05d11lumbercam00` is Chapter 3's D11 — so
-  nothing has to guess what a page is called. Entries resolve by id first, then by name, then
-  through the compendiums; if the adventure isn't in the world the links simply don't appear
-  and the journals panel says so
+- **Journal links** — 120 of the 128 checklist items and 40 of the 42 treasure rows open the
+  page of the Season of Ghosts module's own journal that covers them. Xungu opens the Infested
+  Grove, the Week 11 curse opens *The Face at the Foot of the Bed*, Yen Rui opens the Hidden
+  Library. The eight items with no link are the Two Weavers beats, which aren't in the book.
+  A few links deliberately cross chapters, because that's where the text is: Chapter 1's
+  kappas open Chapter 2's bathhouse, Chapter 10's Preparation Points cash-out opens Chapter
+  8's page on them.
+
+  Every id was read out of the module's pack, not inferred, and
+  [`tools/journal-check/`](../../tools/journal-check) re-checks the whole table against an
+  installed copy. Items the table doesn't name still link if their label carries an area
+  code — that's resolved by page id, since the module builds page ids as
+  `<entry ordinal><area code><name slug>`, so `C1` can't be confused with `C11`. Entries
+  resolve by id, then by name, then through the compendiums; without the adventure in the
+  world the links don't render at all and the journals panel says why
 - **Running procedures** — the loops you keep turning for a whole chapter rather than tick
   once. Chapter 3 carries the hinterlands wandering-monster table: the daily DC 17 flat check,
   what's actually out there, the two finite populations, and the book's instruction not to

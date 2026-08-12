@@ -30,10 +30,14 @@
 - Campaign tracker: the four consoles in this collection are listed against the chapters
   they're for, and Chapter 3 carries the hinterlands wandering-monster procedure
 - Campaign tracker: a legend under the chapter list explaining the spider icon and the columns
-- Campaign tracker: journal links. Each chapter card opens the Season of Ghosts module's own
-  journal entry, and an item naming an area opens that page — area lookup resolves against
-  the module's page ids rather than guessing page titles. Falls back to a name match, then to
-  the compendiums, and hides the links entirely when the adventure isn't in the world
+- Campaign tracker: journal links. 120 of 128 checklist items and 40 of 42 treasure rows open
+  the page of the Season of Ghosts module's journal that covers them, mapped from the module's
+  own pack; the eight without a link are Two Weavers beats that aren't in the book. Items the
+  table doesn't name still link if their label carries an area code. Entries resolve by id,
+  then by name, then through the compendiums, and the links hide themselves entirely when the
+  adventure isn't in the world
+- `tools/journal-check/` — re-checks the tracker's journal tables against an installed copy of
+  the module, so a module update that moves an id is caught rather than discovered at the table
 
 ### Changed
 - Campaign tracker: only **required** items can go overdue. An unticked box in a finished

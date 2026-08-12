@@ -70,31 +70,82 @@ const actorCollection = {
 
 /* ---------------------------------------------------------------- journals
 
-   A stand-in for an imported adventure. Only two entries, but they carry the
-   real id shape the module uses — `<8-char prefix><2-digit ordinal><slug>` for
-   the entry, `<ordinal><area code><name slug>` for the page — so a macro's
-   area lookup can be exercised. Set `__previewJournals = false` on a fixture
-   to preview the "adventure not installed" branch instead. */
+   A stand-in for an imported adventure. Two of the Season of Ghosts module's
+   twenty-three journal entries, with their real document ids and page titles,
+   so a macro's chapter and area lookups resolve exactly as they would in a
+   world that has the adventure installed. No page text — only the structure a
+   link has to navigate. Set `__journals: false` on a fixture to empty this and
+   preview the "adventure not installed" branch instead. */
 const SAMPLE_JOURNALS = [
-  { id: "pf2apsog05thewil", name: "The Willowshore Curse", pages: [
-    "05thewillowsho00|The Willowshore Curse",
-    "05d7infestedgr00|D7: Infested Grove",
-    "05d8oldvillage00|D8: Old Village Expansion",
-    "05d9eyesoffume00|D9: Eyes of Fumeiyoshi",
-    "05d10gorgeoffa00|D10: Gorge of Fangs and Teeth",
-    "05d11lumbercam00|D11: Lumber Camp",
-    "05opportunitie00|Opportunities",
+  { id: "pf2apsog05thewil", name: "Act 1.3: The Willowshore Curse", pages: [
+    "05wholeadswill00|Who Leads Willowshore?",
+    "05speakingwith00|Speaking with Ugly Cute",
+    "05rescuingugly00|Rescuing Ugly Cute",
+    "05searchingthe00|Searching the Hinterlands",
+    "05consultingsi00|Consulting Silvermist",
+    "05searchingfor00|Searching for Ugly Cute",
+    "05returningtog00|Returning to Great Willow",
+    "05intotheinfes00|Into the Infestation",
     "05talkingwithg00|Talking with Great Willow",
-    "05canaryinn00000|Canary Inn"
+    "05visitinggrea00|Visiting Great Willow",
+    "05themists000000|The Mists",
+    "05songsatcanar00|Songs at Canary Inn",
+    "05ghostsintheg00|Ghosts in the Grass",
+    "05themissinggo00|The Missing Governor",
+    "05investigatin00|Investigating the Curse",
+    "05opportunitie00|Opportunities",
+    "05wallofghosts00|Wall of Ghosts",
+    "05ppeachwoodgr00|Peachwood Grove",
+    "05d13theroadto00|The Road to Enlightenment",
+    "05d12ritualsit00|Ritual Site",
+    "05d11lumbercam00|Lumber Camp",
+    "05d10gorgeoffa00|Gorge of Fangs and Teeth",
+    "05d9eyesoffume00|Eyes of Fumeiyoshi",
+    "05d8oldvillage00|Old Village Expansion",
+    "05d7infestedgr00|Infested Grove",
+    "05d6huntershut00|Hunter’s Hut",
+    "05d5greensilkp00|Green Silk Peak",
+    "05d4canaryinn000|Canary Inn",
+    "05d3treacherou00|Treacherous Trail",
+    "05d2gourdlake000|Gourd Lake",
+    "05d1willowshor00|Willowshore",
+    "05exploringthe00|Exploring the Hinterlands",
+    "05themindscape00|The Mindscape Border",
+    "05intothehinte00|Into the Hinterlands",
+    "05themysteriou00|The Mysterious Merchant",
+    "05thewillowsho00|The Willowshore Curse"
   ] },
-  { id: "pf2apsog07turnin", name: "Turning of the Seasons", pages: [
-    "07turningofthe00|Turning of the Seasons",
+  { id: "pf2apsog07turnin", name: "Act 2.1: Turning of the Seasons", pages: [
+    "07week12vanish00|Week 12: Vanishings",
+    "07week11thefac00|Week 11: The Face at the Foot of the Bed",
+    "07thenextday0000|The Next Day",
+    "07afterthefeas00|After the Feast",
+    "07nightofthefe00|Night of the Feast",
+    "07preparingfor01|Preparing for the Feast",
+    "07shinzossugge00|Shinzo’s Suggestion",
+    "07week10feasto00|Week 10: Feast of the Kami",
+    "07week9kimchis00|Week 9: Kimchi’s Ascent",
+    "07week8stablef00|Week 8: Stable Fire",
+    "07week7anicygr00|Week 7: An Icy Grasp",
+    "07week6theface00|Week 6: The Faceless Ghost",
+    "07week5themiss00|Week 5: The Missing Corpse",
+    "07week4haunted00|Week 4: Haunted Hair",
+    "07shinzosvisit00|Shinzo’s Visit",
+    "07onthenightof00|On the Night of the Festival",
+    "07week3firstlo00|Week 3: First Long Night",
+    "07week2aslithe00|Week 2: A Slithering Situation",
+    "07week1anoffer00|Week 1: An Offering for Daikitsu",
+    "07willowshoree00|Willowshore Events",
     "07researchingt00|Researching the Curse",
-    "07restoringthe00|Restoring the Teahouse",
-    "07gatheringfoo00|Gathering Food",
     "07increasingse00|Increasing Security",
-    "07week3firstlo00|Week 3: First Long Night"
-  ] }
+    "07gatheringfoo00|Gathering Food",
+    "07restoringthe00|Restoring the Teahouse",
+    "07bolsteringho00|Bolstering Hope",
+    "07preparingfor00|Preparing for Winter",
+    "07willowshorei00|Willowshore in the Fall",
+    "07gettingstart00|Getting Started",
+    "07turningofthe00|Turning of the Seasons"
+  ] },
 ];
 
 class StubJournal {
