@@ -70,8 +70,8 @@ const actorCollection = {
 
 /* ---------------------------------------------------------------- journals
 
-   A stand-in for an imported adventure. Two of the Season of Ghosts module's
-   twenty-three journal entries, with their real document ids and page titles,
+   A stand-in for an imported adventure. Five of the Season of Ghosts module's
+   twenty-three journal entries — the ones this repo's macros link into — with their real document ids and page titles,
    so a macro's chapter and area lookups resolve exactly as they would in a
    world that has the adventure installed. No page text — only the structure a
    link has to navigate. Set `__journals: false` on a fixture to empty this and
@@ -146,6 +146,79 @@ const SAMPLE_JOURNALS = [
     "07gettingstart00|Getting Started",
     "07turningofthe00|Turning of the Seasons"
   ] },
+  { id: "pf2apsog08theenl", name: "Act 2.2: The Enlightened Path", pages: [
+    "08thefinalday000|The Final Day",
+    "08d3mountainsh00|Mountain Shrine",
+    "08d2awhisperin00|A Whisper in the Woods",
+    "08d1avoiceinth00|A Voice in the Fog",
+    "08thethirdday000|The Third Day",
+    "08c3gardenshri00|Garden Shrine",
+    "08c2thegirlint00|The Girl in the Tree",
+    "08c1hungryfoli00|Hungry Foliage",
+    "08thesecondday00|The Second Day",
+    "08b3bridgeshri00|Bridge Shrine",
+    "08b2serpentamb00|Serpent Ambush",
+    "08b1tormentedk00|Tormented Kappa",
+    "08thefirstday000|The First Day",
+    "08walkingthepa00|Walking the Path",
+    "08thepilgrimsp00|The Pilgrim’s Path",
+    "08plantingthes00|Planting the Soul Seed",
+    "08a3thesoulthi00|The Soulthief’s Nest",
+    "08a2tansuijing00|Tan Sui-Jing’s Grave",
+    "08a1entrance0000|Entrance",
+    "08intothewallo00|Into the Wall of Ghosts",
+    "08performingth00|Performing the Ritual",
+    "08throughthewa00|Through the Wall of Ghosts",
+    "08theenlighten00|The Enlightened Path"
+  ] },
+  { id: "pf2apsog09inther", name: "Act 2.3: In the Ruins of Wisdom", pages: [
+    "09returntowill00|Return to Willowshore",
+    "09concludingth00|Concluding the Act",
+    "09e16kugaptees00|Kugaptee’s Grave",
+    "09e15treasurec00|Treasure Chamber",
+    "09e14storagero00|Storage Room",
+    "09e13thetansug00|The Tan Sugi",
+    "09e12burialgar00|Burial Garden",
+    "09e11hiddenlib00|Hidden Library",
+    "09e10library0000|Library",
+    "09e9dorms0000000|Dorms",
+    "09e8storage00000|Storage",
+    "09e7kitchen00000|Kitchen",
+    "09e6refectory000|Refectory",
+    "09e5pharasmass00|Pharasma’s Shrine",
+    "09e4infirmary000|Infirmary",
+    "09e3mainhall0000|Main Hall",
+    "09e2courtyard000|Courtyard",
+    "09e1grandgate000|Grand Gate",
+    "09monasteryfea00|Monastery Features",
+    "09fourthpurifi00|Fourth Purification",
+    "09thirdpurific00|Third Purification",
+    "09secondpurifi00|Second Purification",
+    "09firstpurific00|First Purification",
+    "09purifyingthe00|Purifying the Monastery",
+    "09resting0000000|Resting",
+    "09tansugimonas00|Tan Sugi Monastery",
+    "09intheruinsof00|In the Ruins of Wisdom"
+  ] },
+  { id: "pf2apsog17firstl", name: "First Long Night", pages: [
+    "17blacksesames00|Black Sesame Soup with Peanut-filled Glutinous Ric",
+    "17shenmensalta00|Shenmen Salt and Pepper Mooncakes",
+    "17festivalfood00|Festival Foods",
+    "17festivalfash00|Festival Fashion",
+    "17lanternmakin00|Lantern Making",
+    "17bundlecuttin00|Bundle-Cutting",
+    "17admiringthem00|Admiring the Moon",
+    "17traditionalc00|Traditional Contests",
+    "17agilityunder00|Agility under Oppression",
+    "17seasonalmark00|Seasonal Markets",
+    "17bribingfumei00|Bribing Fumeiyoshi",
+    "17ghostsorance00|Ghosts... or Ancestors-",
+    "17enlighteneds00|Enlightened Self-Interest",
+    "17communalrevi00|Communal Revivals",
+    "17coldnightswa00|Cold Nights, Warm Hearts",
+    "17festivalcele00|Festival Celebrations",
+    "17firstlongnig00|First Long Night"
+  ] },
 ];
 
 class StubJournal {
@@ -165,14 +238,17 @@ class StubJournal {
   }
 }
 
-const JOURNALS = globalThis.__previewJournals === false
+/* Named defensively: a macro and the stub share one global scope out here,
+   which they never do inside Foundry, so anything generic — `JOURNALS`, say —
+   will eventually collide with a macro's own constant and stop it loading. */
+const STUB_JOURNAL_DOCS = globalThis.__previewJournals === false
   ? [] : SAMPLE_JOURNALS.map(s => new StubJournal(s));
 
 const journalCollection = {
-  get: (id) => JOURNALS.find(j => j.id === id) ?? null,
-  getName: (name) => JOURNALS.find(j => j.name === name) ?? null,
-  find: (fn) => JOURNALS.find(fn) ?? null,
-  [Symbol.iterator]: () => JOURNALS[Symbol.iterator]()
+  get: (id) => STUB_JOURNAL_DOCS.find(j => j.id === id) ?? null,
+  getName: (name) => STUB_JOURNAL_DOCS.find(j => j.name === name) ?? null,
+  find: (fn) => STUB_JOURNAL_DOCS.find(fn) ?? null,
+  [Symbol.iterator]: () => STUB_JOURNAL_DOCS[Symbol.iterator]()
 };
 
 /* ----------------------------------------------------------------- globals */

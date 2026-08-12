@@ -296,6 +296,71 @@ const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 const esc = (s) => foundry.utils.escapeHTML ? foundry.utils.escapeHTML(String(s))
   : String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
+/* ------------------------------------------------------------- the journal
+   The Season of Ghosts module ships the festival as its own journal entry —
+   seventeen pages of foods, fashion, contests and customs — alongside the
+   week 3 page in the chapter itself. Both have fixed ids that a Foundry
+   adventure import keeps, so a button can open the page a section came from.
+   Ids read out of the module's pack.
+
+   None of this is required. An entry resolves by id, then by name, then
+   through the compendiums, and if the adventure isn't in the world no link
+   renders at all. */
+const JOURNALS = {
+  night: { id: "pf2apsog17firstl", name: "First Long Night" },
+  chapter: { id: "pf2apsog07turnin", name: "Act 2.1: Turning of the Seasons" }
+};
+const JPAGE = {
+  /* First Long Night */
+  festival: "17firstlongnig00", celebrations: "17festivalcele00", contests: "17traditionalc00",
+  bundle: "17bundlecuttin00", moon: "17admiringthem00", agility: "17agilityunder00",
+  foods: "17festivalfood00", fashion: "17festivalfash00", lanterns: "17lanternmakin00",
+  markets: "17seasonalmark00", warmth: "17coldnightswa00", revivals: "17communalrevi00",
+  /* Turning of the Seasons */
+  week3: "07week3firstlo00", night: "07onthenightof00"
+};
+
+const jnorm = (s) => String(s ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+const entryFor = (pageId) => pageId.startsWith("17") ? JOURNALS.night : JOURNALS.chapter;
+
+/* World only, and synchronous — the UI uses it to decide whether a link is
+   worth offering before anyone clicks it. */
+function journalEntry(desc) {
+  const byId = game.journal?.get?.(desc.id);
+  if (byId) return byId;
+  const want = jnorm(desc.name), all = [...(game.journal ?? [])];
+  return all.find(j => jnorm(j.name) === want)
+      ?? all.find(j => jnorm(j.name).endsWith(want)) ?? null;
+}
+
+async function journalDoc(desc) {
+  const local = journalEntry(desc);
+  if (local) return local;
+  const want = jnorm(desc.name);
+  for (const pack of game.packs ?? []) {
+    if (pack.documentName !== "JournalEntry") continue;
+    const idx = [...pack.index];
+    const hit = pack.index.get?.(desc.id) ?? idx.find(e => jnorm(e.name) === want);
+    if (hit) return pack.getDocument(hit._id);
+  }
+  return null;
+}
+
+const journalPage = (entry, pageId) =>
+  (entry?.pages?.contents ?? entry?.pages ?? []).find(p => p.id === pageId) ?? null;
+
+async function openJournal(pageId) {
+  const desc = entryFor(pageId);
+  const entry = await journalDoc(desc);
+  if (!entry) {
+    ui.notifications.warn(`No journal found for "${desc.name}". Looked for the id ${desc.id}, then that name in the journal directory and the compendiums.`);
+    return;
+  }
+  const page = journalPage(entry, pageId);
+  entry.sheet.render(true, page ? { pageId: page.id } : {});
+}
+
+
 /* ----------------------------------------------------------------- engine */
 class Festival {
   constructor(state) { this.state = state; }
@@ -602,14 +667,21 @@ class FLNApp extends BaseApp {
   /* ------------------------------------------------------------- markup */
   markup() {
     const f = this.fest, s = f.s, ro = !f.editable;
-    const tabs = [["show", "Grand show"], ["contests", "Contests"], ["booths", "Booths"],
-                  ["games", "The games"], ["kit", "GM kit"]];
+    /* The tab strip carries the same colours the panels under it use, so
+       the strip says where you are before you read it. */
+    const tabs = [
+      { k: "show", label: "Grand show", tone: "plum", icon: "fa-masks-theater" },
+      { k: "contests", label: "Contests", tone: "ember", icon: "fa-trophy" },
+      { k: "booths", label: "Booths", tone: "moss", icon: "fa-store" },
+      { k: "games", label: "The games", tone: "gold", icon: "fa-medal" },
+      { k: "kit", label: "GM kit", tone: "slate", icon: "fa-toolbox" }
+    ];
     return `
       ${this.styles()}
       <div class="fln">
         ${this.phaseStrip(ro)}
         <nav class="tabs">
-          ${tabs.map(([k, label]) => `<button type="button" class="tab ${s.tab === k ? "on" : ""}" data-act="tab" data-k="${k}">${label}</button>`).join("")}
+          ${tabs.map(x => `<button type="button" class="tab ${s.tab === x.k ? "on" : ""}" style="--tt:var(--${x.tone})" data-act="tab" data-k="${x.k}"><i class="fa-solid ${x.icon}"></i> ${x.label}</button>`).join("")}
         </nav>
         ${s.tab === "show" ? this.showTab(ro) : ""}
         ${s.tab === "contests" ? this.contestTab(ro) : ""}
@@ -618,6 +690,17 @@ class FLNApp extends BaseApp {
         ${s.tab === "kit" ? this.kitTab() : ""}
         ${this.ledgerBar(ro)}
       </div>`;
+  }
+
+  /* A link into the module's journal, or nothing at all when the adventure
+     isn't in this world. A button that could only ever say "not found" would
+     be worse than no button. */
+  jbtn(pageId, label = "") {
+    const entry = journalEntry(entryFor(pageId));
+    if (!entry) return "";
+    const page = journalPage(entry, pageId);
+    return `<button type="button" class="jbtn" data-act="journal" data-r="${esc(pageId)}"
+      title="Open the journal: ${esc(page ? page.name : entry.name)}"><i class="fa-solid fa-book-open"></i>${label ? ` ${label}` : ""}</button>`;
   }
 
   phaseStrip(ro) {
@@ -664,7 +747,7 @@ class FLNApp extends BaseApp {
 
     return `
       <section class="panel">
-        <h3>Setting the stage</h3>
+        <h3>Setting the stage ${this.jbtn(JPAGE.night)}</h3>
         <div class="stage">
           <label class="fld">Through-line
             <select data-act="line" ${ro ? "disabled" : ""}>
@@ -700,7 +783,7 @@ class FLNApp extends BaseApp {
       </section>
 
       <section class="panel">
-        <h3>Spotlight beats <small>drop into the show</small></h3>
+        <h3>Spotlight beats <small>drop into the show</small> ${this.jbtn(JPAGE.celebrations)}</h3>
         <ul class="checks">${SPOTLIGHTS.map(x => `<li>${x}</li>`).join("")}</ul>
       </section>`;
   }
@@ -756,7 +839,7 @@ class FLNApp extends BaseApp {
         </article>`;
     }).join("")}</div>
     <section class="panel">
-      <h3>Complications <small>for the witching hours</small></h3>
+      <h3>Complications <small>for the witching hours</small> ${this.jbtn(JPAGE.warmth)}</h3>
       <div class="comps">
         ${COMPLICATIONS.map((c, i) => `<div class="comp"><b>${c.name}</b>
           <button type="button" class="say" data-act="saycomp" data-i="${i}" title="Read to the table"><i class="fa-solid fa-comment"></i></button>
@@ -779,12 +862,14 @@ class FLNApp extends BaseApp {
             const m = f.medalCount(i);
             const titles = f.titlesFor(i);
             const wearing = champ && !champ.tied && champ.leaders[0].i === i;
-            return `<div class="medalrow ${wearing ? "crowned" : ""}" style="--acc:var(${PC_ACCENTS[i % PC_ACCENTS.length]})">
+            const tag = pc.actorId ? "button" : "div";
+            const open = pc.actorId ? ` type="button" data-act="sheet" data-id="${pc.actorId}" title="Open ${esc(pc.name)}'s character sheet"` : "";
+            return `<${tag} class="medalrow ${wearing ? "crowned" : ""}"${open} style="--acc:var(${PC_ACCENTS[i % PC_ACCENTS.length]})">
               <img class="avatar" src="${pc.img}" alt="" onerror="this.src='icons/svg/mystery-man.svg'">
               <div class="mname">${esc(pc.name)}${wearing ? `<span class="crown">Lantern Crown</span>` : ""}
                 ${titles.length ? `<small>${titles.join(" · ")}</small>` : ""}</div>
               <div class="mcount"><span class="gold">${m.gold}</span><span class="silver">${m.silver}</span><b>${m.points}</b></div>
-            </div>`;
+            </${tag}>`;
           }).join("")}
         </div>
         ${champ?.tied ? `<p class="hint">Tied at ${champ.points}. Sudden-death round of the champions' choosing, or co-crown them and let the rivalry simmer into next year.</p>` : ""}
@@ -822,7 +907,7 @@ class FLNApp extends BaseApp {
   kitTab() {
     return `
       <section class="panel">
-        <h3>Six festival riddles <small>for the Riddle Gauntlet</small></h3>
+        <h3>Six festival riddles <small>for the Riddle Gauntlet</small> ${this.jbtn(JPAGE.festival)}</h3>
         <ol class="riddles">
           ${KIT_RIDDLES.map(([q, a]) => `<li>${q}<span class="answer">${a}</span></li>`).join("")}
         </ol>
@@ -883,6 +968,12 @@ class FLNApp extends BaseApp {
       ev.preventDefault();
       const a = btn.dataset.act;
       if (a === "tab") { f.s.tab = btn.dataset.k; f.touch(); }
+      else if (a === "journal") openJournal(btn.dataset.r);
+      else if (a === "sheet") {
+        const actor = game.actors.get(btn.dataset.id);
+        if (actor) actor.sheet?.render(true);
+        else ui.notifications.warn("That character's actor is no longer in this world.");
+      }
       else if (a === "phase") { f.s.phase = Number(btn.dataset.i); f.touch(); }
       else if (a === "postphase") f.postPhase();
       else if (a === "mv") f.setMovement(btn.dataset.id, btn.dataset.d);
@@ -942,9 +1033,12 @@ class FLNApp extends BaseApp {
       .fln select { background:var(--field); color:var(--ink); border:1px solid var(--line);
                     border-radius:3px; height:auto; padding:2px 4px; width:100%; }
       .fln option { background:var(--field); color:var(--ink); }
-      .fln h3 { font-size:.9rem; margin:0 0 .5rem; letter-spacing:.04em; text-transform:uppercase;
-                display:flex; align-items:baseline; gap:.5rem; border-bottom:1px solid var(--line);
-                padding-bottom:.3rem; color:var(--ink); }
+      /* Two levels of heading that must not compete: a panel is titled in
+         large ink over a thick rule in its own tone, a block inside it wears
+         a small filled bar. Outer reads first, inner sorts what's under it. */
+      .fln h3 { font-size:.95rem; margin:0 0 .55rem; letter-spacing:.04em; text-transform:uppercase;
+                display:flex; align-items:center; gap:.5rem; border-bottom:2px solid var(--tone, var(--line));
+                padding-bottom:.3rem; color:var(--ink); flex-wrap:wrap; }
       .fln h3 small { font-weight:400; text-transform:none; letter-spacing:0; color:var(--muted); font-size:.72rem; }
       .fln .mini { margin-left:auto; font-size:.68rem; padding:.15rem .45rem; border:1px solid var(--line);
                    background:transparent; border-radius:3px; text-transform:none; letter-spacing:0; }
@@ -975,8 +1069,19 @@ class FLNApp extends BaseApp {
 
       .fln .tabs { display:flex; gap:3px; margin-bottom:.6rem; }
       .fln .tab { flex:1; padding:.35rem; font-size:.78rem; border:1px solid var(--line);
-                  background:transparent; border-radius:3px; }
-      .fln .tab.on { background:var(--ember); border-color:var(--ember); color:var(--paper); font-weight:600; }
+                  background:transparent; border-radius:3px 3px 2px 2px;
+                  border-top:3px solid var(--tt, var(--line)); display:inline-flex;
+                  align-items:center; justify-content:center; gap:.35rem; }
+      .fln .tab i { font-size:.68rem; color:var(--tt, var(--muted)); }
+      .fln .tab.on { background:var(--tt); border-color:var(--tt); color:var(--paper); font-weight:600; }
+      .fln .tab.on i { color:var(--paper); opacity:.85; }
+
+      /* A link into the module's journal. */
+      .fln .jbtn { font-size:.62rem; padding:1px 5px; border-radius:3px; color:var(--slate);
+                   border:1px solid var(--line); background:transparent; flex:none; letter-spacing:.04em;
+                   display:inline-flex; align-items:center; gap:.25rem; cursor:pointer; height:auto; }
+      .fln .jbtn:hover { background:var(--hover); }
+      .fln .jbtn i { font-size:.66rem; }
 
       .fln .stage { display:grid; grid-template-columns:1fr 1fr; gap:.5rem; }
       .fln .fld { display:block; font-size:.68rem; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); }
@@ -1028,8 +1133,11 @@ class FLNApp extends BaseApp {
       .fln .comp p { margin:.1rem 0 0; color:var(--muted); line-height:1.4; }
 
       .fln .medals { display:grid; gap:.3rem; }
-      .fln .medalrow { display:flex; align-items:center; gap:.5rem; padding:.3rem .4rem;
-                       border-left:3px solid var(--acc); background:var(--stripe); border-radius:3px; }
+      .fln .medalrow { display:flex; align-items:center; gap:.5rem; padding:.3rem .4rem; width:100%;
+                       border-left:3px solid var(--acc); background:var(--stripe); border-radius:3px;
+                       text-align:left; font-family:inherit; color:var(--ink); border-top:0; border-right:0; border-bottom:0; }
+      .fln button.medalrow { cursor:pointer; }
+      .fln button.medalrow:hover { background:var(--hover); }
       .fln .medalrow.crowned { background:rgba(138,106,18,.15); }
       .fln .avatar { width:30px; height:30px; border-radius:50%; object-fit:cover; border:1px solid var(--line); flex:none; }
       .fln .mname { flex:1; font-weight:600; font-size:.85rem; line-height:1.2; }

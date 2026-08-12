@@ -39,6 +39,15 @@
 - `tools/journal-check/` — re-checks the tracker's journal tables against an installed copy of
   the module, so a module update that moves an id is caught rather than discovered at the table
 
+- The other four consoles carry the same reading system as the campaign tracker — panel titles
+  over a rule in their tone, filled bars on the blocks inside them, and a colour and icon per
+  tab — plus journal links into the module and clickable PCs
+- Journal links in every Season of Ghosts console: the Ruins of Wisdom's sixteen areas and the
+  Enlightened Path's encounters resolve from their own area codes, the Fall Downtime Tracker
+  links each week's event and each preparation activity, and the First Long Night reaches both
+  the module's festival entry and the chapter's week 3 page
+- `tools/journal-check/` covers all five macros, not just the tracker
+
 ### Changed
 - Campaign tracker: only **required** items can go overdue. An unticked box in a finished
   chapter is now **skipped** — the party killed the Abacus Sisters rather than saving them,

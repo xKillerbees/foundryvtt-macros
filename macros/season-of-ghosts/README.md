@@ -39,6 +39,8 @@ The Hope / Food / Security preparation subsystem, plus teahouse restoration and 
 - Milestone detection at 12 points in any category
 - A separate read-only player board (opt-in) that hides point targets, the log, and future events
 - Chat summary card and an optional journal-page writeup
+- Journal links to the module's own pages — the week's event, the chosen preparation activity,
+  the research rules — and a PC's name opens their character sheet
 
 ### First Long Night Console
 
@@ -53,6 +55,8 @@ The autumn-equinox festival — the toolkit and the PC games companion in one wi
 - Twelve head-to-head PC games across four disciplines, with a medal tracker, discipline sweeps, titles, and the Lantern Crown
 - GM kit: six riddles with answers, the lantern cipher key, the poetry scaffold, and the moon-stones rules
 - A ledger that pushes earned Hope / Food / Security into the Fall Downtime Tracker's week 3
+- Journal links into both the module's *First Long Night* entry and the chapter's week 3 page,
+  and a medal row opens that PC's character sheet
 
 ![The games tab, with the medal tracker](../../screenshots/season-of-ghosts/first-long-night-games.png)
 
@@ -71,6 +75,7 @@ The ritual, the vision inside the Wall, and the four-day pilgrimage.
 - Enlightenment tracked per shrine against the book's actual conditions; completing one awards XP and activates its save bonus
 - Header lamps and Reflex / Will / Fortitude badges showing what the party carries into Chapter 7
 - A final-day tab summarising what the party banked and which threads are live
+- Journal links on every encounter and shrine, resolved from the encounter's own letter-number
 
 ### In the Ruins of Wisdom
 
@@ -91,6 +96,8 @@ The ruined Tan Sugi monastery, from the arch at the end of the Path to Kugaptee'
   circuit challenge, Kalen Bray, the axe and its quirk
 - An aftermath ledger for the return to Willowshore that pushes Hope and Reputation into
   the Fall Downtime Tracker
+- Journal links on all sixteen areas, resolved from the area's own E-number, plus the
+  purification rules, the resting rules, and the act's conclusion
 
 ![The libraries and the sugi tree](../../screenshots/season-of-ghosts/ruins-of-wisdom-grove.png)
 
@@ -180,6 +187,12 @@ pinned by the scene-notes blocks in the adventure text.
 ![The Threads tab](../../screenshots/season-of-ghosts/campaign-status-threads.png)
 
 ![The loot ledger](../../screenshots/season-of-ghosts/campaign-status-loot.png)
+
+All five consoles share the same reading system: a panel is titled in large ink over a rule
+in its own tone, a block inside it wears a small filled bar in its accent, and the tab strip
+uses the same colours with an icon each. Where the Season of Ghosts module is installed they
+also link into its journals — by document id, so the link survives a rename — and a PC's name
+opens their character sheet.
 
 ## Architecture
 

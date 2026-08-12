@@ -122,13 +122,15 @@ function linkify(text) {
 }
 
 /* ------------------------------------------------------------------- tabs */
+/* The tab strip carries the same colours the panels under it use, so the
+   strip says where you are before you read it. */
 const TABS = [
-  { key: "brig", label: "A1 Brig", sub: "getting out" },
-  { key: "lower", label: "Lower deck", sub: "A2 – A8" },
-  { key: "upper", label: "Upper deck", sub: "B1 – B4" },
-  { key: "bridge", label: "B5 Bridge", sub: "the finale" },
-  { key: "escape", label: "Escape", sub: "the last check" },
-  { key: "fx", label: "Effects", sub: "Sequencer · JB2A" }
+  { key: "brig", label: "A1 Brig", sub: "getting out", tone: "slate", icon: "fa-lock" },
+  { key: "lower", label: "Lower deck", sub: "A2 – A8", tone: "moss", icon: "fa-stairs" },
+  { key: "upper", label: "Upper deck", sub: "B1 – B4", tone: "plum", icon: "fa-box-open" },
+  { key: "bridge", label: "B5 Bridge", sub: "the finale", tone: "rust", icon: "fa-satellite-dish" },
+  { key: "escape", label: "Escape", sub: "the last check", tone: "gold", icon: "fa-rocket" },
+  { key: "fx", label: "Effects", sub: "Sequencer · JB2A", tone: "ember", icon: "fa-wand-sparkles" }
 ];
 
 /* ------------------------------------------------------------------- brig */
@@ -827,8 +829,8 @@ class NRApp extends BaseApp {
       <div class="nr">
         ${this.header(ro)}
         <nav class="tabs">
-          ${TABS.map(x => `<button type="button" class="tab ${s.tab === x.key ? "on" : ""}" data-act="tab" data-k="${x.key}">
-            <b>${x.label}</b><small>${x.sub}</small></button>`).join("")}
+          ${TABS.map(x => `<button type="button" class="tab ${s.tab === x.key ? "on" : ""}" style="--tt:var(--${x.tone})" data-act="tab" data-k="${x.key}">
+            <b><i class="fa-solid ${x.icon}"></i> ${x.label}</b><small>${x.sub}</small></button>`).join("")}
         </nav>
         ${s.tab === "brig" ? this.brigTab(ro) : ""}
         ${s.tab === "lower" ? this.deckTab("lower", ro) : ""}
@@ -1161,7 +1163,9 @@ class NRApp extends BaseApp {
             return `
               <div class="scenerow ${degree ? "res-" + degree : ""}">
                 <img src="${pc.img}" alt="" onerror="this.src='icons/svg/mystery-man.svg'">
-                <div class="cn">${esc(pc.name)}</div>
+                ${pc.actorId
+                  ? `<button type="button" class="cn link" data-act="sheet" data-id="${pc.actorId}" title="Open ${esc(pc.name)}'s character sheet">${esc(pc.name)}</button>`
+                  : `<div class="cn">${esc(pc.name)}</div>`}
                 <div class="roles">
                   ${Object.entries(ROLES).map(([k, r]) => {
                     const used = t.seatUse(k), full = used >= t.seatsFor(k) && role !== k;
@@ -1266,7 +1270,9 @@ class NRApp extends BaseApp {
           ${e.rows.map(r => `
             <div class="crewrow ${r.result ?? ""}">
               <img src="${r.pc.img}" alt="" onerror="this.src='icons/svg/mystery-man.svg'">
-              <div class="cn">${esc(r.pc.name)}</div>
+              ${r.pc.actorId
+                ? `<button type="button" class="cn link" data-act="sheet" data-id="${r.pc.actorId}" title="Open ${esc(r.pc.name)}'s character sheet">${esc(r.pc.name)}</button>`
+                : `<div class="cn">${esc(r.pc.name)}</div>`}
               <div class="roles">
                 ${ESCAPE.roles.map(role => `
                   <button type="button" class="opt sm ${r.role === role.key ? "on" : ""}" data-act="role" data-i="${r.i}" data-k="${role.key}" ${ro ? "disabled" : ""}>${role.label}</button>`).join("")}
@@ -1302,6 +1308,11 @@ class NRApp extends BaseApp {
       ev.preventDefault();
       const a = btn.dataset.act;
       if (a === "tab") { t.s.tab = btn.dataset.k; t.touch(); }
+      else if (a === "sheet") {
+        const actor = game.actors.get(btn.dataset.id);
+        if (actor) actor.sheet?.render(true);
+        else ui.notifications.warn("That character's actor is no longer in this world.");
+      }
       else if (a === "area") t.toggleArea(btn.dataset.k);
       else if (a === "repair") t.toggleRepair(btn.dataset.k);
       else if (a === "ally") t.toggleAlly(btn.dataset.k);
@@ -1352,7 +1363,7 @@ class NRApp extends BaseApp {
       .nr button:hover:not(:disabled) { background:var(--hover); }
       .nr button:disabled { opacity:.4; cursor:not-allowed; }
       .nr input[type="checkbox"] { accent-color:var(--slate); margin-top:.15rem; flex:none; }
-      .nr h3 { color:var(--ink); font-size:.88rem; margin:0 0 .5rem; letter-spacing:.05em; text-transform:uppercase;
+      .nr h3 { color:var(--ink); font-size:.95rem; margin:0 0 .55rem; letter-spacing:.05em; text-transform:uppercase;
                display:flex; align-items:center; gap:.5rem; border-bottom:1px solid var(--line);
                padding-bottom:.3rem; flex-wrap:wrap; }
       .nr h3 small { font-weight:400; text-transform:none; letter-spacing:0; color:var(--muted); font-size:.72rem; }
@@ -1418,10 +1429,19 @@ class NRApp extends BaseApp {
       .nr .dcbox b { font-size:1.05rem; line-height:1; color:var(--gold); }
 
       .nr .tabs { display:flex; gap:3px; margin-bottom:.6rem; }
-      .nr .tab { flex:1; padding:.3rem .2rem; font-size:.77rem; display:flex; flex-direction:column; line-height:1.2; }
-      .nr .tab small { font-size:.6rem; color:var(--muted); font-weight:400; }
-      .nr .tab.on { background:var(--slate); border-color:var(--slate); color:var(--paper); }
-      .nr .tab.on small { color:var(--paper); opacity:.85; }
+      .nr .tab { flex:1; padding:.3rem .2rem; font-size:.77rem; display:flex; flex-direction:column; line-height:1.2;
+                 overflow:hidden; border-top:3px solid var(--tt, var(--line)); border-radius:3px 3px 2px 2px; }
+      .nr .tab b { display:flex; align-items:center; justify-content:center; gap:.3rem; }
+      .nr .tab b i { font-size:.66rem; color:var(--tt, var(--muted)); }
+      .nr .tab small { font-size:.6rem; color:var(--muted); font-weight:400; white-space:nowrap;
+                       text-overflow:ellipsis; overflow:hidden; max-width:100%; }
+      .nr .tab.on { background:var(--tt); border-color:var(--tt); color:var(--paper); }
+      .nr .tab.on b i, .nr .tab.on small { color:var(--paper); opacity:.85; }
+
+      /* A crew name is a button when there's an actor behind it. */
+      .nr button.cn { background:transparent; border:0; padding:0; color:var(--ink); font-family:inherit;
+                      text-align:left; cursor:pointer; justify-content:flex-start; }
+      .nr button.cn:hover { text-decoration:underline; background:transparent; }
 
       .nr .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:.5rem; }
       .nr .crew { display:flex; gap:.35rem; flex-wrap:wrap; margin:.1rem 0 .45rem; }

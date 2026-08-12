@@ -109,6 +109,24 @@ for (const [n, list] of Object.entries(LOOT)) for (const i of list) {
   if (LOOT_PAGES[`${n}.${i.key}`] || AREA_RE.test(i.where ?? "")) lootLinked++;
 }
 
+/* ---- the other consoles ----
+   They link into the same adventure but hold far less: one or two entry ids
+   and a handful of page ids each, with no table to cross-check. Scanning the
+   source for anything shaped like a module id catches a stale one without
+   needing to know how each macro is laid out. */
+const OTHERS = ["fall-downtime-tracker", "first-long-night-console",
+                "enlightened-path-console", "ruins-of-wisdom-console"];
+for (const name of OTHERS) {
+  const file = path.join(here, `../../macros/season-of-ghosts/${name}.js`);
+  if (!fs.existsSync(file)) { fail(`${name}: not found`); continue; }
+  const text = fs.readFileSync(file, "utf8");
+  const entryIds = new Set([...text.matchAll(/"(pf2apsog\d\d\w+)"/g)].map(m => m[1]));
+  const pageIds = new Set([...text.matchAll(/"(\d\d[a-z0-9]{14})"/g)].map(m => m[1]));
+  for (const id of entryIds) if (!entries.has(id)) fail(`${name}: no entry with id ${id}`);
+  for (const id of pageIds) if (!pages.has(id)) fail(`${name}: no page with id ${id}`);
+  console.log(`${name}: ${entryIds.size} entr${entryIds.size === 1 ? "y" : "ies"}, ${pageIds.size} pages`);
+}
+
 console.log(`\n${entries.size} entries and ${pages.size} pages in ${adventure?.name ?? "the pack"}`);
 console.log(`items  ${itemsLinked}/${itemKeys.size} linked`);
 console.log(`loot   ${lootLinked}/${lootKeys.size} linked`);

@@ -757,6 +757,75 @@ class Tracker {
   render() { this.app?.render(); }
 }
 
+/* ------------------------------------------------------------- the journal
+   The Season of Ghosts module ships this chapter as a journal entry with a
+   fixed id, and a Foundry adventure import keeps that id — so a button can
+   open the page a section came from rather than leaving you to find it. Ids
+   read out of the module's pack.
+
+   None of this is required. The entry resolves by id, then by name, then
+   through the compendiums, and if the adventure isn't in the world no link
+   renders at all. */
+const JOURNAL = { id: "pf2apsog07turnin", name: "Act 2.1: Turning of the Seasons" };
+const JPAGE = {
+  chapter: "07turningofthe00", start: "07gettingstart00", fall: "07willowshorei00",
+  winter: "07preparingfor00", events: "07willowshoree00",
+  hope: "07bolsteringho00", food: "07gatheringfoo00", security: "07increasingse00",
+  teahouse: "07restoringthe00", research: "07researchingt00",
+  feastPrep: "07preparingfor01", feastNight: "07nightofthefe00", afterFeast: "07afterthefeas00",
+  shinzo: "07shinzosvisit00"
+};
+/* The twelve town events, each its own page. */
+const JWEEK = {
+  1: "07week1anoffer00", 2: "07week2aslithe00", 3: "07week3firstlo00", 4: "07week4haunted00",
+  5: "07week5themiss00", 6: "07week6theface00", 7: "07week7anicygr00", 8: "07week8stablef00",
+  9: "07week9kimchis00", 10: "07week10feasto00", 11: "07week11thefac00", 12: "07week12vanish00"
+};
+/* Which page explains each preparation activity. */
+const JACTIVITY = {
+  repair: "07restoringthe00", yami: "07restoringthe00", ceremony: "07restoringthe00",
+  harvest: "07gatheringfoo00", hunt: "07gatheringfoo00",
+  townsfolk: "07bolsteringho00", reinforce: "07increasingse00", festival: "07week3firstlo00"
+};
+
+const jnorm = (s) => String(s ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+
+/* World only, and synchronous — the UI uses it to decide whether a link is
+   worth offering before anyone clicks it. */
+function journalEntry() {
+  const byId = game.journal?.get?.(JOURNAL.id);
+  if (byId) return byId;
+  const want = jnorm(JOURNAL.name), all = [...(game.journal ?? [])];
+  return all.find(j => jnorm(j.name) === want)
+      ?? all.find(j => jnorm(j.name).endsWith(want)) ?? null;
+}
+
+async function journalDoc() {
+  const local = journalEntry();
+  if (local) return local;
+  const want = jnorm(JOURNAL.name);
+  for (const pack of game.packs ?? []) {
+    if (pack.documentName !== "JournalEntry") continue;
+    const idx = [...pack.index];
+    const hit = pack.index.get?.(JOURNAL.id) ?? idx.find(e => jnorm(e.name) === want);
+    if (hit) return pack.getDocument(hit._id);
+  }
+  return null;
+}
+
+const journalPage = (entry, pageId) =>
+  (entry?.pages?.contents ?? entry?.pages ?? []).find(p => p.id === pageId) ?? null;
+
+async function openJournal(pageId) {
+  const entry = await journalDoc();
+  if (!entry) {
+    ui.notifications.warn(`No journal found for "${JOURNAL.name}". Looked for the id ${JOURNAL.id}, then that name in the journal directory and the compendiums.`);
+    return;
+  }
+  const page = journalPage(entry, pageId);
+  entry.sheet.render(true, page ? { pageId: page.id } : {});
+}
+
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 /* "DC 17 Willowshore Lore / DC 19 Diplomacy" -> "Willowshore Lore / Diplomacy" */
 const skillsOnly = (s) => s.replace(/DC \d+ /g, "");
@@ -852,7 +921,7 @@ class SoGDowntimeApp extends BaseApp {
 
     const feast = s.week === 10 ? `
       <section class="panel feast">
-        <h3>Feast of the Kami <small>three Prepare for the Feast activities per PC — no downtime this week</small></h3>
+        <h3>Feast of the Kami <small>three Prepare for the Feast activities per PC — no downtime this week</small> ${this.jbtn(JPAGE.feastPrep)}</h3>
         <div class="feast-grid">
           ${[["decoration", "Decorations", "4+ respected · 6+ = +2 Security"], ["banquet", "Banquet", "4–6 fine · 7+ = tea ceremony up one degree"], ["entertainment", "Entertainment", "4–6 = +1 · 7+ = +1 and one degree up"]]
         .map(([k, label, note]) => `
@@ -923,7 +992,7 @@ class SoGDowntimeApp extends BaseApp {
         ${feast}
 
         <section class="panel research">
-          <h3>Researching the Curse <small>one non-preparation activity per PC per week</small></h3>
+          <h3>Researching the Curse <small>one non-preparation activity per PC per week</small> ${this.jbtn(JPAGE.research)}</h3>
           <div class="rp-total">
             <div class="rp-num">${t.rpTotal}<span>/10 RP</span></div>
             <div class="bar"><i style="width:${rpPct}%"></i></div>
@@ -932,7 +1001,7 @@ class SoGDowntimeApp extends BaseApp {
         </section>
 
         <section class="panel setup">
-          <h3>Campaign state</h3>
+          <h3>Campaign state ${this.jbtn(JPAGE.chapter)}</h3>
           <div class="setup-grid">
             <label>Town elder
               <select data-act="leader" ${ro ? "disabled" : ""}>
@@ -1012,11 +1081,23 @@ class SoGDowntimeApp extends BaseApp {
           <button type="button" class="collapse" data-act="toggleeventpanel" title="Show or hide">${open ? "▾" : "▸"}</button>
           Running: ${ev.name}
           ${d.level ? `<small class="lvl">${d.level}</small>` : ""}
+          ${this.jbtn(JWEEK[this.tracker.s.week])}
           ${ev.spooky ? `<small>supernatural — the Resolved box docks 1 Hope</small>` : ""}
           ${d.checks?.length ? `<button type="button" class="postchecks" data-act="posteventchecks" title="Post rollable checks to chat"><i class="fa-solid fa-dice-d20"></i> Post checks</button>` : ""}
         </h3>
         ${body}
       </section>`;
+  }
+
+  /* A link into the module's journal, or nothing at all when the adventure
+     isn't in this world. A button that could only ever say "not found" would
+     be worse than no button. */
+  jbtn(pageId, label = "") {
+    const entry = journalEntry();
+    if (!entry || !pageId) return "";
+    const page = journalPage(entry, pageId);
+    return `<button type="button" class="jbtn" data-act="journal" data-r="${esc(pageId)}"
+      title="Open the journal: ${esc(page ? page.name : entry.name)}"><i class="fa-solid fa-book-open"></i>${label ? ` ${label}` : ""}</button>`;
   }
 
   pcCard(pc, i, ro) {
@@ -1059,14 +1140,16 @@ class SoGDowntimeApp extends BaseApp {
         <div class="card-head">
           <img class="avatar" src="${pc.img || "icons/svg/mystery-man.svg"}" alt="" onerror="this.src='icons/svg/mystery-man.svg'">
           <div class="who">
-            <span class="pcname">${esc(pc.name)}</span>
+            ${pc.actorId
+              ? `<button type="button" class="pcname link" data-act="sheet" data-id="${pc.actorId}" title="Open ${esc(pc.name)}'s character sheet">${esc(pc.name)}</button>`
+              : `<span class="pcname">${esc(pc.name)}</span>`}
             ${sub ? `<span class="pcsub">${esc(sub)}</span>` : ""}
           </div>
           <span class="status ${state}"><i></i>${stateLabel}</span>
         </div>
         ${act ? `<div class="trackbar ${act.track.toLowerCase()}">${act.track}</div>` : ""}
 
-        <label class="fld">Preparation activity
+        <label class="fld">Preparation activity ${entry.activity ? this.jbtn(JACTIVITY[entry.activity]) : ""}
           <select data-act="pick" data-pc="${i}" ${ro ? "disabled" : ""}>
             <option value="">— choose —</option>
             ${opts}
@@ -1112,6 +1195,12 @@ class SoGDowntimeApp extends BaseApp {
       const a = btn.dataset.act;
       const pc = Number(btn.dataset.pc);
       if (a === "week") t.setWeek(t.s.week + Number(btn.dataset.n));
+      else if (a === "journal") openJournal(btn.dataset.r);
+      else if (a === "sheet") {
+        const actor = game.actors.get(btn.dataset.id);
+        if (actor) actor.sheet?.render(true);
+        else ui.notifications.warn("That character's actor is no longer in this world.");
+      }
       else if (a === "gotoweek") t.setWeek(Number(btn.dataset.n));
       else if (a === "eoutcome") t.toggleEventOutcome(Number(btn.dataset.i));
       else if (a === "randtarget") t.pickRandomTarget();
@@ -1275,9 +1364,19 @@ class SoGDowntimeApp extends BaseApp {
              border:1px solid var(--line); border-radius:3px; height:auto; padding:2px 4px; }
       .sog option { background:var(--field); color:var(--ink); }
       .sog input[type="checkbox"] { accent-color:var(--ember); }
-      .sog h3 { font-size:.95rem; margin:0 0 .5rem; letter-spacing:.04em; text-transform:uppercase;
-                display:flex; align-items:baseline; gap:.5rem; border-bottom:1px solid var(--line);
-                padding-bottom:.3rem; color:var(--ink); }
+      /* A panel is titled in large ink over a thick rule in its own tone, so
+         it reads ahead of anything nested inside it. */
+      .sog h3 { font-size:.95rem; margin:0 0 .55rem; letter-spacing:.04em; text-transform:uppercase;
+                display:flex; align-items:center; gap:.5rem; border-bottom:2px solid var(--tone, var(--line));
+                padding-bottom:.3rem; color:var(--ink); flex-wrap:wrap; }
+
+      /* A link into the module's journal. */
+      .sog .jbtn { font-size:.62rem; padding:1px 5px; border-radius:3px; color:var(--slate);
+                   border:1px solid var(--line); background:transparent; flex:none; letter-spacing:.04em;
+                   display:inline-flex; align-items:center; gap:.25rem; cursor:pointer;
+                   height:auto; min-height:0; font-family:inherit; }
+      .sog .jbtn:hover { background:var(--hover); }
+      .sog .jbtn i { font-size:.66rem; }
       .sog h3 small { font-weight:400; text-transform:none; letter-spacing:0; color:var(--muted); font-size:.75rem; }
 
       .sog .eventpanel h3 { align-items:center; }
@@ -1306,6 +1405,10 @@ class SoGDowntimeApp extends BaseApp {
       .sog .who { display:flex; flex-direction:column; flex:1; min-width:0; }
       .sog .pcname { font-weight:600; font-size:.95rem; line-height:1.15; white-space:nowrap;
                      overflow:hidden; text-overflow:ellipsis; }
+      /* The name is a button when there's an actor behind it. */
+      .sog button.pcname { background:transparent; border:0; padding:0; color:var(--ink);
+                           font-family:inherit; text-align:left; cursor:pointer; width:100%; }
+      .sog button.pcname:hover { text-decoration:underline; }
       .sog .pcsub { font-size:.66rem; color:var(--muted); white-space:nowrap; overflow:hidden;
                     text-overflow:ellipsis; }
       .sog .status { display:flex; align-items:center; gap:4px; font-size:.6rem; text-transform:uppercase;

@@ -49,14 +49,16 @@ function linkify(text) {
 }
 
 /* ------------------------------------------------------------------ tabs */
+/* The tab strip carries the same colours the panels under it use, so the
+   strip says where you are before you read it. */
 const ZONES = [
-  { key: "arrival", label: "Arrival", sub: "gifts and ground rules" },
-  { key: "statues", label: "The statues", sub: "purification" },
-  { key: "grounds", label: "E1–E5", sub: "gate to shrine" },
-  { key: "halls", label: "E6–E9", sub: "refectory to dorms" },
-  { key: "grove", label: "E10–E13", sub: "libraries and the tree" },
-  { key: "below", label: "E14–E16", sub: "beneath the monastery" },
-  { key: "after", label: "Aftermath", sub: "back to Willowshore" }
+  { key: "arrival", label: "Arrival", sub: "gifts and ground rules", tone: "gold", icon: "fa-mountain-sun" },
+  { key: "statues", label: "The statues", sub: "purification", tone: "plum", icon: "fa-gopuram" },
+  { key: "grounds", label: "E1–E5", sub: "gate to shrine", tone: "moss", icon: "fa-torii-gate" },
+  { key: "halls", label: "E6–E9", sub: "refectory to dorms", tone: "ember", icon: "fa-utensils" },
+  { key: "grove", label: "E10–E13", sub: "libraries and the tree", tone: "slate", icon: "fa-book" },
+  { key: "below", label: "E14–E16", sub: "beneath the monastery", tone: "rust", icon: "fa-dungeon" },
+  { key: "after", label: "Aftermath", sub: "back to Willowshore", tone: "gold", icon: "fa-scroll" }
 ];
 
 /* -------------------------------------------------------------- arrival */
@@ -411,6 +413,73 @@ const esc = (s) => foundry.utils.escapeHTML ? foundry.utils.escapeHTML(String(s)
 const areaFor = (key) => AREAS.find(a => a.key === key);
 const statueArea = (statueKey) => AREAS.find(a => a.statue === statueKey);
 
+/* ------------------------------------------------------------- the journal
+   The Season of Ghosts module ships this chapter as a journal entry with a
+   fixed id, and a Foundry adventure import keeps that id — so a button can
+   open the page for an area rather than leaving you to find it.
+
+   An area resolves from its own E-number, because the module encodes the area
+   code in the page id (`09e11hiddenlib00` is E11) even though the page is
+   named just "Hidden Library". Ids read out of the module's pack.
+
+   None of this is required. The entry resolves by id, then by name, then
+   through the compendiums, and if the adventure isn't in the world no link
+   renders at all. */
+const JOURNAL = { id: "pf2apsog09inther", name: "Act 2.3: In the Ruins of Wisdom", ord: "09" };
+const JPAGE = {
+  chapter: "09intheruinsof00", monastery: "09tansugimonas00", features: "09monasteryfea00",
+  resting: "09resting0000000", purify: "09purifyingthe00",
+  purify1: "09firstpurific00", purify2: "09secondpurifi00",
+  purify3: "09thirdpurific00", purify4: "09fourthpurifi00",
+  back: "09returntowill00", concluding: "09concludingth00"
+};
+
+const jnorm = (s) => String(s ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+
+/* World only, and synchronous — the UI uses it to decide whether a link is
+   worth offering before anyone clicks it. */
+function journalEntry() {
+  const byId = game.journal?.get?.(JOURNAL.id);
+  if (byId) return byId;
+  const want = jnorm(JOURNAL.name), all = [...(game.journal ?? [])];
+  return all.find(j => jnorm(j.name) === want)
+      ?? all.find(j => jnorm(j.name).endsWith(want)) ?? null;
+}
+
+async function journalDoc() {
+  const local = journalEntry();
+  if (local) return local;
+  const want = jnorm(JOURNAL.name);
+  for (const pack of game.packs ?? []) {
+    if (pack.documentName !== "JournalEntry") continue;
+    const idx = [...pack.index];
+    const hit = pack.index.get?.(JOURNAL.id) ?? idx.find(e => jnorm(e.name) === want);
+    if (hit) return pack.getDocument(hit._id);
+  }
+  return null;
+}
+
+/* A ref is either an exact page id or an area code. The guard on the
+   character after the code stops E1 matching E11. */
+function journalPage(entry, ref) {
+  if (!ref) return null;
+  const pages = entry?.pages?.contents ?? entry?.pages ?? [];
+  if (/^\d/.test(ref)) return pages.find(p => p.id === ref) ?? null;
+  const head = `${JOURNAL.ord}${ref}`.toLowerCase();
+  return pages.find(p => p.id.toLowerCase().startsWith(head)
+    && !/\d/.test(p.id.charAt(head.length))) ?? null;
+}
+
+async function openJournal(ref) {
+  const entry = await journalDoc();
+  if (!entry) {
+    ui.notifications.warn(`No journal found for "${JOURNAL.name}". Looked for the id ${JOURNAL.id}, then that name in the journal directory and the compendiums.`);
+    return;
+  }
+  const page = journalPage(entry, ref);
+  entry.sheet.render(true, page ? { pageId: page.id } : {});
+}
+
 /* ----------------------------------------------------------------- engine */
 class Monastery {
   constructor(state) { this.state = state; }
@@ -637,6 +706,17 @@ class RWApp extends BaseApp {
   }
 
   /* -------------------------------------------------------------- markup */
+  /* A link into the module's journal, or nothing at all when the adventure
+     isn't in this world. A button that could only ever say "not found" would
+     be worse than no button. */
+  jbtn(ref, label = "") {
+    const entry = journalEntry();
+    if (!entry) return "";
+    const page = journalPage(entry, ref);
+    return `<button type="button" class="jbtn" data-act="journal" data-r="${esc(ref ?? "")}"
+      title="Open the journal: ${esc(page ? page.name : entry.name)}"><i class="fa-solid fa-book-open"></i>${label ? ` ${label}` : ""}</button>`;
+  }
+
   markup() {
     const t = this.t, s = t.s, ro = !t.editable;
     const zoneTab = ["grounds", "halls", "grove", "below"].includes(s.tab);
@@ -644,8 +724,8 @@ class RWApp extends BaseApp {
       <div class="rw">
         ${this.header(ro)}
         <nav class="tabs">
-          ${ZONES.map(z => `<button type="button" class="tab ${s.tab === z.key ? "on" : ""}" data-act="tab" data-k="${z.key}">
-            <b>${z.label}</b><small>${z.sub}</small></button>`).join("")}
+          ${ZONES.map(z => `<button type="button" class="tab ${s.tab === z.key ? "on" : ""}" style="--tt:var(--${z.tone})" data-act="tab" data-k="${z.key}">
+            <b><i class="fa-solid ${z.icon}"></i> ${z.label}</b><small>${z.sub}</small></button>`).join("")}
         </nav>
         ${s.tab === "arrival" ? this.arrivalTab() : ""}
         ${s.tab === "statues" ? this.statuesTab(ro) : ""}
@@ -681,6 +761,7 @@ class RWApp extends BaseApp {
     return `
       <section class="panel" style="--tone:var(--gold)">
         <h3>The end of the Pilgrim's Path <small>an hour before sunset</small>
+          ${this.jbtn(JPAGE.monastery)}
           <button type="button" class="say" data-act="postarrival" title="Read to the table"><i class="fa-solid fa-comment"></i></button>
         </h3>
         <p class="boxed">${ARRIVAL.boxed}</p>
@@ -699,12 +780,12 @@ class RWApp extends BaseApp {
       </section>
 
       <section class="panel" style="--tone:var(--slate)">
-        <h3>Monastery features</h3>
+        <h3>Monastery features ${this.jbtn(JPAGE.features)}</h3>
         <ul class="checks">${FEATURES.map(f => `<li>${f}</li>`).join("")}</ul>
       </section>
 
       <section class="panel" style="--tone:var(--rust)">
-        <h3>Resting <small>the ruins are not safe</small></h3>
+        <h3>Resting <small>the ruins are not safe</small> ${this.jbtn(JPAGE.resting)}</h3>
         <ul class="checks">${RESTING.map(r => `<li>${r}</li>`).join("")}</ul>
       </section>`;
   }
@@ -715,6 +796,7 @@ class RWApp extends BaseApp {
     return `
       <section class="panel" style="--tone:var(--gold)">
         <h3>Purify Statue <small>${PURIFY.traits.join(" · ")}</small>
+          ${this.jbtn(JPAGE.purify)}
           <button type="button" class="say" data-act="postpurify" title="Post the activity"><i class="fa-solid fa-comment"></i></button>
         </h3>
         <p class="req"><b>Requirements</b> ${PURIFY.requirement}</p>
@@ -791,6 +873,7 @@ class RWApp extends BaseApp {
       <section class="panel area ${cleared ? "done" : ""}" style="--tone:var(--${a.tone})">
         <h3><span class="eid">${a.id}</span>${a.name}
           ${a.level ? `<span class="lvl">${a.level}</span>` : ""}
+          ${this.jbtn(a.key)}
           <button type="button" class="say" data-act="postarea" data-k="${a.key}" title="Read to the table"><i class="fa-solid fa-comment"></i></button>
           ${a.checks?.length ? `<button type="button" class="say" data-act="postchecks" data-k="${a.key}" title="Post the checks"><i class="fa-solid fa-dice-d20"></i></button>` : ""}
         </h3>
@@ -807,7 +890,8 @@ class RWApp extends BaseApp {
         ${a.hazard ? `<p class="loot"><b>Hazard</b> ${a.hazard}</p>` : ""}
         ${a.treasure ? `<p class="loot"><b>Treasure</b> ${a.treasure}</p>` : ""}
         ${a.aside ? `<div class="aside"><b>${a.aside.title}</b><p>${a.aside.text}</p></div>` : ""}
-        ${beats.length ? `<div class="beats">
+        ${beats.length ? `<div class="sub beats">
+          <div class="subhead"><i class="fa-solid fa-circle-check"></i> What can happen here <span>${beats.filter(b => t.beat(a.key, b.key)).length} of ${beats.length}</span></div>
           ${beats.map(b => `
             <label class="check"><input type="checkbox" data-act="beat" data-k="${a.key}" data-b="${b.key}" ${t.beat(a.key, b.key) ? "checked" : ""} ${ro ? "disabled" : ""}>
               ${b.label}${b.xp ? ` <span class="tag">${b.xp} XP</span>` : ""}${b.hope ? ` <span class="tag">${b.hope} Hope</span>` : ""}</label>
@@ -828,6 +912,7 @@ class RWApp extends BaseApp {
     return `
       <section class="panel" style="--tone:var(--plum)">
         <h3>Concluding the act
+          ${this.jbtn(JPAGE.concluding)}
           <button type="button" class="say" data-act="postconc" title="Read to the table"><i class="fa-solid fa-comment"></i></button>
         </h3>
         <p class="boxed">${CONCLUSION.boxed}</p>
@@ -881,6 +966,7 @@ class RWApp extends BaseApp {
       ev.preventDefault();
       const a = btn.dataset.act;
       if (a === "tab") { t.s.tab = btn.dataset.k; t.touch(); }
+      else if (a === "journal") openJournal(btn.dataset.r || null);
       else if (a === "statue") t.setStatue(btn.dataset.k, btn.dataset.d);
       else if (a === "ask") t.askQuestion(Number(btn.dataset.n), Number(btn.dataset.d));
       else if (a === "cleared") t.toggleCleared(btn.dataset.k);
@@ -922,8 +1008,11 @@ class RWApp extends BaseApp {
       .rw button:hover:not(:disabled) { background:var(--hover); }
       .rw button:disabled { opacity:.45; cursor:not-allowed; }
       .rw input[type="checkbox"] { accent-color:var(--ember); }
-      .rw h3 { color:var(--ink); font-size:.9rem; margin:0 0 .5rem; letter-spacing:.04em; text-transform:uppercase;
-               display:flex; align-items:center; gap:.5rem; border-bottom:1px solid var(--line);
+      /* Two levels of heading that must not compete: a panel is titled in
+         large ink over a thick rule in its own tone, a block inside it wears
+         a small filled bar. Outer reads first, inner sorts what's under it. */
+      .rw h3 { color:var(--ink); font-size:.95rem; margin:0 0 .55rem; letter-spacing:.04em; text-transform:uppercase;
+               display:flex; align-items:center; gap:.5rem; border-bottom:2px solid var(--tone, var(--line));
                padding-bottom:.3rem; flex-wrap:wrap; }
       .rw h3 small { font-weight:400; text-transform:none; letter-spacing:0; color:var(--muted); font-size:.72rem; }
       .rw h1, .rw h2, .rw h4, .rw legend { color:var(--ink); }
@@ -961,16 +1050,35 @@ class RWApp extends BaseApp {
       .rw .qa b { display:block; color:var(--tone, var(--ink)); }
       .rw .aside { border:1px dashed var(--line); border-radius:3px; padding:.45rem; margin:.4rem 0;
                    background:var(--stripe); font-size:.78rem; line-height:1.45; }
-      .rw .aside b { display:block; text-transform:uppercase; letter-spacing:.06em; font-size:.68rem;
-                     color:var(--muted); margin-bottom:.2rem; }
+      .rw .aside b { display:block; text-transform:uppercase; letter-spacing:.07em; font-size:.68rem;
+                     font-weight:700; color:var(--slate); margin-bottom:.25rem; }
       .rw .aside p { margin:0; }
       .rw .check { display:block; font-size:.8rem; margin-bottom:.25rem; line-height:1.4; }
       .rw .check.big { font-size:.84rem; margin:.4rem 0; }
       .rw .tag { font-size:.66rem; text-transform:uppercase; letter-spacing:.06em; padding:1px 6px;
                  border-radius:10px; border:1px solid var(--moss); color:var(--moss); margin-left:.25rem; }
       .rw .tag.warn { border-color:var(--rust); color:var(--rust); }
-      .rw .beats { border:1px dashed var(--line); border-radius:3px; padding:.45rem; margin:.4rem 0; background:var(--stripe); }
-      .rw .beatnote { font-size:.75rem; line-height:1.45; color:var(--muted); margin:0 0 .4rem 1.35rem; }
+      .rw .beatnote { font-size:.75rem; line-height:1.45; color:var(--muted); margin:.1rem 0 .4rem 1.35rem;
+                      padding-left:.5rem; border-left:1px solid var(--line); }
+
+      /* A block inside a panel: a tinted well headed by a filled bar in its
+         own accent. On parchment a tinted label reads as decoration; a solid
+         one reads as a heading, which is the point of it. */
+      .rw .sub { --sub:var(--line); background:var(--stripe); border:1px solid var(--sub);
+                 border-radius:4px; overflow:hidden; padding:.4rem .5rem .45rem; margin:.5rem 0; }
+      .rw .sub.beats { --sub:var(--moss); }
+      .rw .subhead { font-size:.66rem; text-transform:uppercase; letter-spacing:.1em; font-weight:700;
+                     display:flex; align-items:center; gap:.4rem;
+                     background:var(--sub, var(--muted)); color:var(--paper);
+                     margin:-.4rem -.5rem .45rem; padding:.28rem .5rem; border-radius:2px 2px 0 0; }
+      .rw .subhead i { color:var(--paper); opacity:.8; font-size:.72rem; }
+      .rw .subhead span { margin-left:auto; font-weight:600; color:var(--paper); letter-spacing:.06em;
+                          border-radius:8px; padding:0 7px; background:rgba(0,0,0,.22); }
+
+      /* A link into the module's journal. */
+      .rw .jbtn { font-size:.62rem; padding:1px 5px; border-radius:3px; color:var(--slate);
+                  border-color:var(--line); flex:none; letter-spacing:.04em; }
+      .rw .jbtn i { font-size:.66rem; }
       .rw .btnrow { display:flex; gap:.35rem; flex-wrap:wrap; }
       .rw .primary { background:var(--tone, var(--ember)); border-color:var(--tone, var(--ember));
                      color:var(--paper); font-weight:600; padding:.3rem .7rem; font-size:.76rem; }
@@ -999,10 +1107,16 @@ class RWApp extends BaseApp {
       .rw .xp b { font-size:1rem; line-height:1; }
 
       .rw .tabs { display:flex; gap:3px; margin-bottom:.6rem; }
-      .rw .tab { flex:1; padding:.3rem .2rem; font-size:.76rem; display:flex; flex-direction:column; line-height:1.2; }
-      .rw .tab small { font-size:.6rem; color:var(--muted); font-weight:400; }
-      .rw .tab.on { background:var(--plum); border-color:var(--plum); color:var(--paper); }
-      .rw .tab.on small { color:var(--paper); opacity:.8; }
+      .rw .tab { flex:1; padding:.3rem .2rem; font-size:.76rem; display:flex; flex-direction:column; line-height:1.2;
+                 overflow:hidden; border-top:3px solid var(--tt, var(--line)); border-radius:3px 3px 2px 2px; }
+      .rw .tab b { display:flex; align-items:center; justify-content:center; gap:.3rem; }
+      .rw .tab b i { font-size:.66rem; color:var(--tt, var(--muted)); }
+      .rw .tab small { font-size:.6rem; color:var(--muted); font-weight:400; white-space:nowrap;
+                       text-overflow:ellipsis; overflow:hidden; max-width:100%; }
+      .rw .tab.on { background:var(--tt); border-color:var(--tt); color:var(--paper); }
+      .rw .tab.on b i, .rw .tab.on small { color:var(--paper); opacity:.85; }
+
+      .rw .grid > * { align-self:start; }
 
       .rw .grid { display:grid; grid-template-columns:1fr 1fr; gap:.5rem; margin-bottom:.6rem; }
       .rw .statue.pure { box-shadow:inset 0 0 0 1px var(--gold); }

@@ -43,12 +43,14 @@ function linkify(text) {
 }
 
 /* ------------------------------------------------------------- the stages */
+/* The tab strip carries the same colours the panels under it use, so the
+   strip says where you are before you read it. */
 const STAGES = [
-  { key: "wall", label: "The Wall", sub: "ritual and vision" },
-  { key: "d1", label: "First day", sub: "Bridge Shrine" },
-  { key: "d2", label: "Second day", sub: "Garden Shrine" },
-  { key: "d3", label: "Third day", sub: "Mountain Shrine" },
-  { key: "d4", label: "Final day", sub: "the monastery" }
+  { key: "wall", label: "The Wall", sub: "ritual and vision", tone: "plum", icon: "fa-door-open", page: "intoWall" },
+  { key: "d1", label: "First day", sub: "Bridge Shrine", tone: "ember", icon: "fa-bridge", page: "d1" },
+  { key: "d2", label: "Second day", sub: "Garden Shrine", tone: "moss", icon: "fa-fan", page: "d2" },
+  { key: "d3", label: "Third day", sub: "Mountain Shrine", tone: "slate", icon: "fa-mountain", page: "d3" },
+  { key: "d4", label: "Final day", sub: "the monastery", tone: "gold", icon: "fa-torii-gate", page: "d4" }
 ];
 
 /* -------------------------------------------------- part 1: the ritual */
@@ -241,6 +243,73 @@ function registerSetting() {
 const esc = (s) => foundry.utils.escapeHTML ? foundry.utils.escapeHTML(String(s))
   : String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
+/* ------------------------------------------------------------- the journal
+   The Season of Ghosts module ships this chapter as a journal entry with a
+   fixed id, and a Foundry adventure import keeps that id — so a button can
+   open the page for an encounter rather than leaving you to find it.
+
+   An encounter resolves from its own letter-number, because the module
+   encodes that code in the page id (`08b3bridgeshri00` is B3) even though
+   the page is named just "Bridge Shrine". Ids read out of the module's pack.
+
+   None of this is required. The entry resolves by id, then by name, then
+   through the compendiums, and if the adventure isn't in the world no link
+   renders at all. */
+const JOURNAL = { id: "pf2apsog08theenl", name: "Act 2.2: The Enlightened Path", ord: "08" };
+const JPAGE = {
+  chapter: "08theenlighten00", through: "08throughthewa00", ritual: "08performingth00",
+  intoWall: "08intothewallo00", seed: "08plantingthes00", path: "08thepilgrimsp00",
+  walking: "08walkingthepa00",
+  d1: "08thefirstday000", d2: "08thesecondday00", d3: "08thethirdday000", d4: "08thefinalday000"
+};
+
+const jnorm = (s) => String(s ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+
+/* World only, and synchronous — the UI uses it to decide whether a link is
+   worth offering before anyone clicks it. */
+function journalEntry() {
+  const byId = game.journal?.get?.(JOURNAL.id);
+  if (byId) return byId;
+  const want = jnorm(JOURNAL.name), all = [...(game.journal ?? [])];
+  return all.find(j => jnorm(j.name) === want)
+      ?? all.find(j => jnorm(j.name).endsWith(want)) ?? null;
+}
+
+async function journalDoc() {
+  const local = journalEntry();
+  if (local) return local;
+  const want = jnorm(JOURNAL.name);
+  for (const pack of game.packs ?? []) {
+    if (pack.documentName !== "JournalEntry") continue;
+    const idx = [...pack.index];
+    const hit = pack.index.get?.(JOURNAL.id) ?? idx.find(e => jnorm(e.name) === want);
+    if (hit) return pack.getDocument(hit._id);
+  }
+  return null;
+}
+
+/* A ref is either an exact page id or an encounter code. The guard on the
+   character after the code stops B1 matching a hypothetical B11. */
+function journalPage(entry, ref) {
+  if (!ref) return null;
+  const pages = entry?.pages?.contents ?? entry?.pages ?? [];
+  if (/^\d/.test(ref)) return pages.find(p => p.id === ref) ?? null;
+  const head = `${JOURNAL.ord}${ref}`.toLowerCase();
+  return pages.find(p => p.id.toLowerCase().startsWith(head)
+    && !/\d/.test(p.id.charAt(head.length))) ?? null;
+}
+
+async function openJournal(ref) {
+  const entry = await journalDoc();
+  if (!entry) {
+    ui.notifications.warn(`No journal found for "${JOURNAL.name}". Looked for the id ${JOURNAL.id}, then that name in the journal directory and the compendiums.`);
+    return;
+  }
+  const page = journalPage(entry, ref);
+  entry.sheet.render(true, page ? { pageId: page.id } : {});
+}
+
+
 /* ----------------------------------------------------------------- engine */
 class PathTracker {
   constructor(state) { this.state = state; }
@@ -386,6 +455,17 @@ class EPApp extends BaseApp {
     this.wire(html instanceof jQuery ? html[0] : html);
   }
 
+  /* A link into the module's journal, or nothing at all when the adventure
+     isn't in this world. A button that could only ever say "not found" would
+     be worse than no button. */
+  jbtn(ref, label = "") {
+    const entry = journalEntry();
+    if (!entry) return "";
+    const page = journalPage(entry, ref);
+    return `<button type="button" class="jbtn" data-act="journal" data-r="${esc(ref ?? "")}"
+      title="Open the journal: ${esc(page ? page.name : entry.name)}"><i class="fa-solid fa-book-open"></i>${label ? ` ${label}` : ""}</button>`;
+  }
+
   /* -------------------------------------------------------------- markup */
   markup() {
     const t = this.t, s = t.s, ro = !t.editable;
@@ -393,8 +473,8 @@ class EPApp extends BaseApp {
       <div class="ep">
         ${this.header(ro)}
         <nav class="tabs">
-          ${STAGES.map(x => `<button type="button" class="tab ${s.tab === x.key ? "on" : ""}" data-act="tab" data-k="${x.key}">
-            <b>${x.label}</b><small>${x.sub}</small></button>`).join("")}
+          ${STAGES.map(x => `<button type="button" class="tab ${s.tab === x.key ? "on" : ""}" style="--tt:var(--${x.tone})" data-act="tab" data-k="${x.key}">
+            <b><i class="fa-solid ${x.icon}"></i> ${x.label}</b><small>${x.sub}</small></button>`).join("")}
         </nav>
         ${s.tab === "wall" ? this.wallTab(ro) : ""}
         ${["d1", "d2", "d3"].includes(s.tab) ? this.dayTab(s.tab, ro) : ""}
@@ -428,6 +508,7 @@ class EPApp extends BaseApp {
         <h3>
           <span class="eid">${e.id}</span>${e.name}
           ${e.level ? `<span class="lvl">${e.level}</span>` : ""}
+          ${dayKey === "vision" ? "" : this.jbtn(e.id.toLowerCase())}
           <button type="button" class="say" data-act="postenc" data-id="${e.id}" title="Read to the table"><i class="fa-solid fa-comment"></i></button>
         </h3>
         <p class="text">${e.text}</p>
@@ -449,14 +530,14 @@ class EPApp extends BaseApp {
     const opt = (k, label) => `<button type="button" class="rit ${r.cast === k ? "on" : ""} ${k}" data-act="ritual" data-r="${k}" ${ro ? "disabled" : ""}>${label}</button>`;
     return `
       <section class="panel" style="--tone:var(--gold)">
-        <h3>Performing the ritual <small>${RITUAL.name}</small></h3>
+        <h3>Performing the ritual <small>${RITUAL.name}</small> ${this.jbtn(JPAGE.ritual)}</h3>
         <label class="check"><input type="checkbox" data-act="components" ${r.components ? "checked" : ""} ${ro ? "disabled" : ""}> Components secured — <span class="soft">${RITUAL.cost}</span></label>
         <ul class="checks">${RITUAL.rules.map(x => `<li>${x}</li>`).join("")}</ul>
         <div class="btnrow">${opt("success", "Cast successfully · 80 XP")}${opt("critfail", "Critical failure · two ghosts")}</div>
       </section>
 
       <section class="panel" style="--tone:var(--plum)">
-        <h3>Into the Wall of Ghosts <small>Kugaptee's dream</small></h3>
+        <h3>Into the Wall of Ghosts <small>Kugaptee's dream</small> ${this.jbtn(JPAGE.intoWall)}</h3>
         <p class="text">${VISION.intro}</p>
         <ul class="checks">${VISION.rules.map(x => `<li>${x}</li>`).join("")}</ul>
       </section>
@@ -471,6 +552,7 @@ class EPApp extends BaseApp {
     return `
       <section class="panel daybar" style="--tone:var(--slate)">
         <h3>${d.title} <small>${d.weather}</small>
+          ${this.jbtn(JPAGE[dayKey])}
           <button type="button" class="say" data-act="postday" data-k="${dayKey}" title="Read to the table"><i class="fa-solid fa-comment"></i></button>
         </h3>
         <p class="text">${d.travel}</p>
@@ -480,14 +562,16 @@ class EPApp extends BaseApp {
 
       <section class="panel shrine ${lit ? "lit" : ""}" style="--tone:var(--${sh.tone})">
         <h3><span class="eid">${sh.id}</span>${sh.name} <span class="lvl">${sh.level}</span>
+          ${this.jbtn(sh.id.toLowerCase())}
           <button type="button" class="say" data-act="postenc" data-id="${sh.id}" title="Read to the table"><i class="fa-solid fa-comment"></i></button>
         </h3>
         <p class="text">${sh.text}</p>
         <ul class="checks">${sh.checks.map(c => `<li>${c}</li>`).join("")}</ul>
         ${sh.note ? `<p class="note">${sh.note}</p>` : ""}
         ${sh.loot ? `<p class="loot"><b>Treasure</b> ${sh.loot}</p>` : ""}
-        <div class="enl">
-          <div class="enl-head">Enlightenment${lit ? ` <span class="got">achieved</span>` : ""}</div>
+        <div class="sub enl">
+          <div class="subhead"><i class="fa-solid fa-sun"></i> Enlightenment
+            <span>${sh.conditions.filter(c => st[c.key]).length} of ${sh.conditions.length}${lit ? " · achieved" : ""}</span></div>
           ${sh.conditions.map(c => `<label class="check"><input type="checkbox" data-act="cond" data-day="${dayKey}" data-c="${c.key}" ${st[c.key] ? "checked" : ""} ${ro ? "disabled" : ""}> ${c.label}</label>`).join("")}
           <p class="reward">${sh.reward}</p>
           <p class="bonus">+1 item bonus to ${sh.save} saves until the end of the act · ${sh.xp} XP</p>
@@ -504,12 +588,12 @@ class EPApp extends BaseApp {
     const missing = Object.keys(DAYS).filter(k => !t.enlightened(k)).map(k => DAYS[k].shrineEnc.name);
     return `
       <section class="panel" style="--tone:var(--gold)">
-        <h3>The final day <small>uneventful, and cold</small></h3>
+        <h3>The final day <small>uneventful, and cold</small> ${this.jbtn(JPAGE.d4)}</h3>
         <p class="text">If Iogaka fell, the party wakes to clear blue skies; if she didn't, the storm continues for the rest of the act. Either way the temperature keeps dropping, feeling less like fall and more like winter. The Path crests a final ridge and descends toward the ruined Tan Sugi monastery — Chapter 7.</p>
       </section>
 
       <section class="panel" style="--tone:var(--plum)">
-        <h3>Carried into the monastery</h3>
+        <h3>Carried into the monastery ${this.jbtn(JPAGE.path)}</h3>
         <div class="carry">
           <div class="cbox">
             <b>${t.enlightenmentCount} of 3 enlightenments</b>
@@ -546,6 +630,7 @@ class EPApp extends BaseApp {
       ev.preventDefault();
       const a = btn.dataset.act;
       if (a === "tab") { t.s.tab = btn.dataset.k; t.touch(); }
+      else if (a === "journal") openJournal(btn.dataset.r || null);
       else if (a === "toggleenc") t.toggleEncounter(btn.dataset.day, btn.dataset.id, Number(btn.dataset.xp) || 0);
       else if (a === "ritual") t.setRitual(btn.dataset.r);
       else if (a === "postenc") t.postEncounter(btn.dataset.id);
@@ -581,9 +666,12 @@ class EPApp extends BaseApp {
       .ep button:hover:not(:disabled) { background:var(--hover); }
       .ep button:disabled { opacity:.45; cursor:not-allowed; }
       .ep input[type="checkbox"] { accent-color:var(--ember); }
-      .ep h3 { color:var(--ink); font-size:.9rem; margin:0 0 .5rem; letter-spacing:.04em; text-transform:uppercase;
-               display:flex; align-items:center; gap:.5rem; border-bottom:1px solid var(--line);
-               padding-bottom:.3rem; }
+      /* Two levels of heading that must not compete: a panel is titled in
+         large ink over a thick rule in its own tone, a block inside it wears
+         a small filled bar. Outer reads first, inner sorts what's under it. */
+      .ep h3 { color:var(--ink); font-size:.95rem; margin:0 0 .55rem; letter-spacing:.04em; text-transform:uppercase;
+               display:flex; align-items:center; gap:.5rem; border-bottom:2px solid var(--tone, var(--line));
+               padding-bottom:.3rem; flex-wrap:wrap; }
       .ep h3 small { font-weight:400; text-transform:none; letter-spacing:0; color:var(--muted); font-size:.72rem; }
       .ep h1, .ep h2, .ep h4, .ep legend { color:var(--ink); }
       .ep .panel { border:1px solid var(--line); border-radius:4px; padding:.6rem; margin-bottom:.6rem;
@@ -625,10 +713,14 @@ class EPApp extends BaseApp {
       .ep .xp b { font-size:1rem; line-height:1; }
 
       .ep .tabs { display:flex; gap:3px; margin-bottom:.6rem; }
-      .ep .tab { flex:1; padding:.3rem .2rem; font-size:.78rem; display:flex; flex-direction:column; line-height:1.2; }
-      .ep .tab small { font-size:.62rem; color:var(--muted); font-weight:400; }
-      .ep .tab.on { background:var(--plum); border-color:var(--plum); color:var(--paper); }
-      .ep .tab.on small { color:var(--paper); opacity:.8; }
+      .ep .tab { flex:1; padding:.3rem .2rem; font-size:.78rem; display:flex; flex-direction:column; line-height:1.2;
+                 overflow:hidden; border-top:3px solid var(--tt, var(--line)); border-radius:3px 3px 2px 2px; }
+      .ep .tab b { display:flex; align-items:center; justify-content:center; gap:.3rem; }
+      .ep .tab b i { font-size:.66rem; color:var(--tt, var(--muted)); }
+      .ep .tab small { font-size:.62rem; color:var(--muted); font-weight:400; white-space:nowrap;
+                       text-overflow:ellipsis; overflow:hidden; max-width:100%; }
+      .ep .tab.on { background:var(--tt); border-color:var(--tt); color:var(--paper); }
+      .ep .tab.on b i, .ep .tab.on small { color:var(--paper); opacity:.85; }
 
       .ep .grid { display:grid; grid-template-columns:1fr 1fr; gap:.5rem; }
       .ep .enc.done { opacity:.72; }
@@ -638,9 +730,25 @@ class EPApp extends BaseApp {
       .ep .rit.on.critfail { background:var(--rust); border-color:var(--rust); color:var(--paper); }
 
       .ep .shrine.lit { box-shadow:inset 0 0 0 1px var(--gold); }
-      .ep .enl { border:1px dashed var(--line); border-radius:3px; padding:.45rem; margin:.4rem 0; background:var(--stripe); }
-      .ep .enl-head { font-size:.66rem; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:.3rem; }
-      .ep .got { color:var(--gold); border:1px solid var(--gold); border-radius:10px; padding:0 6px; margin-left:4px; }
+      /* A block inside a panel: a tinted well headed by a filled bar in its
+         own accent. On parchment a tinted label reads as decoration; a solid
+         one reads as a heading, which is the point of it. */
+      .ep .sub { --sub:var(--line); background:var(--stripe); border:1px solid var(--sub);
+                 border-radius:4px; overflow:hidden; padding:.4rem .5rem .45rem; margin:.5rem 0; }
+      .ep .sub.enl { --sub:var(--gold); }
+      .ep .subhead { font-size:.66rem; text-transform:uppercase; letter-spacing:.1em; font-weight:700;
+                     display:flex; align-items:center; gap:.4rem;
+                     background:var(--sub, var(--muted)); color:var(--paper);
+                     margin:-.4rem -.5rem .45rem; padding:.28rem .5rem; border-radius:2px 2px 0 0; }
+      .ep .subhead i { color:var(--paper); opacity:.8; font-size:.72rem; }
+      .ep .subhead span { margin-left:auto; font-weight:600; color:var(--paper); letter-spacing:.06em;
+                          border-radius:8px; padding:0 7px; background:rgba(0,0,0,.22); }
+
+      /* A link into the module's journal. */
+      .ep .jbtn { font-size:.62rem; padding:1px 5px; border-radius:3px; color:var(--slate);
+                  border-color:var(--line); flex:none; letter-spacing:.04em; }
+      .ep .jbtn i { font-size:.66rem; }
+      .ep .grid > * { align-self:start; }
       .ep .reward { font-size:.78rem; line-height:1.45; margin:.35rem 0 .2rem; }
       .ep .bonus { font-size:.76rem; font-weight:600; color:var(--moss); margin:0; }
 
