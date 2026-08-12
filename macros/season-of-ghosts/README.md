@@ -154,9 +154,12 @@ produced them.
 - The Two Weavers continuity checklist, the milestone-level table, and per-PC arcs
 - A spoiler-free chat recap: act, chapter, level, and the chapters behind them
 
-Everything inside a chapter card is the same shape — a tinted well with a coloured spine and
-a labelled head carrying its own count — so decisions, treasure, consoles, module macros,
-audio, and cues can be told apart without reading any of them.
+Two levels of heading, and they don't compete. A panel is titled in large ink over a thick
+rule in its own tone; a block inside it wears a small filled bar in its accent — ink for the
+chapter's decisions, gold for treasure, moss for a running procedure, plum for this
+collection's consoles, ember for module macros, slate for audio, rust for scenes and cues.
+The tab strip uses the same colours: an act tab carries its season, and the four views are
+plum, told apart by their icon.
 
 Generic beds that appear in every act — Indoors, Woods, Willowshore, the Mist and Fog set, the
 River loop — sit on the campaign tab under **Always to hand** rather than repeating against all

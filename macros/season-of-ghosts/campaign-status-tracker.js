@@ -1304,23 +1304,27 @@ class CSApp extends BaseApp {
   /* -------------------------------------------------------------- markup */
   markup() {
     const t = this.t, s = t.s, ro = !t.editable;
+    /* An act tab carries its season's colour, which is the same colour that
+       act's chapter cards and its checklist heads use — so the strip says
+       where you are before you read it. The four views are plum, and told
+       apart by their icon rather than by hue. */
     const tabs = [
-      { key: "campaign", label: "Campaign", sub: "where the table is" },
-      { key: "act1", label: "Act 1", sub: ACTS[1].name },
-      { key: "act2", label: "Act 2", sub: ACTS[2].name },
-      { key: "act3", label: "Act 3", sub: ACTS[3].name },
-      { key: "act4", label: "Act 4", sub: ACTS[4].name },
-      { key: "threads", label: "Threads", sub: "what carries forward" },
-      { key: "loot", label: "Treasure", sub: "the loot ledger" },
-      { key: "rework", label: "Two Weavers", sub: "rework continuity" }
+      { key: "campaign", label: "Campaign", sub: "where the table is", tone: "plum", icon: "fa-compass" },
+      { key: "act1", label: "Act 1", sub: ACTS[1].name, tone: ACTS[1].tone, icon: "fa-sun" },
+      { key: "act2", label: "Act 2", sub: ACTS[2].name, tone: ACTS[2].tone, icon: "fa-leaf" },
+      { key: "act3", label: "Act 3", sub: ACTS[3].name, tone: ACTS[3].tone, icon: "fa-snowflake" },
+      { key: "act4", label: "Act 4", sub: ACTS[4].name, tone: ACTS[4].tone, icon: "fa-seedling" },
+      { key: "threads", label: "Threads", sub: "what carries forward", tone: "plum", icon: "fa-diagram-project" },
+      { key: "loot", label: "Treasure", sub: "the loot ledger", tone: "plum", icon: "fa-sack-xmark" },
+      { key: "rework", label: "Two Weavers", sub: "rework continuity", tone: "plum", icon: "fa-spider" }
     ];
     const actTab = /^act[1-4]$/.test(s.tab) ? Number(s.tab.slice(3)) : null;
     return `${this.styles()}
       <div class="cst">
         ${this.header(ro)}
         <nav class="tabs">
-          ${tabs.map(x => `<button type="button" class="tab ${s.tab === x.key ? "on" : ""}" data-act="tab" data-k="${x.key}">
-            <b>${x.label}</b><small>${x.sub}</small></button>`).join("")}
+          ${tabs.map(x => `<button type="button" class="tab ${s.tab === x.key ? "on" : ""}" style="--tt:var(--${x.tone})" data-act="tab" data-k="${x.key}">
+            <b><i class="fa-solid ${x.icon}"></i> ${x.label}</b><small>${x.sub}</small></button>`).join("")}
         </nav>
         ${s.tab === "campaign" ? this.campaignTab(ro) : ""}
         ${actTab ? this.actTab(actTab, ro) : ""}
@@ -1841,8 +1845,11 @@ class CSApp extends BaseApp {
       .cst button:hover:not(:disabled) { background:var(--hover); }
       .cst button:disabled { opacity:.45; cursor:not-allowed; }
       .cst input[type="checkbox"] { accent-color:var(--ember); margin-top:.15rem; flex:none; }
-      .cst h3 { color:var(--ink); font-size:.9rem; margin:0 0 .5rem; letter-spacing:.04em; text-transform:uppercase;
-                display:flex; align-items:center; gap:.5rem; border-bottom:1px solid var(--line);
+      /* Two levels, and they must not compete: a panel is titled in large ink
+         over a thick rule in its own tone, a block inside it is titled in a
+         small filled bar. Outer reads first, inner sorts what's under it. */
+      .cst h3 { color:var(--ink); font-size:.95rem; margin:0 0 .55rem; letter-spacing:.04em; text-transform:uppercase;
+                display:flex; align-items:center; gap:.5rem; border-bottom:2px solid var(--tone, var(--line));
                 padding-bottom:.3rem; flex-wrap:wrap; }
       .cst h3 small { font-weight:400; text-transform:none; letter-spacing:0; color:var(--muted); font-size:.72rem; }
       .cst h1, .cst h2, .cst h4, .cst legend { color:var(--ink); }
@@ -1887,11 +1894,13 @@ class CSApp extends BaseApp {
 
       .cst .tabs { display:flex; gap:3px; margin-bottom:.6rem; }
       .cst .tab { flex:1; padding:.3rem .2rem; font-size:.76rem; display:flex; flex-direction:column; line-height:1.2;
-                  overflow:hidden; }
+                  overflow:hidden; border-top:3px solid var(--tt, var(--line)); border-radius:3px 3px 2px 2px; }
+      .cst .tab b { display:flex; align-items:center; justify-content:center; gap:.3rem; }
+      .cst .tab b i { font-size:.66rem; color:var(--tt, var(--muted)); }
       .cst .tab small { font-size:.58rem; color:var(--muted); font-weight:400; white-space:nowrap;
                         text-overflow:ellipsis; overflow:hidden; max-width:100%; }
-      .cst .tab.on { background:var(--plum); border-color:var(--plum); color:var(--paper); }
-      .cst .tab.on small { color:var(--paper); opacity:.8; }
+      .cst .tab.on { background:var(--tt); border-color:var(--tt); color:var(--paper); }
+      .cst .tab.on b i, .cst .tab.on small { color:var(--paper); opacity:.85; }
 
       .cst .cols { display:grid; grid-template-columns:1fr 1fr; gap:.5rem; }
       .cst .rollup { display:flex; gap:.5rem; flex-wrap:wrap; }
@@ -1961,10 +1970,14 @@ class CSApp extends BaseApp {
          coloured spine and a labelled head — so the eye can sort decisions
          from treasure from audio without reading any of it. Each block sets
          its own accent in --sub, which the head and spine both read. */
-      .cst .sub { --sub:var(--line); background:var(--stripe); border:1px solid var(--line);
-                  border-left:3px solid var(--sub); border-radius:4px;
+      .cst .sub { --sub:var(--line); background:var(--stripe); border:1px solid var(--sub);
+                  border-radius:4px; overflow:hidden;
                   padding:.4rem .5rem .45rem; margin-top:.5rem; }
-      .cst .sub.decisions { --sub:var(--tone, var(--ember)); }
+      /* Ink rather than the act's tone: the act tone is a different colour in
+         each act, so it would collide with audio in winter and with the
+         procedure block in spring. Ink also puts the chapter's own checklist
+         above the reference blocks in the hierarchy, which is right. */
+      .cst .sub.decisions { --sub:var(--ink); }
       .cst .sub.loot   { --sub:var(--gold); }
       .cst .sub.proc   { --sub:var(--moss); }
       .cst .sub.ours   { --sub:var(--plum); }
@@ -1972,20 +1985,25 @@ class CSApp extends BaseApp {
       .cst .sub.audio  { --sub:var(--slate); }
       .cst .sub.cues   { --sub:var(--rust); }
 
-      .cst .subhead { font-size:.64rem; text-transform:uppercase; letter-spacing:.08em; color:var(--sub, var(--muted));
-                      font-weight:700; display:flex; align-items:center; gap:.35rem;
-                      margin:0 0 .35rem; padding-bottom:.25rem; border-bottom:1px solid var(--line); }
-      .cst .subhead i { color:var(--sub, var(--muted)); font-size:.72rem; }
-      .cst .subhead span { margin-left:auto; font-weight:400; color:var(--muted); letter-spacing:.04em;
-                           border:1px solid var(--line); border-radius:8px; padding:0 6px; background:var(--card); }
+      /* The head is a filled bar in the block's accent, bled to the well's
+         edges. On parchment a tinted label reads as decoration; a solid one
+         reads as a heading, which is the whole point of it. */
+      .cst .subhead { font-size:.66rem; text-transform:uppercase; letter-spacing:.1em;
+                      font-weight:700; display:flex; align-items:center; gap:.4rem;
+                      background:var(--sub, var(--muted)); color:var(--paper);
+                      margin:-.4rem -.5rem .45rem; padding:.28rem .5rem; border-radius:2px 2px 0 0; }
+      .cst .subhead i { color:var(--paper); opacity:.8; font-size:.72rem; }
+      .cst .subhead span { margin-left:auto; font-weight:600; color:var(--paper); letter-spacing:.06em;
+                           border-radius:8px; padding:0 7px; background:rgba(0,0,0,.22); }
       .cst .sub.loot .check.on .lbl { text-decoration:line-through; text-decoration-color:var(--line); }
       .cst .itemnote { font-size:.74rem; line-height:1.45; color:var(--muted); margin:.1rem 0 .35rem 1.55rem;
                        padding-left:.5rem; border-left:1px solid var(--line); }
 
-      /* On the campaign tab the blocks sit in a grid rather than stacked. They
-         start level with each other and size to their contents, rather than
-         stretching a short block to match a tall neighbour. */
-      .cst .cols > .sub { margin-top:0; align-self:start; }
+      /* Side by side, things size to their contents and start level with each
+         other rather than a short one stretching to match a tall neighbour. */
+      .cst .cols > * { align-self:start; }
+      .cst .cols > .sub { margin-top:0; }
+      .cst .cols > .panel { margin-bottom:0; }
 
       .cst .macros { display:flex; flex-direction:column; gap:1px; }
       .cst .mrow { display:flex; gap:.45rem; align-items:baseline; font-size:.79rem; padding:.12rem 0; }
@@ -2002,7 +2020,7 @@ class CSApp extends BaseApp {
       .cst .proc { --sub:var(--moss); }
       .cst .proc + .proc { border-top:1px dashed var(--line); margin-top:.5rem; padding-top:.45rem; }
       .cst .proc .subhead span { margin-left:.35rem; text-transform:none; letter-spacing:0; font-style:italic;
-                                 border:0; padding:0; background:none; }
+                                 font-weight:400; padding:0; background:none; opacity:.85; }
       .cst .bullets { margin:.2rem 0 .4rem; padding-left:1.1rem; font-size:.79rem; line-height:1.5; }
       .cst .bullets li { margin-bottom:.15rem; }
 
