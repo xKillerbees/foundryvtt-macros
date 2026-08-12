@@ -90,6 +90,9 @@
     if (seed && globalThis.FIXTURES?.[seed]) globalThis.__previewSeed = globalThis.FIXTURES[seed];
     /* Fixtures may ask for the Sequencer stand-in; see foundry-stub.js. */
     if (globalThis.__previewSeed?.__sequencer) globalThis.__previewSequencer = true;
+    /* …or for an empty journal directory, to preview the branch a world takes
+       when the adventure module isn't installed. */
+    if (globalThis.__previewSeed?.__journals === false) globalThis.__previewJournals = false;
     await load("/tools/preview/foundry-stub.js");
     await load(`/macros/${macro}`);
 

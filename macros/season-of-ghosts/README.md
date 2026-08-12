@@ -127,6 +127,14 @@ produced them.
 - **Consoles in this collection** per chapter — the other four macros here, against the
   chapters they're for, so the Enlightened Path console is named where Chapter 6 is on screen
   rather than remembered
+- **Journal links** — every chapter card opens the module's own journal entry for that
+  chapter, and an item that names an area opens *that page*: the `D7` button on Xungu opens
+  the Infested Grove, not the chapter's front page. Area lookup goes through the page id
+  rather than its title, because the module builds page ids as
+  `<entry ordinal><area code><name slug>` — `05d11lumbercam00` is Chapter 3's D11 — so
+  nothing has to guess what a page is called. Entries resolve by id first, then by name, then
+  through the compendiums; if the adventure isn't in the world the links simply don't appear
+  and the journals panel says so
 - **Running procedures** — the loops you keep turning for a whole chapter rather than tick
   once. Chapter 3 carries the hinterlands wandering-monster table: the daily DC 17 flat check,
   what's actually out there, the two finite populations, and the book's instruction not to

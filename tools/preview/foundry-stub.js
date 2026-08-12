@@ -68,6 +68,62 @@ const actorCollection = {
   [Symbol.iterator]: () => ACTORS[Symbol.iterator]()
 };
 
+/* ---------------------------------------------------------------- journals
+
+   A stand-in for an imported adventure. Only two entries, but they carry the
+   real id shape the module uses — `<8-char prefix><2-digit ordinal><slug>` for
+   the entry, `<ordinal><area code><name slug>` for the page — so a macro's
+   area lookup can be exercised. Set `__previewJournals = false` on a fixture
+   to preview the "adventure not installed" branch instead. */
+const SAMPLE_JOURNALS = [
+  { id: "pf2apsog05thewil", name: "The Willowshore Curse", pages: [
+    "05thewillowsho00|The Willowshore Curse",
+    "05d7infestedgr00|D7: Infested Grove",
+    "05d8oldvillage00|D8: Old Village Expansion",
+    "05d9eyesoffume00|D9: Eyes of Fumeiyoshi",
+    "05d10gorgeoffa00|D10: Gorge of Fangs and Teeth",
+    "05d11lumbercam00|D11: Lumber Camp",
+    "05opportunitie00|Opportunities",
+    "05talkingwithg00|Talking with Great Willow",
+    "05canaryinn00000|Canary Inn"
+  ] },
+  { id: "pf2apsog07turnin", name: "Turning of the Seasons", pages: [
+    "07turningofthe00|Turning of the Seasons",
+    "07researchingt00|Researching the Curse",
+    "07restoringthe00|Restoring the Teahouse",
+    "07gatheringfoo00|Gathering Food",
+    "07increasingse00|Increasing Security",
+    "07week3firstlo00|Week 3: First Long Night"
+  ] }
+];
+
+class StubJournal {
+  constructor(spec) {
+    this.id = spec.id;
+    this.name = spec.name;
+    this.pages = spec.pages.map(p => {
+      const [id, name] = p.split("|");
+      return { id, name };
+    });
+    this.sheet = {
+      render: (force, opts = {}) => {
+        const page = this.pages.find(p => p.id === opts.pageId);
+        console.log("[journal]", this.name, page ? `→ ${page.name}` : "(first page)");
+      }
+    };
+  }
+}
+
+const JOURNALS = globalThis.__previewJournals === false
+  ? [] : SAMPLE_JOURNALS.map(s => new StubJournal(s));
+
+const journalCollection = {
+  get: (id) => JOURNALS.find(j => j.id === id) ?? null,
+  getName: (name) => JOURNALS.find(j => j.name === name) ?? null,
+  find: (fn) => JOURNALS.find(fn) ?? null,
+  [Symbol.iterator]: () => JOURNALS[Symbol.iterator]()
+};
+
 /* ----------------------------------------------------------------- globals */
 
 const settingStore = new Map();
@@ -77,7 +133,8 @@ globalThis.game = {
   user: { id: "gm", isGM: true, name: "Gamemaster" },
   users: [{ id: "gm", isGM: true, character: null }],
   actors: actorCollection,
-  journal: { getName: () => null },
+  journal: journalCollection,
+  packs: [],   /* no compendiums out here; the world lookup is what's exercised */
   settings: {
     settings: settingDefs,
     register: (ns, key, def) => settingDefs.set(`${ns}.${key}`, def),

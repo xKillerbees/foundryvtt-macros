@@ -25,12 +25,15 @@
 - First Long Night Console — run of show, grand show, three contests, eight booths,
   twelve PC games with medal tracking, GM kit
 - Enlightened Path Console — ritual, vision beats, three shrine days, enlightenment tracking
-
 - Campaign tracker: clicking a party member opens their character sheet, and the party panel
   shows the titles and keepsakes each PC won at the First Long Night
 - Campaign tracker: the four consoles in this collection are listed against the chapters
   they're for, and Chapter 3 carries the hinterlands wandering-monster procedure
 - Campaign tracker: a legend under the chapter list explaining the spider icon and the columns
+- Campaign tracker: journal links. Each chapter card opens the Season of Ghosts module's own
+  journal entry, and an item naming an area opens that page — area lookup resolves against
+  the module's page ids rather than guessing page titles. Falls back to a name match, then to
+  the compendiums, and hides the links entirely when the adventure isn't in the world
 
 ### Changed
 - Campaign tracker: only **required** items can go overdue. An unticked box in a finished

@@ -176,6 +176,16 @@ globalThis.FIXTURES = {
     }
   },
 
+  /* The same board in a world without the adventure module, so the journal
+     links stand down and the panel says why. */
+  "campaign-nojournal": {
+    __journals: false,
+    "world.sogCampaign": {
+      tab: "campaign",
+      chapters: { 1: "done", 2: "done", 3: "done", 4: "done", 5: "active" }
+    }
+  },
+
   /* The campaign tab wound back to Chapter 3, the one chapter that carries a
      running procedure — the hinterlands wandering-monster table. */
   "campaign-hinterlands": {

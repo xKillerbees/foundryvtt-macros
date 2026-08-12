@@ -51,6 +51,12 @@ as installed, and every sequence built is pushed to `globalThis.__sequences` as 
 a test can assert what a cue actually constructed. It is off by default, because the "no
 Sequencer installed" branch needs testing too.
 
+## Testing journal links
+
+The stub ships a small journal directory whose ids follow the Season of Ghosts module's own
+scheme, so a macro's chapter and area lookups can be exercised. Set `__journals: false` on a
+fixture to empty it and preview what a world without the adventure module looks like.
+
 ## Limits
 
 This is a preview harness, not an emulator. It knows nothing about actors beyond the four
