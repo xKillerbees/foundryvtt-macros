@@ -1136,7 +1136,9 @@ class FLNApp extends BaseApp {
       .fln .medalrow { display:flex; align-items:center; gap:.5rem; padding:.3rem .4rem; width:100%;
                        border-left:3px solid var(--acc); background:var(--stripe); border-radius:3px;
                        text-align:left; font-family:inherit; color:var(--ink); border-top:0; border-right:0; border-bottom:0; }
-      .fln button.medalrow { cursor:pointer; }
+      /* justify-content only reads as harmless because .mname takes the slack;
+         pin it anyway so the row can't re-centre if that ever changes. */
+      .fln button.medalrow { cursor:pointer; justify-content:flex-start; }
       .fln button.medalrow:hover { background:var(--hover); }
       .fln .medalrow.crowned { background:rgba(138,106,18,.15); }
       .fln .avatar { width:30px; height:30px; border-radius:50%; object-fit:cover; border:1px solid var(--line); flex:none; }

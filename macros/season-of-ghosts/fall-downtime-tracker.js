@@ -1405,9 +1405,12 @@ class SoGDowntimeApp extends BaseApp {
       .sog .who { display:flex; flex-direction:column; flex:1; min-width:0; }
       .sog .pcname { font-weight:600; font-size:.95rem; line-height:1.15; white-space:nowrap;
                      overflow:hidden; text-overflow:ellipsis; }
-      /* The name is a button when there's an actor behind it. */
-      .sog button.pcname { background:transparent; border:0; padding:0; color:var(--ink);
-                           font-family:inherit; text-align:left; cursor:pointer; width:100%; }
+      /* The name is a button when there's an actor behind it. The display:block
+         is load-bearing: the base button rule is an inline-flex centred on its
+         own axis, which would centre the name over a left-aligned sub-line and
+         break the ellipsis. */
+      .sog button.pcname { display:block; width:100%; background:transparent; border:0; padding:0;
+                           color:var(--ink); font-family:inherit; text-align:left; cursor:pointer; }
       .sog button.pcname:hover { text-decoration:underline; }
       .sog .pcsub { font-size:.66rem; color:var(--muted); white-space:nowrap; overflow:hidden;
                     text-overflow:ellipsis; }
