@@ -137,13 +137,27 @@ class StubActor {
 
 const ACTORS = SAMPLE_PCS.map((s, i) => new StubActor(s, i));
 
+/* Player-owned, but not party members: a summoner's eidolon and the sort of
+   utility actor that accumulates in a long-running world. A macro that scans
+   the directory for player-owned characters picks these up and shouldn't —
+   they exist here so that mistake shows in the preview. */
+const TAG_ALONGS = [
+  { name: "Brutal Beast", cls: "Eidolon", ancestry: "", level: 5, bg: "#4a3b52", fg: "#efe6d8" },
+  { name: "(Quick Send To Chat)", cls: "", ancestry: "", level: 1, bg: "#3a3a3a", fg: "#efe6d8" }
+].map((s, i) => new StubActor(s, ACTORS.length + i));
+
+const ALL_ACTORS = [...ACTORS, ...TAG_ALONGS];
+
+/* Only the four real PCs, exactly as a curated party actor would hold them. */
 const partyActor = { id: "party", name: "Party", type: "party", members: ACTORS };
 
 const actorCollection = {
   party: partyActor,
-  get: (id) => ACTORS.find(a => a.id === id) ?? null,
-  find: (fn) => ACTORS.find(fn) ?? null,
-  [Symbol.iterator]: () => ACTORS[Symbol.iterator]()
+  /* The directory holds the tag-alongs too — the party actor is what narrows
+     it back down to the four. */
+  get: (id) => ALL_ACTORS.find(a => a.id === id) ?? null,
+  find: (fn) => ALL_ACTORS.find(fn) ?? null,
+  [Symbol.iterator]: () => ALL_ACTORS[Symbol.iterator]()
 };
 
 /* ---------------------------------------------------------------- journals

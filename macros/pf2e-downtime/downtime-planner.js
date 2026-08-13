@@ -445,20 +445,34 @@ function pcInfo(actor) {
   };
 }
 
-/* Prefers the PF2e party actor, then assigned player characters, then any
-   player-owned character in the directory. */
+/* Companions and utility actors are player-owned too, so ownership alone isn't
+   enough to call something a party member. An eidolon is a character-type actor
+   in PF2e, which is why the class is checked as well as the type. */
+const NON_PC_TYPES = new Set(["familiar", "eidolon", "npc", "hazard", "loot", "vehicle", "party", "army"]);
+function isPlayerCharacter(a) {
+  if (!a?.id) return false;
+  if (NON_PC_TYPES.has(a.type)) return false;
+  if (a.type !== "character" && a.type !== "PC") return false;
+  if (/eidolon|animal companion/i.test(a.system?.details?.class?.name ?? "")) return false;
+  return true;
+}
+
+/* The party actor is the answer wherever a world has one — it is the list the
+   table already curates, and scanning the directory on top of it drags in
+   eidolons, companions, and whatever utility actors happen to be player-owned.
+   The fallbacks below only run in a world with no party actor at all. */
 function detectPCs() {
-  const seen = new Map();
-  const add = (a) => { if (a?.id && !seen.has(a.id)) seen.set(a.id, pcInfo(a)); };
-
   const party = game.actors.party ?? game.actors.find(a => a.type === "party");
-  for (const m of party?.members ?? []) add(m);
+  const members = [...(party?.members ?? [])].filter(isPlayerCharacter);
+  if (members.length) return members.slice(0, MAX_PCS).map(pcInfo);
 
-  if (seen.size < MAX_PCS) for (const u of game.users) { if (!u.isGM) add(u.character); }
+  const seen = new Map();
+  const add = (a) => { if (isPlayerCharacter(a) && !seen.has(a.id)) seen.set(a.id, pcInfo(a)); };
+  for (const u of game.users) if (!u.isGM) add(u.character);
   if (seen.size < MAX_PCS) {
     for (const a of game.actors) {
       if (seen.size >= MAX_PCS) break;
-      if (a.hasPlayerOwner && (a.type === "character" || a.type === "PC")) add(a);
+      if (a.hasPlayerOwner) add(a);
     }
   }
   return [...seen.values()].slice(0, MAX_PCS);
@@ -1529,13 +1543,29 @@ class DowntimeApp extends BaseApp {
 
       .dtp .ref h3 { font-size:.9rem; font-weight:600; border-bottom:2px solid var(--line);
                      padding-bottom:.25rem; margin-bottom:.3rem; }
-      .dtp .reftab { width:100%; border-collapse:collapse; font-size:.72rem; margin:.3rem 0; }
-      .dtp .reftab th { text-align:left; font-size:.62rem; text-transform:uppercase; letter-spacing:.05em;
-                        color:var(--muted); font-weight:600; border-bottom:1px solid var(--line); padding:.15rem 0; }
-      .dtp .reftab td { padding:.15rem 0; border-bottom:1px dotted var(--line); }
-      .dtp .reftab .r { text-align:right; white-space:nowrap; }
-      .dtp .reftab tr.capped td { color:var(--plum); }
-      .dtp .reftab small { color:var(--muted); }
+      /* Foundry styles tables inside application windows — a tinted thead and
+         striped rows, picked for its own dark theme. Left alone it paints a
+         muddy band under this panel, so every background and colour here is
+         set explicitly and the striping is our own. */
+      /* Prefixed with the window id, not just .dtp: the PF2e system styles
+         tables inside application windows fairly aggressively, and a bare
+         class selector loses to it. */
+      #pf2e-downtime-planner .reftab { width:100%; border-collapse:collapse; font-size:.72rem;
+                     margin:.3rem 0; background:transparent; color:var(--ink); border:none; }
+      #pf2e-downtime-planner .reftab thead,
+      #pf2e-downtime-planner .reftab tbody,
+      #pf2e-downtime-planner .reftab tr { background:transparent; border:none; }
+      #pf2e-downtime-planner .reftab th { text-align:left; font-size:.62rem; text-transform:uppercase;
+                        letter-spacing:.05em; color:var(--muted); font-weight:600; background:transparent;
+                        border:none; border-bottom:1px solid var(--line); padding:.2rem .3rem .2rem 0; }
+      #pf2e-downtime-planner .reftab td { padding:.22rem .3rem .22rem 0; background:transparent;
+                        color:var(--ink); border:none; border-bottom:1px solid var(--line); }
+      #pf2e-downtime-planner .reftab tbody tr:nth-child(odd) td { background:var(--stripe); }
+      #pf2e-downtime-planner .reftab tbody tr:last-child td { border-bottom:none; }
+      #pf2e-downtime-planner .reftab .r { text-align:right; white-space:nowrap;
+                        font-variant-numeric:tabular-nums; font-weight:600; padding-right:0; }
+      #pf2e-downtime-planner .reftab tr.capped td { color:var(--plum); }
+      #pf2e-downtime-planner .reftab small { color:var(--muted); font-weight:400; }
       .dtp .tuition { font-size:.74rem; background:var(--stripe); border-left:3px solid var(--plum);
                       border-radius:3px; padding:.35rem .5rem; margin:.4rem 0; line-height:1.4; }
       .dtp .houserules { border-top:1px solid var(--line); padding-top:.35rem; margin-top:.4rem; }

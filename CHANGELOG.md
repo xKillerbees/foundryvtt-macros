@@ -11,6 +11,16 @@
   success paying at one task level higher, as the book has it
 - Downtime Planner: rolls the character's own statistic and records the degree where the
   system offers one, falling back to a rollable `@Check` in chat where it doesn't
+- Downtime Planner: the party is **the party actor**, not a directory scan. Eidolons,
+  companions, and the utility actors that collect in a long-running world are all
+  player-owned, so ownership alone doesn't make something a party member; the directory
+  fallbacks only run in a world with no party actor at all
+- Downtime Planner: the earnings table sets its own backgrounds and colours under the window
+  id, because the PF2e system styles tables inside application windows and its tinted header
+  and row striping otherwise show through as a muddy, low-contrast band
+- Preview stub: two player-owned actors outside the party — a summoner's eidolon and a
+  utility macro actor — so a macro that scans the directory instead of reading the party
+  shows that mistake in the preview
 - Downtime Planner: written to be handed to the players. Players edit only the characters they
   own and the calendar stays the GM's, enforced on the GM's side rather than trusted from the
   sender. Since players can't write world settings, their edits relay over `game.socket` to

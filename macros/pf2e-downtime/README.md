@@ -118,10 +118,15 @@ Shares the shape of the other consoles in this repo:
   incompatible signatures.
 - **Styling** — every selector is namespaced under `.dtp`, and the scroll clamp sits on
   `#pf2e-downtime-planner .window-content`. Unscoped generic selectors like `.row` or `.panel`
-  will bleed into PF2e character sheets and chat messages.
-- **Party detection** — prefers `game.actors.party`, falls back to assigned player characters,
-  then to any player-owned character. Actor data is re-read on every open, so names, art, levels,
-  and proficiency ranks never go stale.
+  will bleed into PF2e character sheets and chat messages. The traffic goes both ways: the PF2e
+  system styles `table` inside application windows, so the earnings table sets its own
+  backgrounds and colours prefixed with the window id, which a bare class selector loses to.
+- **Party detection** — the party actor, and nothing else, wherever a world has one. Eidolons,
+  animal companions, and utility actors are player-owned too, so ownership alone doesn't make
+  something a party member, and scanning the directory on top of a curated party actor drags
+  them all in. The fallbacks — assigned player characters, then any player-owned character —
+  only run in a world with no party actor. Actor data is re-read on every open, so names, art,
+  levels, and proficiency ranks never go stale.
 - **Live sync** — an `updateSetting` hook refreshes open windows for every user. It's
   re-registered rather than guarded on re-run, so running the macro again doesn't leave the hook
   driving a closed window.
