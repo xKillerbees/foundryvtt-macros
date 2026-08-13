@@ -8,6 +8,7 @@ Built for the **pf2e** system on Foundry **v11–v14**.
 | Macro | Covers | Status |
 |---|---|---|
 | [`menace-under-otari-console.js`](menace-under-otari-console.js) | The whole adventure, both floors | Complete |
+| [`abadar-coin-puzzle.js`](abadar-coin-puzzle.js) | Area 9's coin puzzle, as a playable board | Complete |
 
 ## Install
 
@@ -100,6 +101,57 @@ Without Sequencer every cue still plays the module's own sound — only the anim
 and the button says so in its tooltip.
 
 ![The table tab — scenes, ambience, soundboard, and the effect cues](../../screenshots/beginner-box/menace-under-otari-table.png)
+
+## Abadar's Coin Puzzle
+
+Area 9 is a logic puzzle rather than a fight, and running it by hand means the GM secretly
+picking a coin, tracking two weighings, and answering questions without giving anything away.
+[`abadar-coin-puzzle.js`](abadar-coin-puzzle.js) is that puzzle as a board the table can
+actually use.
+
+**Hand it to the players.** Give the macro OBSERVER permission in Foundry and anyone can run
+it. It keeps its board in a *client-scoped* setting, so it needs no GM, writes nothing to the
+world, and every person who opens it gets their own board to think on. The **Tell the table**
+buttons post the statue's answers to chat so the group reasons from the same information.
+
+The fake is picked at random and never shown until the round ends, so the GM can play blind
+alongside everyone else — there's nothing to keep secret and nothing to slip.
+
+![The board after one judgement, with three coins still in play](../../screenshots/beginner-box/abadar-coin-puzzle.png)
+
+Click a coin to move it between the altar and the statue's hands, then ask for judgement. The
+statue raises the hand of greater value, exactly as the book describes — which means the
+**heavier** hand rises, not the lighter one.
+
+The board knows that a judgement with uneven hands proves nothing, because the fuller hand
+always wins whichever coin is false. It warns before you spend one that way, and marks it in
+the history afterwards.
+
+### Working it out
+
+The deduction panel is the reason this is worth having. It never names the fake. It says how
+many coins still fit everything the statue has said, dims the ones already ruled out, and
+compares what's left against what the remaining judgements can distinguish — so it can tell
+the table "still winnable" or "this round can't be reasoned out any more, but a guess might get
+lucky." That's the actual lesson of the puzzle, made visible without spoiling it.
+
+It folds away for tables that want it pure, and there's a collapsed walkthrough of the
+nine-coin solution underneath for when someone gets stuck.
+
+### Expanded past the book
+
+| Setting | Range | Why |
+|---|---|---|
+| Coins | 3 – 27 | Three judgements tell 27 apart; the maths is `3^judgements` |
+| Judgements | 1 – 6 | Defaults to exactly enough for the coin count |
+| Difficulty | Worth less, or unknown direction | The second is the classic twelve-coin problem |
+
+Unknown direction is a genuinely harder puzzle: a heavy fake and a light fake explain opposite
+outcomes, so a candidate is a coin *and* a direction, and both have to be pinned down. Twelve
+coins that way is 24 possibilities against three judgements' 27 — solvable, but only just.
+
+The Area 9 card in the main console has a button that opens this board, so long as you name the
+macro `Abadar's Coin Puzzle` in your directory.
 
 ## Stat blocks
 

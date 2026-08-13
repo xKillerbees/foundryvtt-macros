@@ -18,6 +18,16 @@
   and the module's own four area macros, all by ids read out of its adventure pack
 - Menace Under Otari: eight optional Sequencer cues with JB2A keys verified against the
   installed database, each pairing its animation with the adventure's own sound
+- Abadar's Coin Puzzle — Area 9's logic puzzle as a playable board, and the first macro here
+  meant for the players. Client-scoped state, so it needs no GM and writes nothing to the
+  world; the fake is random and hidden until the round ends, so the GM can play it blind
+- Coin puzzle: a deduction panel that says how many coins still fit the statue's answers and
+  dims the ones ruled out, without naming the fake, and calls out when the remaining
+  judgements can no longer tell the survivors apart. Uneven hands are flagged before a
+  judgement is wasted on them
+- Coin puzzle: expands to 3–27 coins with the matching number of judgements, and to an
+  unknown-direction mode — the classic twelve-coin problem
+- Menace Under Otari: the Area 9 card opens the coin puzzle board
 - Preview stub: `game.macros` and `game.scenes`, Beginner Box journal/playlist/macro/scene
   documents by their real ids, and explicit sound ids on stub playlists
 - `tools/sequencer-keys/` — lists the exact keys a JB2A or PSFX install has, so an effect

@@ -71,6 +71,9 @@ SHOTS = {
     "otari": (
         "beginner-box/menace-under-otari-console.js", "otari",
         "beginner-box/menace-under-otari-console.png"),
+    "coins": (
+        "beginner-box/abadar-coin-puzzle.js", "coins",
+        "beginner-box/abadar-coin-puzzle.png"),
     "otari-floor1": (
         "beginner-box/menace-under-otari-console.js", "otari-floor1",
         "beginner-box/menace-under-otari-floor1.png"),

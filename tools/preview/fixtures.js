@@ -290,6 +290,19 @@ globalThis.FIXTURES = {
     }
   },
 
+  /* Abadar's coin puzzle, one judgement in. Three coins against three, the
+     left hand rose, so the fake is among 4, 5, and 6 — which is what the
+     deduction panel works out without naming it. */
+  "coins": {
+    "world.abadarCoinPuzzle": {
+      coins: 9, hard: false, allowed: 2, round: 1,
+      fake: 5, fakeHeavy: false,
+      place: { 4: "left", 5: "right" },
+      weighings: [{ left: [1, 2, 3], right: [4, 5, 6], verdict: "left" }],
+      accused: null, phase: "weigh", won: null, showHints: true, revealed: false
+    }
+  },
+
   /* Menace Under Otari, part way through floor 1: the crypt and the storeroom
      behind them, the barricade taken apart quietly, the puzzle solved and the
      spear trap armed against its owners. */

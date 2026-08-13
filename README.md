@@ -6,7 +6,7 @@ manifest, no install step. Open a macro file, copy it, paste it into Foundry, ru
 | Collection | System | Foundry | Macros |
 |---|---|---|---|
 | [Season of Ghosts](macros/season-of-ghosts) | PF2e | v11 – v14 | 5 |
-| [Pathfinder Beginner Box](macros/beginner-box) | PF2e | v11 – v14 | 1 |
+| [Pathfinder Beginner Box](macros/beginner-box) | PF2e | v11 – v14 | 2 |
 | [Mark of the Mantis](macros/mark-of-the-mantis) | PF2e | v11 – v14 | 1 |
 | [Battle for Nova Rush](macros/battle-for-nova-rush) | SF2e | v11 – v14 | 1 |
 
@@ -93,6 +93,18 @@ beside the rooms the journal tells you to run them in. Every id was read out of 
 adventure pack.
 
 ![Floor 2, with the warren already alerted and the party at 2nd level](screenshots/beginner-box/menace-under-otari-floor2.png)
+
+### [Abadar's Coin Puzzle](macros/beginner-box/abadar-coin-puzzle.js)
+
+Area 9's logic puzzle as a board the table can actually use — and the one macro here meant to
+be handed to the players. It keeps its state client-side, so it needs no GM and writes nothing
+to the world; give it OBSERVER permission and anyone can run it.
+
+![The coin puzzle after one judgement, with three coins still in play](screenshots/beginner-box/abadar-coin-puzzle.png)
+
+The deduction panel says how many coins still fit what the statue has said and dims the ones
+ruled out, without ever naming the fake. Expands to any number of coins from 3 to 27, and to
+the classic twelve-coin version where the fake might be worth more instead of less.
 
 ## Mark of the Mantis
 

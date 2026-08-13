@@ -324,6 +324,9 @@ const AREAS = [
       { v: "solved", label: "Solved", note: "The real coins fall free — 1 gp each — the fake turns to lead, and the stone door into Area 10 swings open.", tone: "moss" },
       { v: "unsolved", label: "Not solved", note: "Area 10 stays sealed. There is no other way in.", tone: "muted" }
     ] },
+    /* The companion macro in this collection. Named rather than kept by id,
+       because it lives in the GM's own directory rather than the module. */
+    companion: { name: "Abadar's Coin Puzzle", label: "Open the coin puzzle" },
     xp: 80, xpLabel: "Puzzle solved", xpIf: (s) => s.flags.puzzle === "solved" },
 
   { n: 10, key: "a10", floor: 1, page: "gz9x5HmzjSvvBLQp", name: "Abadar's Vault", tone: "gold",
@@ -682,6 +685,12 @@ class Otari {
     await macro.execute();
   }
 
+  async runByName(name) {
+    const macro = game.macros?.getName?.(name);
+    if (!macro) return ui.notifications.warn(`No macro called "${name}" in this world. It's the companion macro in this collection — paste it in as a script macro and give it that name.`);
+    await macro.execute();
+  }
+
   async activateScene(id, name) {
     const scene = game.scenes?.get(id);
     if (!scene) return ui.notifications.warn(`The "${name}" scene isn't in this world.`);
@@ -966,6 +975,7 @@ class BBApp extends BaseApp {
           ${award.map(x => `<button type="button" class="opt sm ${t.s.xp[x.key] ? "on" : ""}" data-act="xp" data-k="${x.key}" ${ro ? "disabled" : ""}>
             ${t.s.xp[x.key] ? "✓ " : "+"}${x.xp} XP</button>`).join("")}
           ${a.macro ? `<button type="button" class="ghost sm" data-act="macro" data-k="${a.macro}" title="Run the module's own macro"><i class="fa-solid fa-play"></i> ${MOD_MACROS[a.macro].name}</button>` : ""}
+          ${a.companion ? `<button type="button" class="opt sm" data-act="companion" data-k="${esc(a.companion.name)}" title="The playable board in this collection — hand it to the players"><i class="fa-solid fa-coins"></i> ${a.companion.label}</button>` : ""}
           ${a.fx ? this.fxBtn(a.fx) : ""}
           ${(a.audio ?? []).map(name => this.soundBtn(name)).join("")}
           <button type="button" class="${done ? "ghost" : "primary"} sm" data-act="area" data-k="${a.key}" ${ro ? "disabled" : ""}>${done ? "Reopen" : "Mark done"}</button>
@@ -1079,6 +1089,7 @@ class BBApp extends BaseApp {
       else if (a === "page") t.openPage(d.k);
       else if (a === "journal") t.openJournalPage(d.e, d.p);
       else if (a === "macro") t.runMacro(d.k);
+      else if (a === "companion") t.runByName(d.k);
       else if (a === "scene") t.activateScene(d.k, d.n);
       else if (a === "sound") t.playByName(d.k);
       else if (a === "fx") t.fx(d.k);
