@@ -433,6 +433,96 @@ globalThis.FIXTURES = {
     }
   },
 
+  /* The planner as it ships: rules as written, every house rule switched off.
+     No Dedicated Study in the activity list, no 75% option on the Craft row,
+     and the side panel says so. */
+  "planner-raw": {
+    "world.pf2eDowntimePlan": {
+      period: 1,
+      settlement: 5,
+      house: { study: false, craft75: false, lore: false },
+      ui: { sel: "pc2" },
+      periods: {
+        1: {
+          label: "The lull after Willowshore",
+          days: 14,
+          plans: {
+            pc1: { rows: [
+              { id: "q1", act: "income", days: 10, degree: "s", done: false, note: "",
+                cfg: { skill: "diplomacy", task: 5, what: "Standing watch for the trade office" } },
+              { id: "q2", act: "rest", days: 4, degree: null, done: true, note: "",
+                cfg: { note: "Recovering from the wight" } }
+            ] },
+            pc2: { rows: [
+              { id: "q3", act: "income", days: 5, degree: "s", done: false, note: "",
+                cfg: { skill: "arcana", task: 5, what: "Copying scrolls for Igawa Jubei" } },
+              { id: "q4", act: "spell", days: 1, degree: "s", done: false, note: "",
+                cfg: { spell: "Wall of Fire", rank: 4, skill: "arcana" } },
+              { id: "q5", act: "craft", days: 8, degree: "s", done: false, note: "",
+                cfg: { item: "Staff of Fire", ilvl: 3, price: 230, skill: "crafting", hr75: "0" } }
+            ] },
+            pc3: { rows: [
+              { id: "q6", act: "income", days: 12, degree: "cs", done: false, note: "",
+                cfg: { skill: "thievery", task: 5, what: "Quiet work for the Abacus Sisters" } }
+            ] },
+            pc4: { rows: [
+              { id: "q7", act: "subsist", days: 6, degree: null, done: false, note: "",
+                cfg: { skill: "survival", dc: 15, where: "The hinterlands" } },
+              { id: "q8", act: "retrain", days: 7, degree: null, done: false, note: "",
+                cfg: { what: "feat", from: "Toughness", to: "Fleet" } }
+            ] }
+          }
+        }
+      }
+    }
+  },
+
+  /* The same fortnight with the table's house rules switched on. Daizen is
+     halfway through Dedicated Study on Absalom Lore, which is why he has no
+     Earn Income row and the tuition line has something to say, and his Craft
+     row is running at 75%. */
+  "planner": {
+    "world.pf2eDowntimePlan": {
+      period: 1,
+      settlement: 5,
+      house: { study: true, craft75: true, lore: true },
+      ui: { sel: "pc2" },
+      periods: {
+        1: {
+          label: "The lull after Willowshore",
+          days: 14,
+          plans: {
+            pc1: { rows: [
+              { id: "r1", act: "income", days: 10, degree: "s", done: false, note: "",
+                cfg: { skill: "diplomacy", task: 5, what: "Standing watch for the trade office" } },
+              { id: "r2", act: "rest", days: 4, degree: null, done: true, note: "",
+                cfg: { note: "Recovering from the wight" } }
+            ] },
+            pc2: { rows: [
+              { id: "r3", act: "study", days: 7, degree: null, done: true, note: "",
+                cfg: { lore: "Absalom Lore", rank: "2", teacher: "Igawa Jubei's collection" } },
+              { id: "r4", act: "spell", days: 1, degree: "s", done: false, note: "",
+                cfg: { spell: "Wall of Fire", rank: 4, skill: "arcana" } },
+              { id: "r5", act: "craft", days: 8, degree: "s", done: false, note: "",
+                cfg: { item: "Staff of Fire", ilvl: 3, price: 230, skill: "crafting", hr75: "1" } }
+            ] },
+            pc3: { rows: [
+              { id: "r6", act: "income", days: 12, degree: "cs", done: false, note: "",
+                cfg: { skill: "thievery", task: 5, what: "Quiet work for the Abacus Sisters" } }
+            ] },
+            pc4: { rows: [
+              { id: "r7", act: "subsist", days: 6, degree: null, done: false, note: "",
+                cfg: { skill: "survival", dc: 15, where: "The hinterlands" } },
+              { id: "r8", act: "retrain", days: 7, degree: null, done: false, note: "",
+                cfg: { what: "feat", from: "Toughness", to: "Fleet" } }
+            ] }
+          }
+        }
+      },
+      study: { pc3: { held: { lore: "Underworld Lore", rank: 2 }, prevHeld: null } }
+    }
+  },
+
   /* Enlightened Path, opened on the first day of the pilgrimage with the
      ritual behind the party. */
   "path": {

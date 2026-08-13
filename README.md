@@ -7,8 +7,13 @@ manifest, no install step. Open a macro file, copy it, paste it into Foundry, ru
 |---|---|---|---|
 | [Season of Ghosts](macros/season-of-ghosts) | PF2e | v11 – v14 | 5 |
 | [Pathfinder Beginner Box](macros/beginner-box) | PF2e | v11 – v14 | 2 |
+| [PF2e Downtime](macros/pf2e-downtime) | PF2e | v11 – v14 | 1 |
 | [Mark of the Mantis](macros/mark-of-the-mantis) | PF2e | v11 – v14 | 1 |
 | [Battle for Nova Rush](macros/battle-for-nova-rush) | SF2e | v11 – v14 | 1 |
+
+Most of these are GM consoles for a particular adventure. [PF2e
+Downtime](macros/pf2e-downtime) is neither — it's system-wide, and it's meant to be handed to
+the players.
 
 ## Installing a macro
 
@@ -105,6 +110,35 @@ to the world; give it OBSERVER permission and anyone can run it.
 The deduction panel says how many coins still fit what the statue has said and dims the ones
 ruled out, without ever naming the fake. Expands to any number of coins from 3 to 27, and to
 the classic twelve-coin version where the fake might be worth more instead of less.
+
+## PF2e Downtime
+
+Not tied to an adventure — a planner for any PF2e game, run by the players rather than the GM.
+Details in the [collection README](macros/pf2e-downtime).
+
+### [Downtime Planner](macros/pf2e-downtime/downtime-planner.js)
+
+The whole party's downtime on one board: thirteen activities, days budgeted against days
+available, and Earn Income costed out of the real table — what a critical success, a success,
+and a failure each pay per day and in total.
+
+![The Downtime Planner, a fortnight into a lull](screenshots/pf2e-downtime/downtime-planner.png)
+
+Players edit only the characters they own; the calendar stays the GM's. Because players can't
+write world settings, their edits are relayed to the GM's client over `game.socket`, which
+re-checks ownership before writing — nothing needs installing for that.
+
+**Rules as written by default.** Three optional house rules ship switched off, and only the GM
+can turn them on; with all three off the planner computes nothing the Player Core doesn't.
+
+![The house rules switched on](screenshots/pf2e-downtime/downtime-planner-house-rules.png)
+
+Switched on, **Dedicated Study** raises a Lore over 2 / 4 / 8 weeks, with the level minimums
+enforced, the teacher required before you can start, one Lore holding the rank at a time, and no
+benefit lent to Earn Income. Since it competes with Earn Income for the same days, the board
+prices what those weeks cost in gold forgone — the rule's actual price, made visible.
+**Crafting at 75%** with a formula and a background reason recalculates the balance owed.
+Turning a rule back off un-applies its maths rather than leaving stale numbers behind.
 
 ## Mark of the Mantis
 

@@ -14,9 +14,9 @@ installed as the `com.google.Chrome` Flatpak.
 ## How it works
 
 `foundry-stub.js` implements the slice of the Foundry API these macros actually touch —
-`foundry.utils`, `game.settings`, `game.actors`, `ChatMessage`, `Hooks`, `ui.notifications`,
-and an `ApplicationV2` that builds the same window / `.window-content` DOM shape the real one
-does. `index.html` loads a stub, then a macro, and the macro boots and renders as it would in
+`foundry.utils`, `game.settings`, `game.actors`, `game.users`, `game.socket`, `ChatMessage`,
+`Hooks`, `ui.notifications`, and an `ApplicationV2` that builds the same window /
+`.window-content` DOM shape the real one does. `index.html` loads a stub, then a macro, and the macro boots and renders as it would in
 Foundry. `capture.py` serves the repo, loads each page in headless Chrome, and screenshots it.
 
 Because every console clamps its scroll area to `calc(100vh - 140px)`, the capture runs twice:
@@ -50,6 +50,14 @@ on a fixture and the stub installs a recording stand-in: it reports any `jb2a.` 
 as installed, and every sequence built is pushed to `globalThis.__sequences` as plain data, so
 a test can assert what a cue actually constructed. It is off by default, because the "no
 Sequencer installed" branch needs testing too.
+
+## Testing a macro the players run
+
+`game.socket` is looped straight back, so a macro that relays a write to the GM and waits for
+it to return can be exercised with one browser open. The sample party carries proficiency
+ranks, Lore items, and `testUserPermission`, which is enough to drive the player path by hand:
+reassign `game.user` to a non-GM who owns one actor, re-evaluate the macro, and the read-only
+branches, the ownership checks, and the relay all run for real.
 
 ## Testing journal links
 

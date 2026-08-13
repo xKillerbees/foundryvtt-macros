@@ -3,11 +3,13 @@
 
    The macros in this repo touch a small, well-defined slice of the API:
 
-     foundry.utils.{escapeHTML, mergeObject, deepClone}
+     foundry.utils.{escapeHTML, mergeObject, deepClone, randomID}
      foundry.applications.api.ApplicationV2
      game.settings.{register, get, set, settings.has}
      game.actors (iterable, .get, .find, .party)
-     game.users, game.user, game.journal.getName
+     game.users (iterable, .get, .activeGM), game.user, game.journal.getName
+     game.socket.{on, emit} — looped back, so a relayed write round-trips
+     actor.{skills, itemTypes.lore, system.abilities, testUserPermission}
      ChatMessage.{create, getSpeaker}, Dialog.confirm, Hooks.on, ui.notifications
 
    Everything below implements exactly that and nothing more. It is a preview
@@ -36,19 +38,33 @@ function portrait(initials, bg, fg) {
    worth distinguishing are listed; anything omitted falls back to BASE_SKILL,
    which is what keeps the sample party from looking uniformly competent. */
 const BASE_SKILL = 8;
+
+/* `ranks` carries proficiency (1 trained, 2 expert, …) for the skills where it
+   isn't just trained; a downtime planner prices Earn Income off the rank, not
+   the modifier. `con` feeds long-term rest. Anything unlisted is trained. */
 const SAMPLE_PCS = [
   { name: "Aiko",  cls: "Champion",   ancestry: "Human",    level: 5, bg: "#5d3654", fg: "#efe6d8",
-    perception: 11, saves: { fortitude: 14, reflex: 10, will: 12 },
-    skills: { athletics: 14, diplomacy: 13, intimidation: 12, religion: 11, medicine: 10 } },
+    perception: 11, con: 4, saves: { fortitude: 14, reflex: 10, will: 12 },
+    skills: { athletics: 14, diplomacy: 13, intimidation: 12, religion: 11, medicine: 10 },
+    ranks: { athletics: 2, diplomacy: 2 },
+    lores: [["Warfare Lore", 1]] },
   { name: "Daizen", cls: "Wizard",    ancestry: "Kitsune",  level: 5, bg: "#3d4c59", fg: "#efe6d8",
-    perception: 10, saves: { fortitude: 9, reflex: 11, will: 14 },
-    skills: { arcana: 15, crafting: 14, society: 13, occultism: 12, "absalom-lore": 11, nature: 10 } },
+    perception: 10, con: 1, saves: { fortitude: 9, reflex: 11, will: 14 },
+    skills: { arcana: 15, crafting: 14, society: 13, occultism: 12, "absalom-lore": 11, nature: 10 },
+    ranks: { arcana: 2, crafting: 2 },
+    lores: [["Absalom Lore", 1], ["Academia Lore", 1]] },
   { name: "Miyu",  cls: "Rogue",      ancestry: "Tengu",    level: 5, bg: "#4b5a34", fg: "#efe6d8",
-    perception: 14, saves: { fortitude: 10, reflex: 15, will: 12 },
-    skills: { stealth: 16, thievery: 15, acrobatics: 14, deception: 13, "underworld-lore": 12, performance: 10 } },
+    perception: 14, con: 2, saves: { fortitude: 10, reflex: 15, will: 12 },
+    skills: { stealth: 16, thievery: 15, acrobatics: 14, deception: 13, "underworld-lore": 12, performance: 10 },
+    ranks: { stealth: 2, thievery: 2, deception: 2 },
+    /* Expert because she took it there by Dedicated Study — the planner should
+       still price her Earn Income off trained. */
+    lores: [["Underworld Lore", 2]] },
   { name: "Tenzo", cls: "Thaumaturge", ancestry: "Nagaji",  level: 5, bg: "#95381f", fg: "#efe6d8",
-    perception: 12, saves: { fortitude: 12, reflex: 12, will: 11 },
-    skills: { intimidation: 15, "assassin-lore": 13, "warfare-lore": 12, survival: 11, athletics: 11 } }
+    perception: 12, con: 3, saves: { fortitude: 12, reflex: 12, will: 11 },
+    skills: { intimidation: 15, "assassin-lore": 13, "warfare-lore": 12, survival: 11, athletics: 11 },
+    ranks: { intimidation: 2 },
+    lores: [["Assassin Lore", 1], ["Warfare Lore", 1]] }
 ];
 
 /* The slugs a macro might ask for, so an unlisted skill still answers. */
@@ -58,6 +74,10 @@ const ALL_SKILLS = ["acrobatics", "arcana", "athletics", "crafting", "deception"
 
 function labelFor(slug) {
   return slug.split("-").map(w => w[0].toUpperCase() + w.slice(1)).join(" ");
+}
+/* "Absalom Lore" -> "absalom-lore", matching how PF2e slugs a Lore item. */
+function slugFor(name) {
+  return String(name).trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
 class StubActor {
@@ -73,15 +93,43 @@ class StubActor {
         level: { value: spec.level },
         class: { name: spec.cls },
         ancestry: { name: spec.ancestry }
-      }
+      },
+      abilities: Object.fromEntries(["str", "dex", "con", "int", "wis", "cha"].map(k =>
+        [k, { mod: k === "con" ? (spec.con ?? 2) : 2 }]))
     };
     /* PF2e exposes statistics as objects with `.mod` and `.label`. */
     this.perception = { mod: spec.perception ?? 10, label: "Perception" };
     this.saves = Object.fromEntries(["fortitude", "reflex", "will"].map(k =>
       [k, { mod: spec.saves?.[k] ?? 10, label: labelFor(k) }]));
-    const slugs = new Set([...ALL_SKILLS, ...Object.keys(spec.skills ?? {})]);
-    this.skills = Object.fromEntries([...slugs].map(slug =>
-      [slug, { mod: spec.skills?.[slug] ?? BASE_SKILL, label: labelFor(slug), slug }]));
+
+    /* PF2e keeps Lore skills as items on the actor, and that item is where the
+       proficiency rank actually lives. Both halves are stubbed because a macro
+       may reasonably read either. */
+    const lores = spec.lores ?? [];
+    this.itemTypes = {
+      lore: lores.map(([name, rank]) => ({
+        name, type: "lore", slug: slugFor(name),
+        system: { proficient: { value: rank } }
+      }))
+    };
+
+    const loreSlugs = lores.map(([name]) => slugFor(name));
+    const slugs = new Set([...ALL_SKILLS, ...Object.keys(spec.skills ?? {}), ...loreSlugs]);
+    this.skills = Object.fromEntries([...slugs].map(slug => {
+      const lore = loreSlugs.includes(slug) || slug.endsWith("-lore");
+      const fromLore = lores.find(([name]) => slugFor(name) === slug)?.[1];
+      return [slug, {
+        mod: spec.skills?.[slug] ?? BASE_SKILL,
+        label: labelFor(slug),
+        rank: spec.ranks?.[slug] ?? fromLore ?? 1,
+        lore,
+        slug
+      }];
+    }));
+
+    /* Everyone in the sample party is player-owned, so the GM preview can
+       edit any of them and the ownership check still runs. */
+    this.testUserPermission = (user) => !!user?.isGM || this.hasPlayerOwner;
     /* Character sheets don't exist out here, so opening one is a log line. */
     this.sheet = { render: () => console.log("[sheet]", this.name) };
   }
@@ -424,9 +472,30 @@ const playlistCollection = {
 const settingStore = new Map();
 const settingDefs = new Map();
 
+/* An array, because macros iterate it — with the two collection members they
+   also reach for hung off the side. */
+const userList = [{ id: "gm", isGM: true, active: true, character: null, name: "Gamemaster" }];
+userList.get = (id) => userList.find(u => u.id === id) ?? null;
+Object.defineProperty(userList, "activeGM", {
+  get: () => userList.find(u => u.isGM && u.active) ?? null
+});
+
+/* Looped straight back, so a macro that relays a write to the GM and waits for
+   it to come round again can be exercised with one browser open. */
+const socketHandlers = new Map();
+const socketStub = {
+  on: (event, fn) => { socketHandlers.set(event, fn); },
+  emit: (event, data) => {
+    console.log("[socket]", event, data);
+    const fn = socketHandlers.get(event);
+    if (fn) setTimeout(() => fn(data), 0);
+  }
+};
+
 globalThis.game = {
-  user: { id: "gm", isGM: true, name: "Gamemaster" },
-  users: [{ id: "gm", isGM: true, character: null }],
+  user: { id: "gm", isGM: true, active: true, name: "Gamemaster" },
+  users: userList,
+  socket: socketStub,
   actors: actorCollection,
   journal: journalCollection,
   playlists: playlistCollection,
@@ -537,6 +606,11 @@ globalThis.foundry = {
     escapeHTML: (s) => String(s).replace(/[&<>"']/g, c =>
       ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])),
     deepClone: (v) => (v === null || typeof v !== "object") ? v : JSON.parse(JSON.stringify(v)),
+    randomID: (n = 16) => {
+      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+      let out = ""; for (let i = 0; i < n; i++) out += chars[Math.floor(Math.random() * chars.length)];
+      return out;
+    },
     mergeObject: (original, other = {}, options = {}) => {
       const target = options.inplace === false
         ? globalThis.foundry.utils.deepClone(original)

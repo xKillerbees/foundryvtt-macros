@@ -3,6 +3,38 @@
 ## Unreleased
 
 ### Added
+- Downtime Planner — a new `pf2e-downtime` collection, and the first macro here that isn't
+  tied to an adventure. The party's downtime on one board: thirteen activities, days budgeted
+  against days available, and a card per character
+- Downtime Planner: Earn Income costed out of the real Income Earned table, by task level and
+  proficiency rank, showing what each degree pays per day and in total — with a critical
+  success paying at one task level higher, as the book has it
+- Downtime Planner: rolls the character's own statistic and records the degree where the
+  system offers one, falling back to a rollable `@Check` in chat where it doesn't
+- Downtime Planner: written to be handed to the players. Players edit only the characters they
+  own and the calendar stays the GM's, enforced on the GM's side rather than trusted from the
+  sender. Since players can't write world settings, their edits relay over `game.socket` to
+  the GM's client, which runs the same reducer the GM's own clicks do
+- Downtime Planner: **rules as written by default.** Three optional house rules ship switched
+  off behind GM-only toggles — with all three off the planner computes nothing the Player Core
+  doesn't. A rule tags an activity, a field, or a piece of derived maths, so switching one off
+  un-applies it rather than leaving stale numbers behind: a Craft row that opted into 75%
+  reverts to 50% + 50%, and a plan still holding Dedicated Study days says so instead of being
+  quietly costed. Players see which rules are live but can't change them, on both sides of the
+  socket
+- Downtime Planner: the optional **Dedicated Study** house rule — 2 / 4 / 8 weeks to expert,
+  master, legendary — with the level minimums enforced, the teacher required before days can
+  be committed, one Lore holding the rank at a time, and no benefit lent to Earn Income.
+  Progress is derived from the days actually booked across every period, so editing a row
+  walks the study back by exactly that much
+- Downtime Planner: because Dedicated Study and Earn Income compete for the same days, the
+  board prices the weeks in gold forgone at that character's best rate — the house rule's
+  actual cost, made visible instead of implied
+- Downtime Planner: the optional **75% crafting** house rule, recalculating the balance owed
+  while leaving the 50% due up front alone
+- Preview stub: `game.socket` (looped back, so a relayed write round-trips with one browser
+  open), `game.users.get` / `activeGM`, `foundry.utils.randomID`, actor `itemTypes.lore`,
+  `system.abilities`, `testUserPermission`, and proficiency ranks on the sample party's skills
 - Menace Under Otari — a console for the Pathfinder Beginner Box adventure: all nineteen
   rooms across both floors, each with its read-aloud text, checks, and the rule the room is
   there to teach

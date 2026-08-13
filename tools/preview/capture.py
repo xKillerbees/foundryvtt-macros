@@ -68,6 +68,12 @@ SHOTS = {
     "novarush-fx": (
         "battle-for-nova-rush/nova-rush-console.js", "novarush-fx",
         "battle-for-nova-rush/nova-rush-fx.png"),
+    "planner": (
+        "pf2e-downtime/downtime-planner.js", "planner-raw",
+        "pf2e-downtime/downtime-planner.png"),
+    "planner-house": (
+        "pf2e-downtime/downtime-planner.js", "planner",
+        "pf2e-downtime/downtime-planner-house-rules.png"),
     "otari": (
         "beginner-box/menace-under-otari-console.js", "otari",
         "beginner-box/menace-under-otari-console.png"),
