@@ -14,6 +14,14 @@
   client over `game.socket`, which re-checks ownership rather than trusting the sender. The
   relayed op set is deliberately narrow — choose, roll, propose — and none of it touches a
   pool, a milestone, or another character
+- Fall Downtime Tracker: the second activity is doable rather than just named, on both boards.
+  **Research the Curse** picks a source and one of its two skills and rolls it, with exhausted
+  sources disabled and the insights remaining called out; the roll proposes, and the GM gets a
+  **Bank it** button that feeds it through the same Research Point tally, caps and revelation
+  text included. **Earn Income** takes a skill, task level, and days, priced off the real Income
+  Earned table by proficiency rank and opening on the character's best-paying skill at their own
+  level. **Craft** takes an item, level, and Price, with the DC and materials owed. Retraining
+  and Other take a line of text
 - Preview stub: `__player` on a fixture boots the preview as a player who owns one actor, with
   a GM left active, so a player-facing board can be exercised and screenshotted
 

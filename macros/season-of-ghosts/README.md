@@ -57,6 +57,24 @@ applies, and records the degree as a **proposal**. The GM's card shows *"Aiko ro
 Success"* and highlights that degree button; clicking it is what actually moves Hope, Food, or
 Security. Recording a result locks the player's controls for the week.
 
+**The second activity is doable too**, not just named. Choosing one opens the controls for it,
+on both boards:
+
+- **Research the Curse** — pick the source and which of its two skills to use, and roll. Sources
+  the party has exhausted are disabled, and the row says how many insights are left in the one
+  you've picked. The roll proposes; the GM gets a **Bank it** button that feeds the degree
+  through the same Research Point tally as the panel below, with the caps and the revelation
+  text at 2 / 4 / 6 / 8 / 10 RP. Banking freezes the row
+- **Earn Income** — skill, task level, and days, priced off the real Income Earned table by the
+  character's proficiency rank. Opens on their best-paying skill at their own level rather than
+  whatever sorts first, and once rolled it says what the week actually earned
+- **Craft** — item, item level, and Price, with the DC and the materials owed up front
+- **Retraining** and **Other** — a line of text for what they're doing. No check
+
+Earn Income and Craft don't touch the town's pools, so they need no GM approval — only research
+does. For the full downtime treatment, including multi-day Craft cost reduction, the
+[PF2e Downtime planner](../pf2e-downtime) covers the same activities in depth.
+
 Players can't write world settings, so their changes are relayed to the GM's client over
 `game.socket`, which re-checks ownership before writing rather than trusting the sender. Nothing
 needs installing. The relayed op set is deliberately narrow — choose, roll, propose — and none

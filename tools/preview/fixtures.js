@@ -51,9 +51,15 @@ globalThis.FIXTURES = {
       weeks: {
         5: {
           entries: {
-            0: { activity: "harvest",   skill: "Farming Lore|17",     result: null, delta: null, rolled: "cs", second: "Earn Income" },
-            1: { activity: "reinforce", skill: "Engineering Lore|17", result: "s",  delta: { security: 1 }, rolled: null, second: "Craft" },
-            2: { activity: "ceremony",  skill: "Performance|19",      result: null, delta: null, rolled: null, second: "—" },
+            0: { activity: "harvest",   skill: "Farming Lore|17",     result: null, delta: null, rolled: "cs",
+                 second: "Research the Curse",
+                 sec: { key: "research", src: "igawa", skill: "Arcana|19", rolled: "s", applied: false, note: "" } },
+            1: { activity: "reinforce", skill: "Engineering Lore|17", result: "s",  delta: { security: 1 }, rolled: null,
+                 second: "Earn Income",
+                 sec: { key: "income", skill: "crafting", task: 4, days: 7, rolled: "s", applied: false, note: "" } },
+            2: { activity: "ceremony",  skill: "Performance|19",      result: null, delta: null, rolled: null,
+                 second: "Craft",
+                 sec: { key: "craft", skill: "crafting", item: "Ghost touch rune", ilvl: 4, price: 200, rolled: null, applied: false, note: "" } },
             3: { activity: null,        skill: "",                    result: null, delta: null, rolled: null, second: "—" }
           },
           locks: {}, pen: {}, eventDone: false, log: []

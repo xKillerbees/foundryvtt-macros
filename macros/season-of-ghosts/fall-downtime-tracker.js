@@ -264,16 +264,81 @@ const ACTIVITIES = {
   }
 };
 
+/* The second, non-preparation activity each PC gets every week. Stored as the
+   label so states saved before this was more than a dropdown still read. */
 const SECOND_SLOT = ["—", "Research the Curse", "Craft", "Earn Income", "Retraining", "Other"];
+const SECOND_KEY = {
+  "Research the Curse": "research", "Craft": "craft", "Earn Income": "income",
+  "Retraining": "retrain", "Other": "other"
+};
+
+/* Income Earned, in copper per day: [failure, trained, expert, master, legendary].
+   Row 21 is the book's "20+" row, used only by a critical success at task 20.
+   Duplicated from the downtime planner on purpose — every macro here is a
+   single file somebody pastes into Foundry, with nothing to import from. */
+const INCOME = {
+  0: [1, 5, 5, 5, 5], 1: [2, 20, 20, 20, 20], 2: [4, 30, 30, 30, 30], 3: [8, 50, 50, 50, 50],
+  4: [10, 70, 80, 80, 80], 5: [20, 90, 100, 100, 100], 6: [30, 150, 200, 200, 200],
+  7: [40, 200, 250, 250, 250], 8: [50, 250, 300, 300, 300], 9: [60, 300, 400, 400, 400],
+  10: [70, 400, 500, 600, 600], 11: [80, 500, 600, 800, 800], 12: [90, 600, 800, 1000, 1000],
+  13: [100, 700, 1000, 1500, 1500], 14: [150, 800, 1500, 2000, 2000],
+  15: [200, 900, 2000, 2800, 2800], 16: [250, 1000, 2500, 3600, 4000],
+  17: [300, 1200, 3000, 4500, 5500], 18: [400, 1500, 4500, 7000, 9000],
+  19: [600, 2000, 6000, 10000, 13000], 20: [800, 3000, 7500, 15000, 20000],
+  21: [800, 4000, 9000, 17500, 30000]
+};
+const LEVEL_DC = [14, 15, 16, 18, 19, 20, 22, 23, 24, 26, 27, 28, 30,
+                  31, 32, 34, 35, 36, 38, 39, 40, 42, 44, 46, 48, 50];
+const levelDC = (lvl) => LEVEL_DC[Math.max(0, Math.min(25, Math.round(lvl || 0)))];
+const incomeRow = (lvl) => INCOME[Math.max(0, Math.min(21, Math.round(lvl || 0)))];
+function earnPerDay(taskLevel, rank, degree) {
+  if (degree === "cf") return 0;
+  if (degree === "f") return incomeRow(taskLevel)[0];
+  return incomeRow(degree === "cs" ? taskLevel + 1 : taskLevel)[Math.max(1, Math.min(4, rank || 1))];
+}
+function coin(cp) {
+  cp = Math.round(cp || 0);
+  if (!cp) return "nothing";
+  const gp = Math.floor(cp / 100), sp = Math.floor((cp % 100) / 10), c = cp % 10;
+  const bits = [];
+  if (gp) bits.push(`${gp.toLocaleString()} gp`);
+  if (sp) bits.push(`${sp} sp`);
+  if (c) bits.push(`${c} cp`);
+  return bits.join(" ");
+}
+
+/* The actor's skills, PF2e-shaped, with Lores flagged. Used to price Earn
+   Income off the proficiency rank rather than the modifier. */
+function skillsOf(actor) {
+  const out = [];
+  for (const [slug, st] of Object.entries(actor?.skills ?? {})) {
+    if (!st) continue;
+    const lore = st.lore ?? /-lore$/.test(slug);
+    const item = (actor?.itemTypes?.lore ?? []).find(i => (i.slug ?? slugish(i.name)) === slug);
+    const rank = Number.isInteger(item?.system?.proficient?.value) ? item.system.proficient.value
+      : Number.isInteger(st.rank) ? st.rank : 1;
+    out.push({ slug, label: st.label ?? slug, rank, lore });
+  }
+  return out.sort((a, b) => (a.lore === b.lore ? a.label.localeCompare(b.label) : (a.lore ? 1 : -1)));
+}
+const slugish = (s) => String(s ?? "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
 /* ---------------------------------------------------------------- research */
+/* `skills` is what the panels print; `opts` is the same thing parsed, so a
+   player can pick one and roll it. */
 const RESEARCH = {
-  sojin:  { label: "You So-Jin", max: 2, skills: "DC 17 Willowshore Lore / DC 19 Diplomacy" },
-  igawa:  { label: "Igawa Jubei", max: 2, skills: "DC 17 Library Lore / DC 19 Arcana" },
-  willow: { label: "Great Willow", max: 2, skills: "DC 19 Nature" },
-  solo:   { label: "Solo Investigation", max: 4, skills: "DC 17 Sangpotshi Lore / DC 19 Occultism" },
-  zoudou: { label: "Zoudou's Notes", max: 3, skills: "DC 17 Academia Lore / DC 19 Religion (+2 if paired)" }
+  sojin:  { label: "You So-Jin", max: 2, skills: "DC 17 Willowshore Lore / DC 19 Diplomacy",
+            opts: [["Willowshore Lore", 17], ["Diplomacy", 19]] },
+  igawa:  { label: "Igawa Jubei", max: 2, skills: "DC 17 Library Lore / DC 19 Arcana",
+            opts: [["Library Lore", 17], ["Arcana", 19]] },
+  willow: { label: "Great Willow", max: 2, skills: "DC 19 Nature",
+            opts: [["Nature", 19]] },
+  solo:   { label: "Solo Investigation", max: 4, skills: "DC 17 Sangpotshi Lore / DC 19 Occultism",
+            opts: [["Sangpotshi Lore", 17], ["Occultism", 19]] },
+  zoudou: { label: "Zoudou's Notes", max: 3, skills: "DC 17 Academia Lore / DC 19 Religion (+2 if paired)",
+            opts: [["Academia Lore", 17], ["Religion", 19]] }
 };
+const RANK_WORD = ["Untrained", "Trained", "Expert", "Master", "Legendary"];
 const RP_MILESTONES = {
   2: "The Wall of Ghosts is the softest border — and the Tan Sugi monastery lies beyond it.",
   4: "The noppera-bo worshipped “Kugaptee.” Nindorus can now be Recalled.",
@@ -406,6 +471,23 @@ const PLAYER_OPS = {
   second(t, { pc, value }) {
     const e = (t.w.entries[pc] ??= {});
     e.second = value;
+    /* A different activity means a different configuration; keeping the old
+       one around would carry a research source into an Earn Income row. */
+    e.sec = blankSecond(SECOND_KEY[value], t, pc);
+  },
+  secCfg(t, { pc, patch }) {
+    const e = (t.w.entries[pc] ??= {});
+    e.sec = e.sec ?? blankSecond(SECOND_KEY[e.second], t, pc);
+    if (e.sec.applied) return;
+    Object.assign(e.sec, patch ?? {});
+    /* Switching research source invalidates the skill picked for the old one. */
+    if (patch?.src) e.sec.skill = RESEARCH[patch.src]?.opts?.[0]?.join("|") ?? "";
+  },
+  secRolled(t, { pc, degree }) {
+    const e = (t.w.entries[pc] ??= {});
+    e.sec = e.sec ?? blankSecond(SECOND_KEY[e.second], t, pc);
+    if (e.sec.applied) return;
+    e.sec.rolled = DEGREES.includes(degree) ? degree : null;
   },
   rolled(t, { pc, degree }) {
     const e = (t.w.entries[pc] ??= {});
@@ -413,6 +495,19 @@ const PLAYER_OPS = {
     e.rolled = DEGREES.includes(degree) ? degree : null;
   }
 };
+
+/* Config for whichever second activity is selected. `applied` is set once the
+   GM has banked a research roll, which freezes the row. */
+function blankSecond(key, t, pc) {
+  const base = { key: key ?? null, rolled: null, applied: false, note: "" };
+  if (key === "research") return { ...base, src: "sojin", skill: RESEARCH.sojin.opts[0].join("|") };
+  /* Opens on the work that pays best at the level the character can actually
+     attempt, rather than whatever sorts first alphabetically at task level 0. */
+  if (key === "income") return { ...base, skill: t?.skillFor(pc, "")?.slug ?? "",
+                                 task: Math.max(0, t?.s?.pcs?.[pc]?.level ?? 0), days: 7 };
+  if (key === "craft") return { ...base, skill: "crafting", item: "", ilvl: 1, price: 0 };
+  return base;
+}
 
 function ownsPC(user, state, pcIdx) {
   const id = state?.pcs?.[pcIdx]?.actorId;
@@ -514,6 +609,100 @@ class Tracker {
       }
     }
     return this.postCheck(pcIdx);
+  }
+
+  /* ----- the second, non-preparation activity ----- */
+
+  secOf(pcIdx) {
+    const e = this.w.entries[pcIdx] ?? {};
+    const key = SECOND_KEY[e.second];
+    if (!key) return null;
+    const sec = e.sec ?? blankSecond(key, this, pcIdx);
+    /* A state saved before the second slot did anything has a label but no
+       config; treat it as freshly chosen rather than losing the choice. */
+    return sec.key === key ? sec : blankSecond(key, this, pcIdx);
+  }
+
+  /* Skill and DC for whatever the second activity currently is. */
+  secCheck(pcIdx) {
+    const sec = this.secOf(pcIdx);
+    if (!sec) return null;
+    if (sec.key === "research") {
+      const [skill, dc] = String(sec.skill || "").split("|");
+      return skill ? { skill, dc: Number(dc) } : null;
+    }
+    if (sec.key === "income") {
+      const sk = this.skillFor(pcIdx, sec.skill);
+      return sk ? { skill: sk.label, dc: levelDC(sec.task), slug: sk.slug } : null;
+    }
+    if (sec.key === "craft") {
+      const sk = this.skillFor(pcIdx, sec.skill || "crafting");
+      return sk ? { skill: sk.label, dc: levelDC(sec.ilvl), slug: sk.slug } : null;
+    }
+    return null;
+  }
+
+  /* An empty slug means "whatever pays most" — the right opening guess for
+     Earn Income, where alphabetical order lands on Acrobatics. */
+  skillFor(pcIdx, slug) {
+    const all = skillsOf(this.actorOf(pcIdx));
+    if (slug) return all.find(s => s.slug === slug) ?? all.find(s => s.slug === "crafting") ?? all[0] ?? null;
+    return [...all].filter(s => s.rank >= 1).sort((a, b) => b.rank - a.rank)[0] ?? all[0] ?? null;
+  }
+
+  actorOf(pcIdx) {
+    const id = this.s.pcs[pcIdx]?.actorId;
+    return id ? game.actors.get(id) : null;
+  }
+
+  /* What an Earn Income roll is actually worth, at the character's real rank. */
+  secIncome(pcIdx) {
+    const sec = this.secOf(pcIdx);
+    if (sec?.key !== "income") return null;
+    const sk = this.skillFor(pcIdx, sec.skill);
+    const rank = sk?.rank ?? 1;
+    const per = (d) => earnPerDay(sec.task, rank, d);
+    return {
+      rank, days: sec.days, task: sec.task,
+      perDay: { cs: per("cs"), s: per("s"), f: per("f"), cf: 0 },
+      total: sec.rolled ? per(sec.rolled) * sec.days : null
+    };
+  }
+
+  async rollSecond(pcIdx) {
+    const sec = this.secOf(pcIdx);
+    const chk = this.secCheck(pcIdx);
+    if (!sec || !chk) return ui.notifications.warn("Choose a second activity and a skill for it first.");
+    if (sec.applied) return ui.notifications.info("The GM has already banked this one.");
+    const actor = this.actorOf(pcIdx);
+    const st = actor?.skills?.[chk.slug ?? checkSlug(chk.skill)];
+    if (st?.roll) {
+      try {
+        const r = await st.roll({ dc: { value: chk.dc }, label: this.w.entries[pcIdx]?.second });
+        const d = r?.degreeOfSuccess ?? r?.options?.degreeOfSuccess;
+        if (Number.isInteger(d)) await this.apply("secRolled", { pc: pcIdx, degree: DEGREES[d] });
+        return;
+      } catch (err) {
+        console.warn("Fall Downtime Tracker — statistic roll failed, posting an inline check instead.", err);
+      }
+    }
+    const pc = this.s.pcs[pcIdx];
+    await ChatMessage.create({
+      content: `<p style="margin:0 0 4px"><b>${esc(pc.name)}</b> — ${esc(this.w.entries[pcIdx]?.second ?? "")}</p>${checkCode(chk.skill, chk.dc)}`,
+      speaker: actor ? ChatMessage.getSpeaker({ actor }) : { alias: "Willowshore" }
+    });
+  }
+
+  /* GM only: bank a player's research roll into the Research Point tally. The
+     roll itself proposes; this is what actually moves the number. */
+  bankResearch(pcIdx) {
+    const sec = this.secOf(pcIdx);
+    if (!this.editable || sec?.key !== "research" || !sec.rolled || sec.applied) return;
+    this.addResearch(sec.src, sec.rolled);
+    const e = this.w.entries[pcIdx];
+    e.sec = { ...sec, applied: true };
+    this.render();
+    this.save();
   }
 
   activityAvailable(key, pcIdx) {
@@ -1227,7 +1416,6 @@ class SoGDowntimeApp extends BaseApp {
         <button type="button" data-act="tchoice" data-pc="${i}" data-which="split" ${ro ? "disabled" : ""}>+1 Sec / +1 Hope</button>
       </div>` : "";
 
-    const second = entry.second ?? "—";
 
     const sub = [pc.level ? `Level ${pc.level}` : "", pc.ancestry, pc.cls].filter(Boolean).join(" · ");
     const state = resolved ? "done" : act ? "set" : "idle";
@@ -1276,12 +1464,103 @@ class SoGDowntimeApp extends BaseApp {
         ${pendingUI}
         ${resolved ? `<div class="outcome">${DEGREE_LABEL[resolved]}${deltaBits ? ` · ${deltaBits}` : " · no change"}</div>` : ""}
 
-        <label class="fld second">Second activity
-          <select data-act="second" data-pc="${i}" ${ro ? "disabled" : ""}>
-            ${SECOND_SLOT.map(o => `<option value="${o}" ${second === o ? "selected" : ""}>${o}</option>`).join("")}
-          </select>
-        </label>
+        ${this.secondBlock(i, ro)}
       </article>`;
+  }
+
+  /* The second activity, made doable rather than just named. Shared by the GM
+     card and the player card — the only difference is who may touch it and
+     that banking a research roll is the GM's. */
+  secondBlock(i, ro) {
+    const t = this.tracker;
+    const e = t.w.entries[i] ?? {};
+    const sec = t.secOf(i);
+    const dis = (ro || sec?.applied) ? "disabled" : "";
+
+    const head = `
+      <label class="fld second">Second activity
+        <select data-act="second" data-pc="${i}" ${ro ? "disabled" : ""}>
+          ${SECOND_SLOT.map(o => `<option value="${o}" ${(e.second ?? "—") === o ? "selected" : ""}>${o}</option>`).join("")}
+        </select>
+      </label>`;
+    if (!sec) return head;
+
+    const rolledBadge = sec.rolled
+      ? `<span class="secres ${sec.applied ? "done" : "rolled"}">${DEGREE_LABEL[sec.rolled]}${sec.applied ? " · banked" : ""}</span>`
+      : "";
+    const rollBtn = `<button type="button" class="rollbtn" data-act="sec-roll" data-pc="${i}"
+        title="Roll this check" ${dis || !t.secCheck(i) ? "disabled" : ""}><i class="fa-solid fa-dice-d20"></i></button>`;
+
+    if (sec.key === "research") {
+      const src = RESEARCH[sec.src] ?? RESEARCH.sojin;
+      const left = src.max - (t.s.research[sec.src] ?? 0);
+      const srcOpts = Object.entries(RESEARCH).map(([k, r]) => {
+        const rem = r.max - (t.s.research[k] ?? 0);
+        return `<option value="${k}" ${sec.src === k ? "selected" : ""} ${rem <= 0 && sec.src !== k ? "disabled" : ""}>${r.label}${rem <= 0 ? " · exhausted" : ""}</option>`;
+      }).join("");
+      const skillOpts = src.opts.map(([n, dc]) =>
+        `<option value="${n}|${dc}" ${sec.skill === `${n}|${dc}` ? "selected" : ""}>${n} — DC ${dc}</option>`).join("");
+      return `${head}
+        <div class="secbox research">
+          <div class="secrow">
+            <select data-act="sec-src" data-pc="${i}" ${dis}>${srcOpts}</select>
+            <select data-act="sec-skill" data-pc="${i}" ${dis}>${skillOpts}</select>
+            ${rollBtn}${rolledBadge}
+          </div>
+          <div class="sechint">${left > 0 ? `${left} more insight${left === 1 ? "" : "s"} to be had here.` : "Nothing more to learn from this one."}</div>
+          ${!ro && sec.rolled && !sec.applied && t.editable
+            ? `<button type="button" class="bank" data-act="sec-bank" data-pc="${i}">Bank ${DEGREE_LABEL[sec.rolled]} into the research total</button>` : ""}
+        </div>`;
+    }
+
+    if (sec.key === "income") {
+      const inc = t.secIncome(i);
+      const skills = skillsOf(t.actorOf(i)).filter(s => s.rank >= 1);
+      const skillOpts = skills.length
+        ? skills.map(s => `<option value="${s.slug}" ${sec.skill === s.slug ? "selected" : ""}>${esc(s.label)} (${RANK_WORD[s.rank] ?? "Trained"})</option>`).join("")
+        : `<option value="">No trained skills found</option>`;
+      return `${head}
+        <div class="secbox income">
+          <div class="secrow">
+            <select data-act="sec-skill" data-pc="${i}" ${dis}>${skillOpts}</select>
+            <label class="mini">Task lv<input type="number" min="0" max="25" value="${sec.task}" data-act="sec-num" data-k="task" data-pc="${i}" ${dis}></label>
+            <label class="mini">Days<input type="number" min="0" max="60" value="${sec.days}" data-act="sec-num" data-k="days" data-pc="${i}" ${dis}></label>
+            ${rollBtn}${rolledBadge}
+          </div>
+          <div class="sechint">DC ${levelDC(sec.task)} · ${coin(inc.perDay.s)} a day on a success, ${coin(inc.perDay.cs)} on a critical
+            ${inc.total != null ? ` · <b>earned ${coin(inc.total)}</b> over ${sec.days} day${sec.days === 1 ? "" : "s"}` : ""}</div>
+        </div>`;
+    }
+
+    if (sec.key === "craft") {
+      const skills = skillsOf(t.actorOf(i)).filter(s => s.rank >= 1);
+      const skillOpts = skills.map(s => `<option value="${s.slug}" ${sec.skill === s.slug ? "selected" : ""}>${esc(s.label)}</option>`).join("");
+      const half = Math.round((Number(sec.price) || 0) * 50);
+      return `${head}
+        <div class="secbox craft">
+          <div class="secrow">
+            <input type="text" class="grow" placeholder="What are you making?" value="${esc(sec.item)}" data-act="sec-note" data-k="item" data-pc="${i}" ${dis}>
+            <label class="mini">Item lv<input type="number" min="0" max="25" value="${sec.ilvl}" data-act="sec-num" data-k="ilvl" data-pc="${i}" ${dis}></label>
+            <label class="mini">Price gp<input type="number" min="0" max="100000" value="${sec.price}" data-act="sec-num" data-k="price" data-pc="${i}" ${dis}></label>
+          </div>
+          <div class="secrow">
+            <select data-act="sec-skill" data-pc="${i}" ${dis}>${skillOpts}</select>
+            ${rollBtn}${rolledBadge}
+          </div>
+          <div class="sechint">DC ${levelDC(sec.ilvl)} · four days minimum${half ? `, ${coin(half)} in materials up front` : " — set the Price to see the materials cost"}</div>
+        </div>`;
+    }
+
+    return `${head}
+      <div class="secbox">
+        <div class="secrow">
+          <input type="text" class="grow" placeholder="${sec.key === "retrain" ? "Retraining what, into what?" : "What are you doing?"}"
+                 value="${esc(sec.note)}" data-act="sec-note" data-k="note" data-pc="${i}" ${dis}>
+        </div>
+        <div class="sechint">${sec.key === "retrain"
+          ? "A week of downtime, and usually a teacher. No check — settle it with the GM."
+          : "No check. Tell the GM what you're up to."}</div>
+      </div>`;
   }
 
   /* ------------------------------------------------------------ listeners */
@@ -1304,6 +1583,8 @@ class SoGDowntimeApp extends BaseApp {
         else ui.notifications.warn("That character's actor is no longer in this world.");
       }
       else if (a === "pmy-roll") t.rollCheck(pc);
+      else if (a === "sec-roll") t.rollSecond(pc);
+      else if (a === "sec-bank") t.bankResearch(pc);
       else if (a === "gotoweek") t.setWeek(Number(btn.dataset.n));
       else if (a === "eoutcome") t.toggleEventOutcome(Number(btn.dataset.i));
       else if (a === "randtarget") t.pickRandomTarget();
@@ -1344,7 +1625,13 @@ class SoGDowntimeApp extends BaseApp {
          than writing the setting directly. */
       if (a === "pmy-pick") return void t.apply("pick", { pc, key: el.value });
       if (a === "pmy-skill") return void t.apply("skill", { pc, value: el.value });
-      if (a === "pmy-second") return void t.apply("second", { pc, value: el.value });
+      /* The second-activity controls are the same markup on both boards, so
+         they route through the relay for everyone. */
+      if (a === "second") return void t.apply("second", { pc, value: el.value });
+      if (a === "sec-src") return void t.apply("secCfg", { pc, patch: { src: el.value } });
+      if (a === "sec-skill") return void t.apply("secCfg", { pc, patch: { skill: el.value } });
+      if (a === "sec-num") return void t.apply("secCfg", { pc, patch: { [el.dataset.k]: Number(el.value) } });
+      if (a === "sec-note") return void t.apply("secCfg", { pc, patch: { [el.dataset.k]: el.value } });
       if (a === "pick") {
         week.entries[pc] = { activity: el.value || null, skill: "", result: null, delta: null, second: week.entries[pc]?.second ?? "—" };
         const act = ACTIVITIES[el.value];
@@ -1353,10 +1640,6 @@ class SoGDowntimeApp extends BaseApp {
       } else if (a === "skill") {
         week.entries[pc] = week.entries[pc] ?? {};
         week.entries[pc].skill = el.value;
-        t.save();
-      } else if (a === "second") {
-        week.entries[pc] = week.entries[pc] ?? {};
-        week.entries[pc].second = el.value;
         t.save();
       } else if (a === "rename") {
         t.s.pcs[pc].name = el.value.trim() || `PC ${pc + 1}`;
@@ -1481,7 +1764,6 @@ class SoGDowntimeApp extends BaseApp {
       : `<option value="">—</option>`;
 
     const mods = act ? t.checkModifier(e.activity) : [];
-    const second = e.second ?? "—";
 
     return `
       <section class="panel mycard">
@@ -1514,11 +1796,7 @@ class SoGDowntimeApp extends BaseApp {
         ${mods.length ? `<div class="mods">${mods.map(([v, why]) => `<span class="mod ${v.startsWith("-") ? "bad" : "good"}">${v} ${why}</span>`).join("")}</div>` : ""}
         ${act?.hint ? `<p class="hint">${act.hint}</p>` : ""}
 
-        <label class="fld second">Second activity
-          <select data-act="pmy-second" data-pc="${i}">
-            ${SECOND_SLOT.map(o => `<option value="${o}" ${second === o ? "selected" : ""}>${o}</option>`).join("")}
-          </select>
-        </label>
+        ${this.secondBlock(i, false)}
       </section>`;
   }
 
@@ -1667,6 +1945,28 @@ class SoGDowntimeApp extends BaseApp {
       .sog .proposed { font-size:.74rem; background:var(--stripe); border-left:3px solid var(--ember);
                     border-radius:3px; padding:.3rem .45rem; margin:.35rem 0; }
       .sog .deg.proposed { box-shadow:inset 0 0 0 2px var(--ember); font-weight:700; }
+
+      .sog .secbox { border:1px solid var(--line); border-left:3px solid var(--plum); border-radius:3px;
+                     padding:.35rem .45rem; margin:-.15rem 0 .4rem; background:var(--stripe); }
+      .sog .secbox.income { border-left-color:var(--ember); }
+      .sog .secbox.craft { border-left-color:var(--rust); }
+      .sog .secrow { display:flex; align-items:center; gap:.3rem; flex-wrap:wrap; margin-bottom:.25rem; }
+      .sog .secrow > select { flex:1 1 7rem; min-width:0; }
+      .sog .secrow .grow { flex:1 1 8rem; min-width:0; }
+      .sog .secrow .mini { display:flex; align-items:center; gap:.25rem; font-size:.66rem;
+                     color:var(--muted); white-space:nowrap; }
+      .sog .secrow .mini input { width:3.4rem; }
+      .sog .sechint { font-size:.68rem; color:var(--muted); line-height:1.35; }
+      .sog .sechint b { color:var(--ink); }
+      .sog .secres { font-size:.68rem; font-weight:600; border:1px solid var(--line); border-radius:3px;
+                     padding:.12rem .35rem; white-space:nowrap; }
+      .sog .secres.rolled { color:var(--ember); border-color:var(--ember); }
+      .sog .secres.done { color:var(--moss); border-color:var(--moss); }
+      .sog .secbox .bank { width:100%; margin-top:.3rem; font-size:.72rem; padding:.25rem;
+                     border:1px solid var(--plum); color:var(--plum); background:transparent;
+                     border-radius:3px; height:auto; display:inline-flex; align-items:center;
+                     justify-content:center; }
+      .sog .secbox .bank:hover { background:var(--hover); }
 
       .sog .topbar { display:flex; align-items:center; gap:.75rem; padding:.5rem .25rem .75rem; }
       .sog .weeknav { display:flex; align-items:center; gap:.35rem; }
