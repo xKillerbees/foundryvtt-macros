@@ -1547,7 +1547,7 @@ class SoGDowntimeApp extends BaseApp {
             <select data-act="sec-skill" data-pc="${i}" ${dis}>${skillOpts}</select>
             ${rollBtn}${rolledBadge}
           </div>
-          <div class="sechint">DC ${levelDC(sec.ilvl)} · four days minimum${half ? `, ${coin(half)} in materials up front` : " — set the Price to see the materials cost"}</div>
+          <div class="sechint">DC ${levelDC(sec.ilvl)} · two days of setup before the check, one with the formula${half ? `, then ${coin(half)} in materials` : " — set the Price to see the materials cost"}</div>
         </div>`;
     }
 
@@ -1821,9 +1821,15 @@ class SoGDowntimeApp extends BaseApp {
                    border:1px solid var(--line); border-radius:3px; line-height:1.25;
                    display:inline-flex; align-items:center; justify-content:center; gap:.3rem;
                    height:auto; min-height:0; white-space:nowrap; text-overflow:ellipsis; overflow:hidden; }
-      .sog select, .sog input[type="text"] { background:var(--field); color:var(--ink);
+      /* color-scheme drives the native dropdown popup. Without it, a world on
+         Foundry's dark theme opens a select over a black list with black text
+         — the control looks right and the menu is unreadable. */
+      .sog { color-scheme:${THEME === "dark" ? "dark" : "light"}; }
+      .sog select, .sog input[type="text"], .sog input[type="number"] {
+             background:var(--field); color:var(--ink); color-scheme:${THEME === "dark" ? "dark" : "light"};
              border:1px solid var(--line); border-radius:3px; height:auto; padding:2px 4px; }
       .sog option { background:var(--field); color:var(--ink); }
+      .sog option:disabled { color:var(--muted); }
       .sog input[type="checkbox"] { accent-color:var(--ember); }
       /* A panel is titled in large ink over a thick rule in its own tone, so
          it reads ahead of anything nested inside it. */

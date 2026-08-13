@@ -156,12 +156,14 @@ const ACTS = {
 
   craft: {
     label: "Craft", icon: "fa-solid fa-hammer", tone: "rust", check: true, drop: true,
-    blurb: "Drag an item onto this card to fill in its level and Price. Four days minimum, half the Price in materials up front; extra days chip away at what's left to pay.",
+    blurb: "Drag an item onto this card to fill in its level and Price. Two days of setup before the check — one if you have the formula — and half the Price in materials up front. Every day after that chips away at what's left to pay.",
     fields: [
       { k: "item", label: "Item", type: "text", placeholder: "Drop an item, or type its name" },
       { k: "ilvl", label: "Item level", type: "number", min: 0, max: 25, def: 1 },
       { k: "price", label: "Price (gp)", type: "number", min: 0, max: 100000, step: "0.01", def: 0 },
-      { k: "skill", label: "Skill", type: "skill", trainedOnly: true, def: "crafting" },
+      /* Not trained-only: Craft always wants Crafting, and being untrained in
+         it is a warning to show rather than a reason to offer Acrobatics. */
+      { k: "skill", label: "Skill", type: "skill", trainedOnly: false, def: "crafting" },
       /* HOUSE RULE — 75% total with a formula and a background reason. Hidden
          unless the GM has switched the rule on; the 50% up front is unchanged
          either way, and only the balance owed shrinks. */
@@ -169,7 +171,7 @@ const ACTS = {
         options: [["0", "No — standard 50% + 50%"], ["1", "Yes — formula + background reason"]] }
     ],
     dc: (cfg) => levelDC(cfg.ilvl),
-    minDays: 4
+    minDays: 2
   },
 
   subsist: {
@@ -298,10 +300,10 @@ const OUTCOMES = {
     cf: "Fired on the spot. Nothing earned, and the job is over."
   },
   craft: {
-    cs: "Made, and the balance drops faster for every extra day you put in.",
-    s: "Made. Pay the balance, or keep working to whittle it down.",
-    f: "Not finished. You can salvage the materials.",
-    cf: "Not finished, and a tenth of the materials are ruined."
+    cs: "Each further day knocks off more — priced a level above you rather than at your own.",
+    s: "Pay the balance now, or keep working and knock a day's worth off each time.",
+    f: "You don't finish. The materials salvage for their full value, but you start over.",
+    cf: "You ruin a tenth of the materials. The rest salvages."
   },
   subsist: {
     cs: "Enough for you and one other, or you eat and sleep comfortably.",
@@ -775,18 +777,25 @@ class Planner {
   }
 
   /* Half the Price up front either way; the house rule only shrinks the
-     balance owed on completion, from 50% of Price to 25%. */
+     balance owed on completion, from 50% of Price to 25%.
+
+     Setup is two days of work before the check, or one with the item's
+     formula, and every day after that reduces what's left to pay. The
+     reduction is priced off the *crafter* — their own level and proficiency,
+     or a level higher on a critical success — not off the item. */
   craftFor(pc, row) {
     const price = Math.round((Number(row.cfg.price) || 0) * 100);
     const hr = this.on("craft75") && String(row.cfg.hr75) === "1";
     const upFront = Math.floor(price / 2);
     const balance = hr ? Math.floor(price / 4) : price - upFront;
-    const extra = Math.max(0, (row.days || 0) - 4);
+    const setup = row.cfg.formula ? 1 : 2;
+    const extra = Math.max(0, (row.days || 0) - setup);
     const rank = this.effectiveRank(pc, row.cfg.skill || "crafting");
-    const ilvl = Number(row.cfg.ilvl) || 0;
-    const perDay = row.degree === "cs" ? incomeRow(ilvl + 1)[Math.max(1, rank)] : incomeRow(ilvl)[Math.max(1, rank)];
+    const lvl = (pc.level ?? 1) + (row.degree === "cs" ? 1 : 0);
+    const perDay = incomeRow(lvl)[Math.max(1, rank)];
     const reduced = Math.min(balance, extra * perDay);
-    return { price, upFront, balance, extra, perDay, reduced, owed: Math.max(0, balance - reduced), hr };
+    return { price, upFront, balance, extra, setup, perDay, reduced,
+             owed: Math.max(0, balance - reduced), hr };
   }
 
   restFor(pc, row) {
@@ -855,8 +864,25 @@ class Planner {
       else if (task > this.s.settlement) out.push(`No level ${task} work here — the settlement tops out at level ${this.s.settlement}.`);
       if (this.effectiveRank(pc, r.cfg.skill) < 1) out.push("Earn Income needs you trained in the skill.");
     }
+    /* Craft's requirements, which are easy to plan straight past: the setup
+       days, your own level and proficiency against the item's, and access to
+       anything that isn't common. */
     for (const r of rows) {
-      if (r.act === "craft" && (r.days || 0) < 4) out.push("Craft takes at least four days.");
+      if (r.act !== "craft") continue;
+      const c = this.craftFor(pc, r);
+      const what = r.cfg.item ? `“${r.cfg.item}”` : "That item";
+      if ((r.days || 0) < c.setup) {
+        out.push(`Craft needs ${days2(c.setup)} of setup before the check${r.cfg.formula ? "." : " — one, with the item's formula."}`);
+      }
+      const ilvl = Number(r.cfg.ilvl) || 0;
+      const rank = this.effectiveRank(pc, r.cfg.skill || "crafting");
+      if (ilvl > (pc.level ?? 1)) out.push(`${what} is level ${ilvl} — above ${pc.name}'s level, so it can't be Crafted.`);
+      if (rank < 1) out.push("Craft needs you trained in Crafting.");
+      else if (ilvl >= 17 && rank < 4) out.push(`Level ${ilvl} items need legendary Crafting.`);
+      else if (ilvl >= 9 && rank < 3) out.push(`Level ${ilvl} items need master Crafting.`);
+      if (r.cfg.rarity && r.cfg.rarity !== "common") {
+        out.push(`${what} is ${r.cfg.rarity} — you need access to it before you can Craft one.`);
+      }
     }
     return [...new Set(out)];
   }
@@ -1076,9 +1102,10 @@ class DowntimeApp extends BaseApp {
           <div class="pay"><span>Up front</span><b>${coin(c.upFront)}</b><small>materials</small></div>
           <div class="pay"><span>Balance</span><b>${coin(c.balance)}</b><small>${c.hr ? "75% rule" : "on completion"}</small></div>
           <div class="pay ${c.owed === 0 ? "on" : ""}"><span>Still owed</span><b>${coin(c.owed)}</b>
-            <small>${c.extra ? `after ${days2(c.extra)} extra` : "no extra days"}</small></div>
+            <small>${c.extra ? `after ${days2(c.extra)} past setup` : "no days past setup"}</small></div>
         </div>
-        <div class="payfoot">DC ${levelDC(row.cfg.ilvl)} · each day past the fourth knocks off ${coin(c.perDay)}${c.hr ? " · house rule: 75% of Price in total" : ""}</div>`;
+        <div class="payfoot">DC ${levelDC(row.cfg.ilvl)} · ${days2(c.setup)} of setup${row.cfg.formula ? " (formula known)" : ""},
+          then ${coin(c.perDay)} off per day at ${RANKS[this.planner.effectiveRank(pc, row.cfg.skill || "crafting")]} and level ${pc.level ?? 1}${c.hr ? " · house rule: 75% of Price in total" : ""}</div>`;
     }
 
     if (row.act === "rest") {
@@ -1546,8 +1573,16 @@ class DowntimeApp extends BaseApp {
                     padding:.3rem .5rem; font-size:.8rem; font-family:inherit; }
       .dtp button:hover:not(:disabled) { background:var(--hover); }
       .dtp button:disabled { opacity:.45; cursor:default; }
+      /* color-scheme drives the native dropdown popup. Without it, a world on
+         Foundry's dark theme opens a select over a black list with black text
+         — the control looks right and the menu is unreadable. The options are
+         painted explicitly as well, since Linux Chrome ignores the scheme. */
+      .dtp { color-scheme:${THEME === "dark" ? "dark" : "light"}; }
       .dtp input, .dtp select { background:var(--field); color:var(--ink); border:1px solid var(--line);
-                                border-radius:3px; padding:.2rem .3rem; font-family:inherit; font-size:.8rem; }
+                                border-radius:3px; padding:.2rem .3rem; font-family:inherit; font-size:.8rem;
+                                color-scheme:${THEME === "dark" ? "dark" : "light"}; }
+      .dtp select option { background:var(--field); color:var(--ink); }
+      .dtp select option:disabled { color:var(--muted); }
       .dtp .muted, .dtp .sub { color:var(--muted); font-size:.78rem; }
       .dtp .spacer { flex:1; }
       .dtp .empty { padding:2rem; text-align:center; }

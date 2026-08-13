@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+### Fixed
+- Downtime Planner: Craft was running on the pre-remaster rules. It is not a flat four days —
+  it's **two days of setup before the check, or one with the item's formula**. The per-day
+  reduction after that was also priced off the item's level; it goes off the **crafter's** level
+  and Crafting rank, a level higher on a critical success. Craft now also carries the
+  requirements it's easiest to plan past: an item above your own level, the master and legendary
+  ranks that level 9 and 17 items need, being trained at all, and anything uncommon or rare
+  needing access before you can make one
+- Downtime Planner and Fall Downtime Tracker: dropdowns opened black-on-black in worlds using
+  Foundry's dark theme. The control inherited the page's `color-scheme`, so the native popup
+  painted itself dark while the options stayed dark-on-dark. Both boards now pin the scheme to
+  their own palette and paint the options explicitly
+- Downtime Planner: a Craft row on a character untrained in Crafting offered Acrobatics, because
+  the field filtered to trained skills and fell through to the first one. It always offers
+  Crafting now, and says if you aren't trained in it
+- Fall Downtime Tracker: the second activity's number inputs were unstyled, the CSS only having
+  covered text inputs and selects
+
 ### Added
 - Fall Downtime Tracker: the player board is no longer read-only. Each player gets a card per
   character they own — this week's preparation activity, the skill for it, a roll button, and
@@ -49,8 +67,10 @@
   character sheet — and its name, level, and Price fill themselves in, with a coin-purse Price
   flattened to gp so 15 gp 5 sp arrives as 15.5. Dropping on the panel instead starts a new
   Craft row. The chip that appears carries the two things that change the answer: the item's
-  rarity, and whether that character knows its formula, read off their own formula book. A
-  non-physical item is refused rather than crafted against a Price it doesn't have
+  rarity, and whether that character knows its formula, read off their own formula book. Both
+  feed the rules directly: the formula is what halves the setup days, and rarity is what decides
+  whether you need access. A non-physical item is refused rather than crafted against a Price it
+  doesn't have
 - Downtime Planner: rolls the character's own statistic and records the degree where the
   system offers one, falling back to a rollable `@Check` in chat where it doesn't
 - Downtime Planner: the party is **the party actor**, not a directory scan. Eidolons,

@@ -55,7 +55,10 @@ and what the party will be richer by at the end of it.
 - A **what you can earn** panel per character, ranking their skills by what the work actually
   pays at the best task the settlement offers
 - Warnings that catch the things that get missed: over the day budget, a task level above your
-  own level or above the settlement's, Earn Income without being trained, Craft under four days
+  own level or above the settlement's, and Earn Income without being trained. Craft carries the
+  requirements that are easiest to plan straight past — the setup days, an item above your own
+  level, the master and legendary ranks that level 9 and 17 items need, and anything uncommon or
+  rare needing access before you can make one
 - A chat card for one character's plan or the whole party's
 
 ### The house rules
@@ -91,6 +94,11 @@ best rate. That's the house rule's actual price, made visible.
 **Crafting at 75%** — with the formula and a background reason for it, the total comes to 75% of
 Price instead of 100%. Half is still due up front; the balance owed drops. Toggling it on
 recalculates what's still owed after the extra days worked.
+
+Craft otherwise follows the remastered activity: **two days of setup before the check, or one if
+you have the item's formula**, then every further day reduces the balance by a day's Earn Income
+— priced off *your* level and Crafting rank, or a level higher on a critical success, not off
+the item's level.
 
 **Additional Lore** may be taken for a Lore you already have, keeping the automatic scaling.
 Reference only — it changes nothing the planner computes, and it's listed so the table can see
