@@ -323,6 +323,46 @@ function skillsOf(actor) {
 }
 const slugish = (s) => String(s ?? "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
+/* -------------------------------------------------------------- dropped items
+   Dragging an item onto the Craft second activity fills in its level and
+   Price. Duplicated from the downtime planner on purpose — every macro here is
+   a single file somebody pastes into Foundry, with nothing to import from. */
+
+function readDropData(event) {
+  const TE = foundry.applications?.ux?.TextEditor?.implementation ?? globalThis.TextEditor;
+  try {
+    if (TE?.getDragEventData) return TE.getDragEventData(event);
+    return JSON.parse(event.dataTransfer.getData("text/plain"));
+  } catch { return null; }
+}
+
+/* PF2e stores a Price as a coin purse; flatten it to the gp the book quotes. */
+function priceInGP(doc) {
+  const p = doc?.system?.price?.value ?? {};
+  const gp = (p.pp ?? 0) * 10 + (p.gp ?? 0) + (p.sp ?? 0) / 10 + (p.cp ?? 0) / 100;
+  const per = doc?.system?.price?.per ?? 1;
+  return Math.round((per > 1 ? gp / per : gp) * 100) / 100;
+}
+
+/* The formula halves Craft's setup from two days to one. */
+function knowsFormula(actor, doc) {
+  const list = actor?.system?.crafting?.formulas ?? [];
+  if (!list.length) return false;
+  const want = new Set([doc?.uuid, doc?.sourceId, doc?._stats?.compendiumSource].filter(Boolean));
+  return list.some(f => f?.uuid && want.has(f.uuid));
+}
+
+function itemFacts(doc, actor) {
+  return {
+    name: doc.name ?? "",
+    level: doc.system?.level?.value ?? doc.level ?? 0,
+    price: priceInGP(doc),
+    uuid: doc.uuid ?? "",
+    rarity: doc.system?.traits?.rarity ?? "common",
+    formula: knowsFormula(actor, doc)
+  };
+}
+
 /* ---------------------------------------------------------------- research */
 /* `skills` is what the panels print; `opts` is the same thing parsed, so a
    player can pick one and roll it. */
@@ -483,6 +523,20 @@ const PLAYER_OPS = {
     /* Switching research source invalidates the skill picked for the old one. */
     if (patch?.src) e.sec.skill = RESEARCH[patch.src]?.opts?.[0]?.join("|") ?? "";
   },
+  secItem(t, { pc, item }) {
+    const e = (t.w.entries[pc] ??= {});
+    if (e.second !== "Craft") return;
+    e.sec = e.sec ?? blankSecond("craft", t, pc);
+    if (e.sec.applied) return;
+    Object.assign(e.sec, {
+      item: String(item?.name ?? "").slice(0, 120),
+      ilvl: Math.max(0, Math.min(25, Math.round(Number(item?.level) || 0))),
+      price: Math.max(0, Math.min(100000, Number(item?.price) || 0)),
+      uuid: String(item?.uuid ?? ""),
+      rarity: String(item?.rarity ?? "common"),
+      formula: !!item?.formula
+    });
+  },
   secRolled(t, { pc, degree }) {
     const e = (t.w.entries[pc] ??= {});
     e.sec = e.sec ?? blankSecond(SECOND_KEY[e.second], t, pc);
@@ -505,7 +559,8 @@ function blankSecond(key, t, pc) {
      attempt, rather than whatever sorts first alphabetically at task level 0. */
   if (key === "income") return { ...base, skill: t?.skillFor(pc, "")?.slug ?? "",
                                  task: Math.max(0, t?.s?.pcs?.[pc]?.level ?? 0), days: 7 };
-  if (key === "craft") return { ...base, skill: "crafting", item: "", ilvl: 1, price: 0 };
+  if (key === "craft") return { ...base, skill: "crafting", item: "", ilvl: 1, price: 0,
+                                uuid: "", rarity: "common", formula: false };
   return base;
 }
 
@@ -1536,18 +1591,31 @@ class SoGDowntimeApp extends BaseApp {
       const skills = skillsOf(t.actorOf(i)).filter(s => s.rank >= 1);
       const skillOpts = skills.map(s => `<option value="${s.slug}" ${sec.skill === s.slug ? "selected" : ""}>${esc(s.label)}</option>`).join("");
       const half = Math.round((Number(sec.price) || 0) * 50);
+      const setup = sec.formula ? 1 : 2;
+      const rare = sec.rarity && sec.rarity !== "common";
+      const chip = sec.uuid ? `
+        <div class="itemchip ${rare ? "rare" : ""}">
+          <button type="button" class="ilink" data-act="opendoc" data-uuid="${esc(sec.uuid)}"
+                  title="Open ${esc(sec.item)}"><i class="fa-solid fa-up-right-from-square"></i>${esc(sec.item)}</button>
+          <span class="ilvl">Level ${sec.ilvl}</span>
+          <div class="inotes">
+            ${rare ? `<span class="bad">${cap(sec.rarity)} — you need access before you can Craft one.</span> ` : ""}
+            <span class="${sec.formula ? "good" : "bad"}">${sec.formula ? "You have the formula — one day of setup." : "No formula — two days of setup."}</span>
+          </div>
+        </div>` : "";
       return `${head}
-        <div class="secbox craft">
+        <div class="secbox craft" ${dis ? "" : `data-drop="${i}"`}>
+          ${chip}
           <div class="secrow">
-            <input type="text" class="grow" placeholder="What are you making?" value="${esc(sec.item)}" data-act="sec-note" data-k="item" data-pc="${i}" ${dis}>
+            <input type="text" class="grow" placeholder="Drop an item here, or type its name" value="${esc(sec.item)}" data-act="sec-note" data-k="item" data-pc="${i}" ${dis}>
             <label class="mini">Item lv<input type="number" min="0" max="25" value="${sec.ilvl}" data-act="sec-num" data-k="ilvl" data-pc="${i}" ${dis}></label>
-            <label class="mini">Price gp<input type="number" min="0" max="100000" value="${sec.price}" data-act="sec-num" data-k="price" data-pc="${i}" ${dis}></label>
+            <label class="mini">Price gp<input type="number" min="0" max="100000" step="0.01" value="${sec.price}" data-act="sec-num" data-k="price" data-pc="${i}" ${dis}></label>
           </div>
           <div class="secrow">
             <select data-act="sec-skill" data-pc="${i}" ${dis}>${skillOpts}</select>
             ${rollBtn}${rolledBadge}
           </div>
-          <div class="sechint">DC ${levelDC(sec.ilvl)} · two days of setup before the check, one with the formula${half ? `, then ${coin(half)} in materials` : " — set the Price to see the materials cost"}</div>
+          <div class="sechint">DC ${levelDC(sec.ilvl)} · ${setup} day${setup === 1 ? "" : "s"} of setup before the check${half ? `, then ${coin(half)} in materials` : " — drop an item or set the Price to see the materials cost"}</div>
         </div>`;
     }
 
@@ -1563,11 +1631,52 @@ class SoGDowntimeApp extends BaseApp {
       </div>`;
   }
 
+  /* Resolved on the client that dropped it; only the plain facts read off the
+     document are stored and relayed to the GM. */
+  async dropItem(event, pcIdx) {
+    const t = this.tracker;
+    if (!Number.isInteger(pcIdx)) return;
+    if (!t.editable && !ownsPC(game.user, t.s, pcIdx)) return;
+    const data = readDropData(event);
+    if (!data || data.type !== "Item") {
+      if (data) ui.notifications.warn("Only items can be dropped here.");
+      return;
+    }
+    let doc = null;
+    try { doc = await fromUuid(data.uuid); } catch { /* handled below */ }
+    if (!doc) return ui.notifications.warn("That item couldn't be read.");
+    if (doc.system?.price === undefined) {
+      return ui.notifications.warn(`${doc.name} isn't a physical item, so it has no Price to craft against.`);
+    }
+    const facts = itemFacts(doc, t.actorOf(pcIdx));
+    await t.apply("secItem", { pc: pcIdx, item: facts });
+    ui.notifications.info(`${facts.name} — level ${facts.level}, ${facts.price} gp.`);
+  }
+
   /* ------------------------------------------------------------ listeners */
   wire(root) {
     if (!root || root.dataset?.sogWired === "1") return;
     if (root.dataset) root.dataset.sogWired = "1";
     const t = this.tracker;
+
+    /* Drag an item onto a Craft second activity to fill in its level and
+       Price. Delegated like everything else here, so it survives a re-render. */
+    root.addEventListener("dragover", (ev) => {
+      const zone = ev.target.closest("[data-drop]");
+      if (!zone) return;
+      ev.preventDefault();
+      zone.classList.add("dragover");
+    });
+    root.addEventListener("dragleave", (ev) => {
+      ev.target.closest("[data-drop]")?.classList.remove("dragover");
+    });
+    root.addEventListener("drop", async (ev) => {
+      const zone = ev.target.closest("[data-drop]");
+      if (!zone) return;
+      ev.preventDefault();
+      zone.classList.remove("dragover");
+      await this.dropItem(ev, Number(zone.dataset.drop));
+    });
 
     root.addEventListener("click", async (ev) => {
       const btn = ev.target.closest("button[data-act]");
@@ -1585,6 +1694,11 @@ class SoGDowntimeApp extends BaseApp {
       else if (a === "pmy-roll") t.rollCheck(pc);
       else if (a === "sec-roll") t.rollSecond(pc);
       else if (a === "sec-bank") t.bankResearch(pc);
+      else if (a === "opendoc") {
+        const doc = await fromUuid(btn.dataset.uuid).catch(() => null);
+        if (doc?.sheet) doc.sheet.render(true);
+        else ui.notifications.warn("That item is no longer available in this world.");
+      }
       else if (a === "gotoweek") t.setWeek(Number(btn.dataset.n));
       else if (a === "eoutcome") t.toggleEventOutcome(Number(btn.dataset.i));
       else if (a === "randtarget") t.pickRandomTarget();
@@ -1689,7 +1803,7 @@ class SoGDowntimeApp extends BaseApp {
         : e?.rolled ? `${DEGREE_LABEL[e.rolled]} <span class="muted">rolled</span>` : "";
       return `
         <tr class="${mine.includes(i) ? "mine" : ""}">
-          <td class="who"><img class="avatar sm" src="${pc.img || "icons/svg/mystery-man.svg"}" alt="" onerror="this.src='icons/svg/mystery-man.svg'">${esc(pc.name)}</td>
+          <td class="pwho"><img class="avatar sm" src="${pc.img || "icons/svg/mystery-man.svg"}" alt="" onerror="this.src='icons/svg/mystery-man.svg'"><span>${esc(pc.name)}</span></td>
           <td>${act ? act.label : "<span class='muted'>nothing yet</span>"}</td>
           <td class="rt">${skill ? `${skill[0]} DC ${skill[1]}` : ""}</td>
           <td class="rt">${shown}</td>
@@ -1928,12 +2042,13 @@ class SoGDowntimeApp extends BaseApp {
                    border:none; border-bottom:1px solid var(--line); vertical-align:middle; }
       #sog-downtime .ptable tbody tr:nth-child(odd) td { background:var(--stripe); }
       #sog-downtime .ptable tbody tr:last-child td { border-bottom:none; }
-      #sog-downtime .ptable .who { font-weight:600; }
       #sog-downtime .ptable .rt { text-align:right; padding-right:0; }
       #sog-downtime .ptable .muted { color:var(--muted); }
-      /* The card header's .who is a column flexbox; the table reuses the class
-         on a <td>, where that stacks the avatar on top of the name. */
-      #sog-downtime .ptable td.who { display:table-cell; flex:none; white-space:nowrap; }
+      /* Its own class, not the card header's .who — that one is a column
+         flexbox, and sharing it stacked the avatar on top of the name. */
+      #sog-downtime .ptable td.pwho { white-space:nowrap; }
+      #sog-downtime .ptable td.pwho img { vertical-align:middle; margin-right:.4rem; }
+      #sog-downtime .ptable td.pwho span { vertical-align:middle; font-weight:600; }
       /* First cell only — on every cell it draws a rule down each column. */
       #sog-downtime .ptable .mine td:first-child { box-shadow:inset 3px 0 0 -1px var(--ember); }
 
@@ -1973,6 +2088,18 @@ class SoGDowntimeApp extends BaseApp {
                      border-radius:3px; height:auto; display:inline-flex; align-items:center;
                      justify-content:center; }
       .sog .secbox .bank:hover { background:var(--hover); }
+      .sog [data-drop].dragover { outline:2px dashed var(--rust); outline-offset:-3px; }
+      .sog .itemchip { border:1px solid var(--line); border-left:3px solid var(--rust); border-radius:3px;
+                       padding:.25rem .35rem; margin-bottom:.3rem; background:var(--card); }
+      .sog .itemchip.rare { border-left-color:var(--plum); }
+      .sog .itemchip .ilink { padding:0; border:none; background:transparent; font-weight:600;
+                       font-size:.8rem; color:var(--ink); height:auto; }
+      .sog .itemchip .ilink:hover { background:transparent; text-decoration:underline; }
+      .sog .itemchip .ilink i { font-size:.6rem; color:var(--muted); }
+      .sog .itemchip .ilvl { font-size:.66rem; color:var(--muted); margin-left:.3rem; }
+      .sog .itemchip .inotes { font-size:.66rem; line-height:1.35; margin-top:.1rem; }
+      .sog .itemchip .good { color:var(--moss); }
+      .sog .itemchip .bad { color:var(--rust); }
 
       .sog .topbar { display:flex; align-items:center; gap:.75rem; padding:.5rem .25rem .75rem; }
       .sog .weeknav { display:flex; align-items:center; gap:.35rem; }

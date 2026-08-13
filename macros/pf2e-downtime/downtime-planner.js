@@ -617,6 +617,11 @@ const OPS = {
     let row = rowId ? plan.rows.find(r => r.id === rowId) : null;
     if (row && row.act !== "craft") return;
     if (!row) { row = blankRow("craft", actorId); plan.rows.push(row); }
+    /* Setup is one day with the formula and two without, so dropping an item
+       can change the floor under the day count. Move the days with it while
+       they're still sitting on that floor, and never leave them below it. */
+    const prevSetup = row.cfg.formula ? 1 : 2;
+    const untouched = row.days === prevSetup;
     Object.assign(row.cfg, {
       item: String(item?.name ?? "").slice(0, 120),
       ilvl: Math.max(0, Math.min(25, Math.round(Number(item?.level) || 0))),
@@ -625,6 +630,8 @@ const OPS = {
       rarity: String(item?.rarity ?? "common"),
       formula: !!item?.formula
     });
+    const setup = row.cfg.formula ? 1 : 2;
+    if (untouched || row.days < setup) row.days = setup;
   },
   delRow(s, { actorId, rowId }) {
     const plan = planFor(s, actorId);
@@ -1168,7 +1175,8 @@ class DowntimeApp extends BaseApp {
           <i class="${def.icon}"></i>
           <h4>${def.label}${def.house ? `<span class="hr">house rule</span>` : ""}</h4>
           <label class="days"><span>Days</span>
-            <input type="number" min="0" max="365" value="${row.days}" data-act="days" data-row="${row.id}" ${ro}></label>
+            <input type="number" min="${row.act === "craft" ? P.craftFor(pc, row).setup : (def.minDays ?? 0)}"
+                   max="365" value="${row.days}" data-act="days" data-row="${row.id}" ${ro}></label>
           <button type="button" class="x" data-act="del" data-row="${row.id}" title="Remove" ${ro}>✕</button>
         </header>
         <p class="blurb">${def.blurb}</p>

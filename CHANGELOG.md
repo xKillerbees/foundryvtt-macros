@@ -3,6 +3,16 @@
 ## Unreleased
 
 ### Fixed
+- Downtime Planner: the day count didn't follow the formula. Craft's setup is two days without
+  the item's formula and one with it, so dropping an item can move the floor under the days —
+  they now move with it while they're still sitting on that floor, and never sit below it. Days
+  you set deliberately are left alone
+- Fall Downtime Tracker: the Craft second activity wouldn't accept a dragged item — the
+  planner had it and this didn't. It does now, with the same chip, the same rarity and formula
+  reading, and the formula setting the setup days
+- Fall Downtime Tracker: the player board's week table stacked the avatar on top of each name.
+  The `td` shared the `.who` class with the PC card's header, which is a column flexbox; the
+  table cell has its own class now rather than relying on an override winning
 - Downtime Planner: Craft was running on the pre-remaster rules. It is not a flat four days —
   it's **two days of setup before the check, or one with the item's formula**. The per-day
   reduction after that was also priced off the item's level; it goes off the **crafter's** level

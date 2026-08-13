@@ -68,7 +68,9 @@ on both boards:
 - **Earn Income** — skill, task level, and days, priced off the real Income Earned table by the
   character's proficiency rank. Opens on their best-paying skill at their own level rather than
   whatever sorts first, and once rolled it says what the week actually earned
-- **Craft** — item, item level, and Price, with the DC and the materials owed up front
+- **Craft** — drag an item onto the card and its level and Price fill themselves in, along with
+  whether it's uncommon enough to need access and whether that character knows the formula. The
+  formula is what decides the setup: two days before the check, or one with it
 - **Retraining** and **Other** — a line of text for what they're doing. No check
 
 Earn Income and Craft don't touch the town's pools, so they need no GM approval — only research
