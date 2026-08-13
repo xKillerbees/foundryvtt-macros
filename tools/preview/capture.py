@@ -38,6 +38,9 @@ SHOTS = {
     "downtime": (
         "season-of-ghosts/fall-downtime-tracker.js", "downtime",
         "season-of-ghosts/fall-downtime-tracker.png"),
+    "downtime-player": (
+        "season-of-ghosts/fall-downtime-tracker.js", "downtime-player",
+        "season-of-ghosts/fall-downtime-player.png"),
     "festival": (
         "season-of-ghosts/first-long-night-console.js", "festival",
         "season-of-ghosts/first-long-night-console.png"),

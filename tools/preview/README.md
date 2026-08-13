@@ -59,6 +59,10 @@ ranks, Lore items, and `testUserPermission`, which is enough to drive the player
 reassign `game.user` to a non-GM who owns one actor, re-evaluate the macro, and the read-only
 branches, the ownership checks, and the relay all run for real.
 
+Set `__player: "pc1"` on a fixture to boot the whole preview that way instead — the previewing
+user becomes a player who owns only that actor, and a GM stays active so the "no GM logged in"
+branch doesn't fire. That's what lets `capture.py` screenshot a player-facing board.
+
 ## Testing journal links
 
 The stub ships a small journal directory whose ids follow the Season of Ghosts module's own

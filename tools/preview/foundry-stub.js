@@ -127,9 +127,15 @@ class StubActor {
       }];
     }));
 
-    /* Everyone in the sample party is player-owned, so the GM preview can
-       edit any of them and the ownership check still runs. */
-    this.testUserPermission = (user) => !!user?.isGM || this.hasPlayerOwner;
+    /* Everyone in the sample party is player-owned, so the GM preview can edit
+       any of them and the ownership check still runs. Previewing as a player
+       (`__player` on a fixture) narrows it to that one actor, which is what
+       makes a player-facing board's read-only branches show up. */
+    this.testUserPermission = (user) => {
+      if (user?.isGM) return true;
+      const only = globalThis.__previewPlayer;
+      return only ? this.id === only : this.hasPlayerOwner;
+    };
     /* Character sheets don't exist out here, so opening one is a log line. */
     this.sheet = { render: () => console.log("[sheet]", this.name) };
   }
@@ -487,8 +493,15 @@ const settingStore = new Map();
 const settingDefs = new Map();
 
 /* An array, because macros iterate it — with the two collection members they
-   also reach for hung off the side. */
+   also reach for hung off the side. The GM stays active even when previewing
+   as a player, so a macro that relays writes to the GM doesn't take its "no
+   GM logged in" branch. */
+const PREVIEW_PLAYER = globalThis.__previewPlayer ?? null;
 const userList = [{ id: "gm", isGM: true, active: true, character: null, name: "Gamemaster" }];
+if (PREVIEW_PLAYER) {
+  userList.push({ id: "player", isGM: false, active: true, name: "Player",
+                  character: ACTORS.find(a => a.id === PREVIEW_PLAYER) ?? null });
+}
 userList.get = (id) => userList.find(u => u.id === id) ?? null;
 Object.defineProperty(userList, "activeGM", {
   get: () => userList.find(u => u.isGM && u.active) ?? null
@@ -507,7 +520,9 @@ const socketStub = {
 };
 
 globalThis.game = {
-  user: { id: "gm", isGM: true, active: true, name: "Gamemaster" },
+  user: PREVIEW_PLAYER
+    ? userList.find(u => u.id === "player")
+    : userList.find(u => u.id === "gm"),
   users: userList,
   socket: socketStub,
   actors: actorCollection,

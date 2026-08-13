@@ -35,6 +35,33 @@ globalThis.FIXTURES = {
     }
   },
 
+  /* The fall tracker's player board, switched on, mid-week 5. One character
+     has already rolled and is waiting on the GM; the rest are part way
+     through choosing. Rendered as a player by flipping game.user — see
+     tools/preview/README.md. */
+  "downtime-player": {
+    __player: "pc1",
+    "world.sogFallDowntime": {
+      week: 5,
+      playerVisible: true,
+      pools: { hope: 16, food: 9, security: 6, restoration: 5 },
+      rep: { southbank: 2, northridge: 1 },
+      research: { sojin: 2, igawa: 0, willow: 1, solo: 2, zoudou: 3 },
+      opts: { expansion: false, teaware: true },
+      weeks: {
+        5: {
+          entries: {
+            0: { activity: "harvest",   skill: "Farming Lore|17",     result: null, delta: null, rolled: "cs", second: "Earn Income" },
+            1: { activity: "reinforce", skill: "Engineering Lore|17", result: "s",  delta: { security: 1 }, rolled: null, second: "Craft" },
+            2: { activity: "ceremony",  skill: "Performance|19",      result: null, delta: null, rolled: null, second: "—" },
+            3: { activity: null,        skill: "",                    result: null, delta: null, rolled: null, second: "—" }
+          },
+          locks: {}, pen: {}, eventDone: false, log: []
+        }
+      }
+    }
+  },
+
   /* First Long Night, with the grand show under way and the ledger filling. */
   "festival": {
     "world.sogFirstLongNight": {

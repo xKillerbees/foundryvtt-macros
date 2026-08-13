@@ -3,6 +3,31 @@
 ## Unreleased
 
 ### Added
+- Fall Downtime Tracker: the player board is no longer read-only. Each player gets a card per
+  character they own — this week's preparation activity, the skill for it, a roll button, and
+  the second activity slot — while characters they don't own stay a read-only row
+- Fall Downtime Tracker: a player's roll uses their character's own statistic where the system
+  offers one and records the degree as a **proposal**. The GM's card shows what was rolled and
+  highlights that degree; clicking it is still what moves Hope, Food, or Security. Recording a
+  result locks the player's controls for the week
+- Fall Downtime Tracker: players can't write world settings, so their changes relay to the GM's
+  client over `game.socket`, which re-checks ownership rather than trusting the sender. The
+  relayed op set is deliberately narrow — choose, roll, propose — and none of it touches a
+  pool, a milestone, or another character
+- Preview stub: `__player` on a fixture boots the preview as a player who owns one actor, with
+  a GM left active, so a player-facing board can be exercised and screenshotted
+
+### Fixed
+- Fall Downtime Tracker: the player board went dark and unreadable in some worlds. Two causes —
+  the board blanked its own background and leaned on `.window-content`, so wherever the host
+  theme won that rule there was nothing underneath the panels; and the week's table inherited
+  the PF2e system's own table styling, a tinted header and row striping picked for a dark
+  theme. The board now paints its own background, and the table sets its colours explicitly
+  under the window id
+- Fall Downtime Tracker: the week table's Who column stacked the avatar on top of the name,
+  having picked up the card header's column flexbox from the shared `.who` class
+
+### Added
 - Downtime Planner — a new `pf2e-downtime` collection, and the first macro here that isn't
   tied to an adventure. The party's downtime on one board: thirteen activities, days budgeted
   against days available, and a card per character

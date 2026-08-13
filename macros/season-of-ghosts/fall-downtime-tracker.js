@@ -377,6 +377,60 @@ function registerSetting() {
   });
 }
 
+/* ------------------------------------------------------------ player relay
+   Players can't write world settings, so the few things a player is allowed to
+   change are sent to the GM's client, which re-checks ownership and performs
+   the write. Foundry relays any event namespaced module.* whether or not a
+   module by that name is installed, so nothing needs installing.
+
+   Deliberately narrow: a player assigns their own character's work and rolls
+   for it. Recording the result moves the town's pools, and that stays the GM's
+   to do — a player's roll only proposes a degree. */
+const SOCKET = "module.sog-fall-downtime";
+
+const PLAYER_OPS = {
+  pick(t, { pc, key }) {
+    const w = t.w;
+    const prev = w.entries[pc] ?? {};
+    if (prev.result) return;
+    w.entries[pc] = { activity: key || null, skill: "", result: null, delta: null,
+                      rolled: null, second: prev.second ?? "—" };
+    const act = ACTIVITIES[key];
+    if (act) w.entries[pc].skill = `${act.skills[0][0]}|${act.skills[0][1]}`;
+  },
+  skill(t, { pc, value }) {
+    const e = (t.w.entries[pc] ??= {});
+    if (e.result) return;
+    e.skill = value;
+  },
+  second(t, { pc, value }) {
+    const e = (t.w.entries[pc] ??= {});
+    e.second = value;
+  },
+  rolled(t, { pc, degree }) {
+    const e = (t.w.entries[pc] ??= {});
+    if (e.result) return;
+    e.rolled = DEGREES.includes(degree) ? degree : null;
+  }
+};
+
+function ownsPC(user, state, pcIdx) {
+  const id = state?.pcs?.[pcIdx]?.actorId;
+  if (!id) return false;
+  const actor = game.actors.get(id);
+  return !!actor && (user.isGM || actor.testUserPermission(user, "OWNER"));
+}
+const myPCIndexes = (state) =>
+  (state.pcs ?? []).map((_, i) => i).filter(i => ownsPC(game.user, state, i));
+
+const isPrimaryGM = () => {
+  const gm = game.users.activeGM;
+  if (gm) return gm.id === game.user.id;
+  const gms = game.users.filter(u => u.isGM && u.active).sort((a, b) => a.id.localeCompare(b.id));
+  return gms[0]?.id === game.user.id;
+};
+const anyGMOnline = () => game.users.some(u => u.isGM && u.active);
+
 async function getJournal(create = false) {
   let j = game.journal.getName(JOURNAL_NAME);
   if (!j && create && game.user.isGM) {
@@ -416,6 +470,50 @@ class Tracker {
   async save() {
     if (!this.editable) return;
     await game.settings.set(SETTING_NS, SETTING_KEY, this.s);
+  }
+
+  /* The one way a player changes anything. The GM runs the op locally; a
+     player runs it for an immediate repaint and relays it, and the GM's write
+     comes back through the updateSetting hook as the authority. */
+  async apply(op, data) {
+    if (!PLAYER_OPS[op]) return;
+    if (this.editable) {
+      PLAYER_OPS[op](this, data);
+      this.render();
+      await this.save();
+      return;
+    }
+    if (!ownsPC(game.user, this.s, data?.pc)) return ui.notifications.warn("That isn't your character.");
+    if (!anyGMOnline()) {
+      return ui.notifications.error("No GM is logged in, so that can't be saved. Your change was not kept.");
+    }
+    PLAYER_OPS[op](this, data);
+    this.render();
+    game.socket.emit(SOCKET, { op, data, userId: game.user.id });
+  }
+
+  /* Rolls the character's own statistic where the system offers one, so the
+     result lands in chat with every modifier applied, and records the degree
+     as a proposal for the GM. Falls back to posting a rollable inline check. */
+  async rollCheck(pcIdx) {
+    const e = this.w.entries[pcIdx];
+    if (!e?.activity || !e.skill) return ui.notifications.warn("Pick an activity and a skill first.");
+    if (e.result) return ui.notifications.info("The GM has already recorded this week's result.");
+    const [skill, dc] = e.skill.split("|");
+    const pc = this.s.pcs[pcIdx];
+    const actor = pc?.actorId ? game.actors.get(pc.actorId) : null;
+    const st = actor?.skills?.[checkSlug(skill)];
+    if (st?.roll) {
+      try {
+        const r = await st.roll({ dc: { value: Number(dc) }, label: ACTIVITIES[e.activity]?.label });
+        const d = r?.degreeOfSuccess ?? r?.options?.degreeOfSuccess;
+        if (Number.isInteger(d)) await this.apply("rolled", { pc: pcIdx, degree: DEGREES[d] });
+        return;
+      } catch (err) {
+        console.warn("Fall Downtime Tracker — statistic roll failed, posting an inline check instead.", err);
+      }
+    }
+    return this.postCheck(pcIdx);
   }
 
   activityAvailable(key, pcIdx) {
@@ -1166,9 +1264,13 @@ class SoGDowntimeApp extends BaseApp {
         ${modLine}
         ${act?.hint ? `<p class="hint">${act.hint}</p>` : ""}
 
+        ${entry.rolled && !entry.result
+          ? `<div class="proposed">${esc(pc.name)} rolled <b>${DEGREE_LABEL[entry.rolled]}</b> — click it to record what it does for the town.</div>`
+          : ""}
+
         <div class="degrees">
           ${DEGREES.slice().reverse().map(d => `
-            <button type="button" class="deg ${d} ${entry.result === d ? "on" : ""}" data-act="resolve" data-pc="${i}" data-deg="${d}" ${ro || !act ? "disabled" : ""}>${DEGREE_LABEL[d]}</button>`).join("")}
+            <button type="button" class="deg ${d} ${entry.result === d ? "on" : ""} ${!entry.result && entry.rolled === d ? "proposed" : ""}" data-act="resolve" data-pc="${i}" data-deg="${d}" ${ro || !act ? "disabled" : ""}>${DEGREE_LABEL[d]}</button>`).join("")}
         </div>
 
         ${pendingUI}
@@ -1201,6 +1303,7 @@ class SoGDowntimeApp extends BaseApp {
         if (actor) actor.sheet?.render(true);
         else ui.notifications.warn("That character's actor is no longer in this world.");
       }
+      else if (a === "pmy-roll") t.rollCheck(pc);
       else if (a === "gotoweek") t.setWeek(Number(btn.dataset.n));
       else if (a === "eoutcome") t.toggleEventOutcome(Number(btn.dataset.i));
       else if (a === "randtarget") t.pickRandomTarget();
@@ -1237,6 +1340,11 @@ class SoGDowntimeApp extends BaseApp {
       const a = el.dataset.act;
       const pc = Number(el.dataset.pc);
       const week = t.w;
+      /* The player board's own controls, which route through the relay rather
+         than writing the setting directly. */
+      if (a === "pmy-pick") return void t.apply("pick", { pc, key: el.value });
+      if (a === "pmy-skill") return void t.apply("skill", { pc, value: el.value });
+      if (a === "pmy-second") return void t.apply("second", { pc, value: el.value });
       if (a === "pick") {
         week.entries[pc] = { activity: el.value || null, skill: "", result: null, delta: null, second: week.entries[pc]?.second ?? "—" };
         const act = ACTIVITIES[el.value];
@@ -1288,16 +1396,20 @@ class SoGDowntimeApp extends BaseApp {
         <div class="pool-val">${s.pools[key]}</div>
       </div>`;
 
+    const mine = myPCIndexes(s);
+
     const rows = s.pcs.map((pc, i) => {
       const e = t.w.entries[i];
       const act = e?.activity ? ACTIVITIES[e.activity] : null;
       const skill = e?.skill ? e.skill.split("|") : null;
+      const shown = e?.result ? DEGREE_LABEL[e.result]
+        : e?.rolled ? `${DEGREE_LABEL[e.rolled]} <span class="muted">rolled</span>` : "";
       return `
-        <tr>
+        <tr class="${mine.includes(i) ? "mine" : ""}">
           <td class="who"><img class="avatar sm" src="${pc.img || "icons/svg/mystery-man.svg"}" alt="" onerror="this.src='icons/svg/mystery-man.svg'">${esc(pc.name)}</td>
           <td>${act ? act.label : "<span class='muted'>nothing yet</span>"}</td>
           <td class="rt">${skill ? `${skill[0]} DC ${skill[1]}` : ""}</td>
-          <td class="rt">${e?.result ? DEGREE_LABEL[e.result] : ""}</td>
+          <td class="rt">${shown}</td>
         </tr>`;
     }).join("");
 
@@ -1317,11 +1429,15 @@ class SoGDowntimeApp extends BaseApp {
           ${pool("restoration", "Teahouse")}
         </section>
 
+        ${mine.length
+          ? mine.map(i => this.playerCard(s.pcs[i], i)).join("")
+          : `<div class="alarm quiet">You don't have a character in the party list, so this is a read-only view.</div>`}
+
         <section class="panel">
           <h3>This week's work</h3>
           <table class="ptable">
-            <tr><th>Who</th><th>Activity</th><th class="rt">Check</th><th class="rt">Result</th></tr>
-            ${rows}
+            <thead><tr><th>Who</th><th>Activity</th><th class="rt">Check</th><th class="rt">Result</th></tr></thead>
+            <tbody>${rows}</tbody>
           </table>
         </section>
 
@@ -1339,8 +1455,71 @@ class SoGDowntimeApp extends BaseApp {
           </div>
         </section>
 
-        <p class="hint" style="text-align:center">Read-only. Ask your GM to record results.</p>
+        <p class="hint" style="text-align:center">${mine.length
+          ? "Your roll is sent to the GM, who records what it does for the town."
+          : "Read-only. Ask your GM to record results."}</p>
       </div>`;
+  }
+
+  /* A player's own character: choose the week's preparation activity and the
+     skill for it, roll, and pick the second activity. Point totals and targets
+     stay off this card — the pools above are the only numbers players see. */
+  playerCard(pc, i) {
+    const t = this.tracker;
+    const e = t.w.entries[i] ?? {};
+    const act = ACTIVITIES[e.activity];
+    const locked = !!e.result;
+
+    const opts = Object.entries(ACTIVITIES).map(([k, a]) => {
+      const blocked = t.activityAvailable(k, i);
+      const sel = e.activity === k ? "selected" : "";
+      return `<option value="${k}" ${sel} ${blocked && e.activity !== k ? "disabled" : ""}>${a.label}${a.gives ? ` — ${a.gives}` : ""}${blocked ? ` · ${blocked.toLowerCase()}` : ""}</option>`;
+    }).join("");
+
+    const skillOpts = act
+      ? act.skills.map(([n, dc]) => `<option value="${n}|${dc}" ${e.skill === `${n}|${dc}` ? "selected" : ""}>${n} — DC ${dc}</option>`).join("")
+      : `<option value="">—</option>`;
+
+    const mods = act ? t.checkModifier(e.activity) : [];
+    const second = e.second ?? "—";
+
+    return `
+      <section class="panel mycard">
+        <div class="my-head">
+          <img class="avatar" src="${pc.img || "icons/svg/mystery-man.svg"}" alt="" onerror="this.src='icons/svg/mystery-man.svg'">
+          <div class="who">
+            <span class="pcname">${esc(pc.name)}</span>
+            <span class="pcsub">${locked ? "Recorded by the GM" : act ? "Ready to roll" : "Nothing chosen yet"}</span>
+          </div>
+          ${e.result
+            ? `<span class="myres done">${DEGREE_LABEL[e.result]}</span>`
+            : e.rolled ? `<span class="myres rolled">${DEGREE_LABEL[e.rolled]} · with the GM</span>` : ""}
+        </div>
+
+        <label class="fld">This week's preparation
+          <select data-act="pmy-pick" data-pc="${i}" ${locked ? "disabled" : ""}>
+            <option value="">— choose —</option>
+            ${opts}
+          </select>
+        </label>
+
+        <label class="fld">Skill
+          <div class="skillrow">
+            <select data-act="pmy-skill" data-pc="${i}" ${locked || !act ? "disabled" : ""}>${skillOpts}</select>
+            <button type="button" class="rollbtn" data-act="pmy-roll" data-pc="${i}"
+                    title="Roll this check" ${locked || !act ? "disabled" : ""}><i class="fa-solid fa-dice-d20"></i></button>
+          </div>
+        </label>
+
+        ${mods.length ? `<div class="mods">${mods.map(([v, why]) => `<span class="mod ${v.startsWith("-") ? "bad" : "good"}">${v} ${why}</span>`).join("")}</div>` : ""}
+        ${act?.hint ? `<p class="hint">${act.hint}</p>` : ""}
+
+        <label class="fld second">Second activity
+          <select data-act="pmy-second" data-pc="${i}">
+            ${SECOND_SLOT.map(o => `<option value="${o}" ${second === o ? "selected" : ""}>${o}</option>`).join("")}
+          </select>
+        </label>
+      </section>`;
   }
 
   /* --------------------------------------------------------------- styles */
@@ -1349,7 +1528,11 @@ class SoGDowntimeApp extends BaseApp {
     return `<style>
       #sog-downtime .window-content { background:${p.paper}; color:${p.ink}; padding:8px;
              overflow-y:auto; max-height:calc(100vh - 140px); }
-      #sog-downtime .window-content > * { background:transparent; }
+      /* Everything except the board itself. Blanking .sog too left the board
+         with no background of its own, so wherever the host theme won the
+         .window-content rule the whole thing went dark under the panels. */
+      #sog-downtime .window-content > *:not(.sog) { background:transparent; }
+      #sog-downtime .sog { background:${p.paper}; color:${p.ink}; }
       .sog { --ink:${p.ink}; --paper:${p.paper}; --card:${p.card}; --line:${p.line};
              --rust:${p.rust}; --ember:${p.ember}; --moss:${p.moss}; --slate:${p.slate};
              --plum:${p.plum}; --muted:${p.muted}; --track:${p.track}; --stripe:${p.stripe};
@@ -1446,13 +1629,44 @@ class SoGDowntimeApp extends BaseApp {
       .sog .wtab.spooky { border-bottom:2px solid var(--plum); }
       .sog .wtab.on { background:var(--ember); border-color:var(--ember); color:var(--paper); font-weight:700; }
       .sog .closed { text-align:center; padding:1.5rem .5rem; color:var(--muted); }
-      .sog .ptable { width:100%; border-collapse:collapse; font-size:.82rem; }
-      .sog .ptable th { text-align:left; font-size:.65rem; text-transform:uppercase; letter-spacing:.07em;
-                   color:var(--muted); font-weight:400; padding-bottom:.2rem; }
-      .sog .ptable td { padding:.25rem 0; border-top:1px dotted var(--line); }
-      .sog .ptable .who { font-weight:600; }
-      .sog .ptable .rt { text-align:right; }
-      .sog .ptable .muted { color:var(--muted); }
+      /* Prefixed with the window id, not just .sog: the PF2e system styles
+         tables inside application windows — a tinted thead and its own row
+         striping, chosen for a dark theme — and a bare class selector loses to
+         it, which is what turned this table into an unreadable dark band. */
+      #sog-downtime .ptable { width:100%; border-collapse:collapse; font-size:.82rem;
+                   background:transparent; color:var(--ink); border:none; }
+      #sog-downtime .ptable thead, #sog-downtime .ptable tbody,
+      #sog-downtime .ptable tr { background:transparent; border:none; }
+      #sog-downtime .ptable th { text-align:left; font-size:.65rem; text-transform:uppercase;
+                   letter-spacing:.07em; color:var(--muted); font-weight:600; background:transparent;
+                   border:none; border-bottom:1px solid var(--line); padding:.2rem .4rem .2rem 0; }
+      #sog-downtime .ptable td { padding:.3rem .4rem .3rem 0; background:transparent; color:var(--ink);
+                   border:none; border-bottom:1px solid var(--line); vertical-align:middle; }
+      #sog-downtime .ptable tbody tr:nth-child(odd) td { background:var(--stripe); }
+      #sog-downtime .ptable tbody tr:last-child td { border-bottom:none; }
+      #sog-downtime .ptable .who { font-weight:600; }
+      #sog-downtime .ptable .rt { text-align:right; padding-right:0; }
+      #sog-downtime .ptable .muted { color:var(--muted); }
+      /* The card header's .who is a column flexbox; the table reuses the class
+         on a <td>, where that stacks the avatar on top of the name. */
+      #sog-downtime .ptable td.who { display:table-cell; flex:none; white-space:nowrap; }
+      /* First cell only — on every cell it draws a rule down each column. */
+      #sog-downtime .ptable .mine td:first-child { box-shadow:inset 3px 0 0 -1px var(--ember); }
+
+      .sog .mycard { border-left:3px solid var(--ember); }
+      .sog .my-head { display:flex; align-items:center; gap:.5rem; margin-bottom:.45rem; }
+      .sog .my-head .avatar { width:34px; height:34px; border-radius:3px; object-fit:cover;
+                    border:1px solid var(--line); }
+      .sog .my-head .who { display:flex; flex-direction:column; line-height:1.2; }
+      .sog .my-head .pcname { font-weight:700; font-size:.95rem; }
+      .sog .my-head .pcsub { font-size:.68rem; color:var(--muted); }
+      .sog .myres { margin-left:auto; font-size:.72rem; font-weight:600; border-radius:3px;
+                    padding:.2rem .45rem; border:1px solid var(--line); }
+      .sog .myres.done { color:var(--moss); border-color:var(--moss); }
+      .sog .myres.rolled { color:var(--ember); border-color:var(--ember); }
+      .sog .proposed { font-size:.74rem; background:var(--stripe); border-left:3px solid var(--ember);
+                    border-radius:3px; padding:.3rem .45rem; margin:.35rem 0; }
+      .sog .deg.proposed { box-shadow:inset 0 0 0 2px var(--ember); font-weight:700; }
 
       .sog .topbar { display:flex; align-items:center; gap:.75rem; padding:.5rem .25rem .75rem; }
       .sog .weeknav { display:flex; align-items:center; gap:.35rem; }
@@ -1622,7 +1836,28 @@ async function confirmReset() {
   const tracker = new Tracker(game.journal.getName(JOURNAL_NAME) ?? null, state);
   const app = new SoGDowntimeApp(tracker);
 
-  if (!globalThis.__sogDowntimeHook) {
+  /* The GM's client is the only one that can write, so it is the only one that
+     listens. Ownership is re-checked here rather than trusted from the sender,
+     and the op set is the narrow player one — nothing here moves a pool. */
+  if (game.user.isGM) {
+    if (globalThis.__sogDowntimeSocket) game.socket.off(SOCKET, globalThis.__sogDowntimeSocket);
+    globalThis.__sogDowntimeSocket = async ({ op, data, userId }) => {
+      if (!isPrimaryGM()) return;
+      const user = game.users.get(userId);
+      if (!user || !PLAYER_OPS[op]) return;
+      if (!ownsPC(user, tracker.s, data?.pc)) return;
+      PLAYER_OPS[op](tracker, data);
+      tracker.render();
+      await tracker.save();
+    };
+    game.socket.on(SOCKET, globalThis.__sogDowntimeSocket);
+  }
+
+  /* Re-registered rather than guarded: running the macro again builds a new
+     tracker, and a hook still closed over the previous one would keep the
+     stale window in sync and leave the live one frozen. */
+  {
+    if (globalThis.__sogDowntimeHook) Hooks.off("updateSetting", globalThis.__sogDowntimeHook);
     globalThis.__sogDowntimeHook = Hooks.on("updateSetting", (setting, changes, opts, userId) => {
       if (setting.key !== SETTING_ID || userId === game.user.id) return;
       const fresh = typeof setting.value === "string" ? JSON.parse(setting.value) : setting.value;

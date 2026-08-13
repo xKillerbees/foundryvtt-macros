@@ -37,10 +37,30 @@ The Hope / Food / Security preparation subsystem, plus teahouse restoration and 
 - Twelve-week tab strip with the town event for each week, its hook, its checks, and toggleable outcome buttons
 - Research Points tracked per source with the book's caps, firing the revelation text at 2 / 4 / 6 / 8 / 10 RP
 - Milestone detection at 12 points in any category
-- A separate read-only player board (opt-in) that hides point targets, the log, and future events
+- A player board (opt-in) that hides point targets, the log, and future events — and that the
+  players actually use: see below
 - Chat summary card and an optional journal-page writeup
 - Journal links to the module's own pages — the week's event, the chosen preparation activity,
   the research rules — and a PC's name opens their character sheet
+
+#### The player board
+
+![The player board, with a roll waiting on the GM](../../screenshots/season-of-ghosts/fall-downtime-player.png)
+
+Tick **Show the board to players** and give the macro OBSERVER permission, and each player gets
+a card for every character they own: this week's preparation activity, the skill for it, a roll
+button, and the second activity slot. Characters they don't own stay a read-only row in the
+week's table.
+
+Rolling uses the character's own statistic where the system offers one, so every modifier
+applies, and records the degree as a **proposal**. The GM's card shows *"Aiko rolled Crit
+Success"* and highlights that degree button; clicking it is what actually moves Hope, Food, or
+Security. Recording a result locks the player's controls for the week.
+
+Players can't write world settings, so their changes are relayed to the GM's client over
+`game.socket`, which re-checks ownership before writing rather than trusting the sender. Nothing
+needs installing. The relayed op set is deliberately narrow — choose, roll, propose — and none
+of it touches a pool, a milestone, or another character.
 
 ### First Long Night Console
 
@@ -213,7 +233,11 @@ All five share the same shape:
   incompatible signatures.
 - **Styling** — every CSS selector is namespaced under a root class (`.sog`, `.fln`, `.ep`, `.rw`, `.cst`).
   Unscoped generic selectors like `.card` or `.panel` will bleed into PF2e character sheets
-  and chat messages.
+  and chat messages. The traffic runs both ways: the PF2e system styles `table` inside
+  application windows, so a board's own tables set their backgrounds and colours explicitly,
+  prefixed with the window id, which a bare class selector loses to. A board also paints its own
+  background rather than relying on `.window-content` — where the host theme wins that rule, a
+  board with nothing of its own goes dark under the panels.
 - **Party detection** — prefers `game.actors.party`, falls back to assigned player characters,
   then to any player-owned character. Actor data is re-read on every open so names, art, and
   levels never go stale.

@@ -93,6 +93,9 @@
     /* …or for an empty journal directory, to preview the branch a world takes
        when the adventure module isn't installed. */
     if (globalThis.__previewSeed?.__journals === false) globalThis.__previewJournals = false;
+    /* …or to be viewed as a player who owns one actor, for the boards that
+       have a player-facing side. See foundry-stub.js. */
+    if (globalThis.__previewSeed?.__player) globalThis.__previewPlayer = globalThis.__previewSeed.__player;
     await load("/tools/preview/foundry-stub.js");
     await load(`/macros/${macro}`);
 
