@@ -491,8 +491,11 @@ globalThis.FIXTURES = {
                 cfg: { skill: "arcana", task: 5, what: "Copying scrolls for Igawa Jubei" } },
               { id: "q4", act: "spell", days: 1, degree: "s", done: false, note: "",
                 cfg: { spell: "Wall of Fire", rank: 4, skill: "arcana" } },
+              /* Dragged in from a compendium — the uuid is what draws the item
+                 chip and lets the planner check the formula. */
               { id: "q5", act: "craft", days: 8, degree: "s", done: false, note: "",
-                cfg: { item: "Staff of Fire", ilvl: 3, price: 230, skill: "crafting", hr75: "0" } }
+                cfg: { item: "+1 Striking Longsword", ilvl: 4, price: 35, skill: "crafting", hr75: "0",
+                       uuid: "Compendium.pf2e.equipment-srd.Item.bbbb0000", rarity: "common", formula: false } }
             ] },
             pc3: { rows: [
               { id: "q6", act: "income", days: 12, degree: "cs", done: false, note: "",
@@ -536,8 +539,11 @@ globalThis.FIXTURES = {
                 cfg: { lore: "Absalom Lore", rank: "2", teacher: "Igawa Jubei's collection" } },
               { id: "r4", act: "spell", days: 1, degree: "s", done: false, note: "",
                 cfg: { spell: "Wall of Fire", rank: 4, skill: "arcana" } },
+              /* Uncommon and with the formula known — the chip carries both the
+                 rarity flag and what the 75% house rule asks for. */
               { id: "r5", act: "craft", days: 8, degree: "s", done: false, note: "",
-                cfg: { item: "Staff of Fire", ilvl: 3, price: 230, skill: "crafting", hr75: "1" } }
+                cfg: { item: "Ghost Touch Rune", ilvl: 4, price: 77, skill: "crafting", hr75: "1",
+                       uuid: "Compendium.pf2e.equipment-srd.Item.cccc0000", rarity: "uncommon", formula: true } }
             ] },
             pc3: { rows: [
               { id: "r6", act: "income", days: 12, degree: "cs", done: false, note: "",

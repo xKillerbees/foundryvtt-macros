@@ -120,7 +120,9 @@ Details in the [collection README](macros/pf2e-downtime).
 
 The whole party's downtime on one board: thirteen activities, days budgeted against days
 available, and Earn Income costed out of the real table — what a critical success, a success,
-and a failure each pay per day and in total.
+and a failure each pay per day and in total. Drag an item onto a Craft card and its level and
+Price fill themselves in, along with whether it's rare enough to need asking about and whether
+that character actually knows its formula.
 
 ![The Downtime Planner, a fortnight into a lull](screenshots/pf2e-downtime/downtime-planner.png)
 

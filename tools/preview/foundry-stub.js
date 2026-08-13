@@ -52,7 +52,10 @@ const SAMPLE_PCS = [
     perception: 10, con: 1, saves: { fortitude: 9, reflex: 11, will: 14 },
     skills: { arcana: 15, crafting: 14, society: 13, occultism: 12, "absalom-lore": 11, nature: 10 },
     ranks: { arcana: 2, crafting: 2 },
-    lores: [["Absalom Lore", 1], ["Academia Lore", 1]] },
+    lores: [["Absalom Lore", 1], ["Academia Lore", 1]],
+    /* The party's crafter, and the only one who knows any formulas. */
+    formulas: ["Compendium.pf2e.equipment-srd.Item.aaaa0000",
+               "Compendium.pf2e.equipment-srd.Item.cccc0000"] },
   { name: "Miyu",  cls: "Rogue",      ancestry: "Tengu",    level: 5, bg: "#4b5a34", fg: "#efe6d8",
     perception: 14, con: 2, saves: { fortitude: 10, reflex: 15, will: 12 },
     skills: { stealth: 16, thievery: 15, acrobatics: 14, deception: 13, "underworld-lore": 12, performance: 10 },
@@ -95,7 +98,8 @@ class StubActor {
         ancestry: { name: spec.ancestry }
       },
       abilities: Object.fromEntries(["str", "dex", "con", "int", "wis", "cha"].map(k =>
-        [k, { mod: k === "con" ? (spec.con ?? 2) : 2 }]))
+        [k, { mod: k === "con" ? (spec.con ?? 2) : 2 }])),
+      crafting: { formulas: (spec.formulas ?? []).map(uuid => ({ uuid })) }
     };
     /* PF2e exposes statistics as objects with `.mod` and `.label`. */
     this.perception = { mod: spec.perception ?? 10, label: "Perception" };
@@ -562,6 +566,44 @@ globalThis.Hooks = {
   callAll: (name, ...args) => globalThis.Hooks.call(name, ...args)
 };
 
+/* ------------------------------------------------------------------- items
+
+   A few PF2e-shaped physical items so a macro that accepts a dragged item can
+   be exercised: a coin-purse Price, a level, a rarity, and a uuid. Aiko knows
+   the first one's formula and nobody knows the rest. */
+const STUB_ITEMS = [
+  { uuid: "Compendium.pf2e.equipment-srd.Item.aaaa0000", name: "Staff of Fire", level: 8,
+    price: { gp: 230 }, rarity: "common" },
+  { uuid: "Compendium.pf2e.equipment-srd.Item.bbbb0000", name: "+1 Striking Longsword", level: 4,
+    price: { gp: 35 }, rarity: "common" },
+  { uuid: "Compendium.pf2e.equipment-srd.Item.cccc0000", name: "Ghost Touch Rune", level: 4,
+    price: { gp: 77 }, rarity: "uncommon" },
+  { uuid: "Compendium.pf2e.equipment-srd.Item.dddd0000", name: "Healing Potion (Minor)", level: 1,
+    price: { gp: 4 }, rarity: "common" },
+  /* Priced in mixed coin, to prove the flattening to gp. */
+  { uuid: "Compendium.pf2e.equipment-srd.Item.eeee0000", name: "Everburning Torch", level: 2,
+    price: { gp: 15, sp: 5 }, rarity: "common" },
+  /* Not a physical item: no Price at all, so it must be refused. */
+  { uuid: "Compendium.pf2e.feats-srd.Item.ffff0000", name: "Toughness", level: 1,
+    price: undefined, rarity: "common" }
+].map(spec => ({
+  uuid: spec.uuid,
+  name: spec.name,
+  system: {
+    level: { value: spec.level },
+    ...(spec.price === undefined ? {} : { price: { value: spec.price } }),
+    traits: { rarity: spec.rarity }
+  },
+  sheet: { render: () => console.log("[sheet]", spec.name) }
+}));
+
+/* Foundry v13 moved TextEditor under foundry.applications.ux; macros are
+   written against both, so both are answered here. */
+const dragEventData = (event) => {
+  try { return JSON.parse(event.dataTransfer.getData("text/plain")); } catch { return null; }
+};
+globalThis.TextEditor = { getDragEventData: dragEventData };
+
 globalThis.ChatMessage = {
   getSpeaker: () => ({ alias: "Gamemaster" }),
   create: (data) => { console.log("[chat]", data?.content ?? data); return Promise.resolve(data); }
@@ -589,12 +631,14 @@ globalThis.Roll = class Roll {
   roll() { return this.evaluate(); }
 };
 
-/* Compendium lookups resolve to a stand-in whose sheet render is a no-op, so
-   "open the statblock" buttons can be exercised without a real world. */
-globalThis.fromUuid = async (uuid) => ({
+/* Compendium lookups resolve to one of the sample items where the uuid matches
+   one, so a dragged item carries a real Price and level; anything else gets a
+   stand-in whose sheet render is a no-op, so "open the statblock" buttons can
+   be exercised without a real world. */
+globalThis.fromUuid = async (uuid) => STUB_ITEMS.find(i => i.uuid === uuid) ?? {
   uuid, name: uuid.split(".").pop(),
   sheet: { render: () => console.log("[sheet]", uuid) }
-});
+};
 
 /* Opt-in Sequencer stand-in, switched on by a fixture setting
    `__previewSequencer`. It reports any jb2a./psfx. key as installed and
@@ -655,7 +699,11 @@ globalThis.foundry = {
       return merge(target, other);
     }
   },
-  applications: { api: {} }
+  applications: {
+    api: {},
+    /* v13 moved TextEditor here; the v11/v12 global above still answers too. */
+    ux: { TextEditor: { implementation: { getDragEventData: dragEventData } } }
+  }
 };
 
 /* ------------------------------------------------------ ApplicationV2 stub */

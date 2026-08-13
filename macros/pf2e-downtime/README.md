@@ -37,6 +37,13 @@ and what the party will be richer by at the end of it.
 - Thirteen activities — Earn Income, Dedicated Study, Craft, Subsist, Long-Term Rest,
   Retraining, Learn a Spell, Treat Disease, Create Forgery, Research a Topic, Gather
   Information, Repair, and a free-text catch-all
+- **Drag an item onto a Craft card** — from a compendium, the items sidebar, or a character
+  sheet — and its name, level, and Price fill themselves in. A coin-purse Price flattens to gp,
+  so 15 gp 5 sp arrives as 15.5 and the materials owed come out right. Drop onto the panel
+  rather than a card and it starts a new Craft row. The item keeps a link back to its sheet
+- **The chip says the two things that change the answer**: whether the item is uncommon or rare,
+  which needs the GM's nod before you plan around it, and whether that character actually knows
+  the formula — read off their own formula book, which is what the 75% house rule asks for
 - **Earn Income costed properly.** The full Income Earned table, by task level and proficiency
   rank, showing what a critical success, a success, and a failure each pay *per day* and *in
   total* for the days booked. A critical success pays at one task level higher, exactly as the
@@ -141,6 +148,9 @@ Shares the shape of the other consoles in this repo:
   four outcome lines — the UI is generic over that.
 - A row's skill is resolved against the actor when the row is created, not left to the dropdown's
   first option. A rendered default that was never stored is a check that posts without a skill.
+- A dropped item is resolved on the client that dropped it, and only the plain facts read off the
+  document — name, level, Price in gp, uuid, rarity, formula — are stored and relayed. The GM
+  never re-resolves a uuid on a player's say-so.
 
 ## Adding an activity
 

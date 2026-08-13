@@ -155,12 +155,12 @@ const ACTS = {
   },
 
   craft: {
-    label: "Craft", icon: "fa-solid fa-hammer", tone: "rust", check: true,
-    blurb: "Four days minimum, half the Price in materials up front. Extra days chip away at what's left to pay.",
+    label: "Craft", icon: "fa-solid fa-hammer", tone: "rust", check: true, drop: true,
+    blurb: "Drag an item onto this card to fill in its level and Price. Four days minimum, half the Price in materials up front; extra days chip away at what's left to pay.",
     fields: [
-      { k: "item", label: "Item", type: "text", placeholder: "+1 striking longsword" },
+      { k: "item", label: "Item", type: "text", placeholder: "Drop an item, or type its name" },
       { k: "ilvl", label: "Item level", type: "number", min: 0, max: 25, def: 1 },
-      { k: "price", label: "Price (gp)", type: "number", min: 0, max: 100000, def: 0 },
+      { k: "price", label: "Price (gp)", type: "number", min: 0, max: 100000, step: "0.01", def: 0 },
       { k: "skill", label: "Skill", type: "skill", trainedOnly: true, def: "crafting" },
       /* HOUSE RULE — 75% total with a formula and a background reason. Hidden
          unless the GM has switched the rule on; the 50% up front is unchanged
@@ -478,6 +478,48 @@ function detectPCs() {
   return [...seen.values()].slice(0, MAX_PCS);
 }
 
+/* ------------------------------------------------------------- dropped items
+   Dragging an item from a compendium, the sidebar, or a character sheet gives
+   a payload the client resolves to a document; what gets stored — and relayed
+   to the GM — is the handful of plain facts read off it. */
+
+function readDropData(event) {
+  const TE = foundry.applications?.ux?.TextEditor?.implementation ?? globalThis.TextEditor;
+  try {
+    if (TE?.getDragEventData) return TE.getDragEventData(event);
+    return JSON.parse(event.dataTransfer.getData("text/plain"));
+  } catch { return null; }
+}
+
+/* PF2e stores a Price as a coin purse. Flatten it to gp, since that is the
+   unit the book quotes and the unit the field takes. */
+function priceInGP(doc) {
+  const p = doc?.system?.price?.value ?? {};
+  const gp = (p.pp ?? 0) * 10 + (p.gp ?? 0) + (p.sp ?? 0) / 10 + (p.cp ?? 0) / 100;
+  const per = doc?.system?.price?.per ?? 1;
+  return Math.round((per > 1 ? gp / per : gp) * 100) / 100;
+}
+
+/* The formula matters twice over: RAW you need one to Craft at all, and the
+   75% house rule asks for one explicitly. */
+function knowsFormula(actor, doc) {
+  const list = actor?.system?.crafting?.formulas ?? [];
+  if (!list.length) return false;
+  const want = new Set([doc?.uuid, doc?.sourceId, doc?._stats?.compendiumSource].filter(Boolean));
+  return list.some(f => f?.uuid && want.has(f.uuid));
+}
+
+function itemFacts(doc, actor) {
+  return {
+    name: doc.name ?? "",
+    level: doc.system?.level?.value ?? doc.level ?? 0,
+    price: priceInGP(doc),
+    uuid: doc.uuid ?? "",
+    rarity: doc.system?.traits?.rarity ?? "common",
+    formula: knowsFormula(actor, doc)
+  };
+}
+
 const ownsActor = (user, actorId) => {
   const a = game.actors.get(actorId);
   return !!a && (user.isGM || a.testUserPermission(user, "OWNER"));
@@ -565,6 +607,22 @@ const OPS = {
     if (patch.cfg) Object.assign(row.cfg, patch.cfg);
     for (const k of ["days", "degree", "done", "note"]) if (k in patch) row[k] = patch[k];
     if (row.days != null) row.days = Math.max(0, Math.min(365, Math.round(row.days)));
+  },
+  /* Fills an existing Craft row from a dropped item, or starts one if the drop
+     landed on the panel rather than on a row. */
+  setCraft(s, { actorId, rowId, item }) {
+    const plan = planFor(s, actorId);
+    let row = rowId ? plan.rows.find(r => r.id === rowId) : null;
+    if (row && row.act !== "craft") return;
+    if (!row) { row = blankRow("craft", actorId); plan.rows.push(row); }
+    Object.assign(row.cfg, {
+      item: String(item?.name ?? "").slice(0, 120),
+      ilvl: Math.max(0, Math.min(25, Math.round(Number(item?.level) || 0))),
+      price: Math.max(0, Math.min(100000, Number(item?.price) || 0)),
+      uuid: String(item?.uuid ?? ""),
+      rarity: String(item?.rarity ?? "common"),
+      formula: !!item?.formula
+    });
   },
   delRow(s, { actorId, rowId }) {
     const plan = planFor(s, actorId);
@@ -965,7 +1023,8 @@ class DowntimeApp extends BaseApp {
     if (f.type === "number") {
       return `<label class="fld num"><span>${f.label}</span>
         <input type="number" id="${id}" data-act="cfg" data-row="${row.id}" data-k="${f.k}"
-               value="${esc(val === "" ? (f.def ?? 0) : val)}" min="${f.min ?? 0}" max="${f.max ?? 999}" ${ro}></label>`;
+               value="${esc(val === "" ? (f.def ?? 0) : val)}" min="${f.min ?? 0}" max="${f.max ?? 999}"
+               step="${f.step ?? 1}" ${ro}></label>`;
     }
 
     return `<label class="fld wide"><span>${f.label}</span>
@@ -1010,8 +1069,9 @@ class DowntimeApp extends BaseApp {
 
     if (row.act === "craft") {
       const c = P.craftFor(pc, row);
-      if (!c.price) return `<div class="payfoot">Enter the item's Price to see what you owe.</div>`;
-      return `
+      const chip = this.itemChip(pc, row);
+      if (!c.price) return `${chip}<div class="payfoot">Drop an item on this card, or enter its Price, to see what you owe.</div>`;
+      return `${chip}
         <div class="paygrid three">
           <div class="pay"><span>Up front</span><b>${coin(c.upFront)}</b><small>materials</small></div>
           <div class="pay"><span>Balance</span><b>${coin(c.balance)}</b><small>${c.hr ? "75% rule" : "on completion"}</small></div>
@@ -1047,6 +1107,27 @@ class DowntimeApp extends BaseApp {
     return dc ? `<div class="payfoot">DC ${dc} · ${days2(row.days)}${def.secret ? " · the GM rolls this one in secret" : ""}</div>` : "";
   }
 
+  /* What the dropped item was, and the two things about it that change the
+     answer: rarity needs the GM's nod, and the formula is what the 75% house
+     rule asks for. Only rendered once something has actually been dropped. */
+  itemChip(pc, row) {
+    const cfg = row.cfg;
+    if (!cfg.uuid) return "";
+    const P = this.planner;
+    const rare = cfg.rarity && cfg.rarity !== "common";
+    const notes = [];
+    if (rare) notes.push(`<span class="bad">${cap(cfg.rarity)} — needs the GM's approval before you plan around it.</span>`);
+    if (cfg.formula) notes.push(`<span class="good">You have the formula.</span>`);
+    else notes.push(`<span class="bad">No formula known${P.on("craft75") ? " — the 75% rule asks for one" : ""}.</span>`);
+    return `
+      <div class="itemchip ${rare ? "rare" : ""}">
+        <button type="button" class="ilink" data-act="opendoc" data-uuid="${esc(cfg.uuid)}"
+                title="Open ${esc(cfg.item)}"><i class="fa-solid fa-up-right-from-square"></i>${esc(cfg.item)}</button>
+        <span class="ilvl">Level ${cfg.ilvl}</span>
+        <div class="inotes">${notes.join(" ")}</div>
+      </div>`;
+  }
+
   rowCard(pc, row) {
     const def = ACTS[row.act];
     const P = this.planner;
@@ -1055,7 +1136,7 @@ class DowntimeApp extends BaseApp {
     const out = OUTCOMES[row.act];
 
     return `
-      <section class="row t-${def.tone}">
+      <section class="row t-${def.tone}" ${def.drop ? `data-drop="${row.id}"` : ""}>
         <header>
           <i class="${def.icon}"></i>
           <h4>${def.label}${def.house ? `<span class="hr">house rule</span>` : ""}</h4>
@@ -1264,7 +1345,7 @@ class DowntimeApp extends BaseApp {
 
         <div class="cols">
           <div class="main">
-            <section class="panel">
+            <section class="panel" data-drop="new">
               <h3>${esc(pc.name)}<span class="budget ${left < 0 ? "over" : ""}">
                 ${left < 0 ? `${days2(-left)} over budget` : `${days2(left)} left`}</span></h3>
               ${warn.length ? `<ul class="warns">${warn.map(w => `<li>${esc(w)}</li>`).join("")}</ul>` : ""}
@@ -1294,6 +1375,26 @@ class DowntimeApp extends BaseApp {
     const P = this.planner;
     const pcId = () => (this.pc ?? P.pcs[0])?.actorId;
     const rowOf = (id) => P.rows(pcId()).find(r => r.id === id);
+
+    /* Drag an item in from a compendium, the items sidebar, or a character
+       sheet. Dropping on a Craft card fills that card; dropping anywhere else
+       on the panel starts a new one. Delegated from the root, so the innermost
+       drop target wins and the panel only catches what a row didn't. */
+    root.querySelectorAll("[data-drop]").forEach(zone => {
+      zone.addEventListener("dragover", (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        zone.classList.add("dragover");
+      });
+      for (const leave of ["dragleave", "drop"]) {
+        zone.addEventListener(leave, () => zone.classList.remove("dragover"));
+      }
+      zone.addEventListener("drop", async (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        await this.onDropItem(ev, zone.dataset.drop === "new" ? null : zone.dataset.drop);
+      });
+    });
 
     root.querySelectorAll("[data-act]").forEach(el => {
       const act = el.dataset.act;
@@ -1348,9 +1449,36 @@ class DowntimeApp extends BaseApp {
           case "postmine": return P.postPlan(el.dataset.pc);
           case "postall": return P.postPlan(null);
           case "sheet": return game.actors.get(el.dataset.pc)?.sheet?.render(true);
+          case "opendoc": {
+            const doc = await fromUuid(el.dataset.uuid).catch(() => null);
+            if (doc?.sheet) return doc.sheet.render(true);
+            return ui.notifications.warn("That item is no longer available in this world.");
+          }
         }
       });
     });
+  }
+
+  /* Resolve the drop here on the dropping client — the GM gets the plain facts
+     read off the document, not a uuid to look up again. */
+  async onDropItem(event, rowId) {
+    const pc = this.pc;
+    const P = this.planner;
+    if (!pc || !P.canEdit(pc.actorId)) return;
+    const data = readDropData(event);
+    if (!data || data.type !== "Item") {
+      if (data) ui.notifications.warn("Only items can be dropped here.");
+      return;
+    }
+    let doc = null;
+    try { doc = await fromUuid(data.uuid); } catch { /* resolved below */ }
+    if (!doc) return ui.notifications.warn("That item couldn't be read.");
+    if (doc.system?.price === undefined) {
+      return ui.notifications.warn(`${doc.name} isn't a physical item, so it has no Price to craft against.`);
+    }
+    const facts = itemFacts(doc, game.actors.get(pc.actorId));
+    await P.apply("setCraft", { actorId: pc.actorId, rowId, item: facts });
+    ui.notifications.info(`${facts.name} — level ${facts.level}, ${facts.price} gp.`);
   }
 
   /* Roll through the actor's own statistic where the system offers one, so the
@@ -1505,6 +1633,19 @@ class DowntimeApp extends BaseApp {
       .dtp .row .x { padding:.15rem .35rem; color:var(--muted); }
       .dtp .blurb { margin:.25rem 0 .35rem; font-size:.75rem; color:var(--muted); line-height:1.35; }
       .dtp .fields { display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:.4rem; }
+
+      .dtp [data-drop].dragover { outline:2px dashed var(--rust); outline-offset:-3px; }
+      .dtp .itemchip { border:1px solid var(--line); border-left:3px solid var(--rust); border-radius:3px;
+                       padding:.3rem .4rem; margin-bottom:.35rem; background:var(--card); }
+      .dtp .itemchip.rare { border-left-color:var(--plum); }
+      .dtp .itemchip .ilink { padding:0; border:none; background:transparent; font-weight:600;
+                       font-size:.82rem; color:var(--ink); }
+      .dtp .itemchip .ilink:hover { background:transparent; text-decoration:underline; }
+      .dtp .itemchip .ilink i { font-size:.62rem; color:var(--muted); }
+      .dtp .itemchip .ilvl { font-size:.68rem; color:var(--muted); margin-left:.35rem; }
+      .dtp .itemchip .inotes { font-size:.68rem; line-height:1.35; margin-top:.1rem; }
+      .dtp .itemchip .good { color:var(--moss); }
+      .dtp .itemchip .bad { color:var(--rust); }
 
       .dtp .paygrid { display:grid; grid-template-columns:repeat(4,1fr); gap:.3rem; margin-bottom:.3rem; }
       .dtp .paygrid.three { grid-template-columns:repeat(3,1fr); }

@@ -24,6 +24,9 @@
   and Other take a line of text
 - Preview stub: `__player` on a fixture boots the preview as a player who owns one actor, with
   a GM left active, so a player-facing board can be exercised and screenshotted
+- Preview stub: sample physical items with coin-purse Prices, levels, and rarities that
+  `fromUuid` resolves, `TextEditor.getDragEventData` on both its v11 and v13 homes, and
+  crafting formulas on the sample party — enough to exercise a drag-and-drop path for real
 
 ### Fixed
 - Fall Downtime Tracker: the player board went dark and unreadable in some worlds. Two causes —
@@ -42,6 +45,12 @@
 - Downtime Planner: Earn Income costed out of the real Income Earned table, by task level and
   proficiency rank, showing what each degree pays per day and in total — with a critical
   success paying at one task level higher, as the book has it
+- Downtime Planner: drag an item onto a Craft card — from a compendium, the items sidebar, or a
+  character sheet — and its name, level, and Price fill themselves in, with a coin-purse Price
+  flattened to gp so 15 gp 5 sp arrives as 15.5. Dropping on the panel instead starts a new
+  Craft row. The chip that appears carries the two things that change the answer: the item's
+  rarity, and whether that character knows its formula, read off their own formula book. A
+  non-physical item is refused rather than crafted against a Price it doesn't have
 - Downtime Planner: rolls the character's own statistic and records the degree where the
   system offers one, falling back to a rollable `@Check` in chat where it doesn't
 - Downtime Planner: the party is **the party actor**, not a directory scan. Eidolons,
