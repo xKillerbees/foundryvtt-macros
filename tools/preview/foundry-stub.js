@@ -106,6 +106,64 @@ const actorCollection = {
    world that has the adventure installed. No page text — only the structure a
    link has to navigate. Set `__journals: false` on a fixture to empty this and
    preview the "adventure not installed" branch instead. */
+/* The Pathfinder Beginner Box module's own ids, alongside the Season of Ghosts
+   ones, so the Menace Under Otari console's page links resolve too. */
+const BB_JOURNALS = [
+  { id: "qFSLpCM2cpRQWCR2", name: "Menace Under Otari", pages: [
+    "UEuiUcrrPdr9eFqN|Hungry Rats", "VLztUZ1H5YEYPcx9|Drop into Darkness",
+    "8Fr6KCxqXp322B5r|The Spider's Web", "Ccp3c9A1WH9tOCVO|The Barricade",
+    "mJ3pVc1aJi98duaA|Forgotten Crypt", "u4m7Ttls4lBA9e96|Forgotten Shrine",
+    "UCEZLyerntYnmzgX|Abandoned Storeroom", "rajhJ9Y006IkwuZa|Trapped Hallway",
+    "bpVEaN8PUCgbuJvk|Gold Puzzle", "gz9x5HmzjSvvBLQp|Abadar's Vault",
+    "KWTky7M63NvVIVRz|Kobolds and Traps", "2KRdW68qNXeJ6JpN|Kobold Lookouts",
+    "UlIek5d97G6nHWEm|Soggy Crossroads", "7Ko4GJeI1K3Vy1Xp|Elements of Chaos",
+    "CMjhAWaRWlbFVoF0|Xulgath Cave", "MSU45JsvJjOJc1dg|Mermaid Fountain",
+    "0vJpmu4QJ7RgYLi2|Kobold Warren", "l6OIDtJFH40dtZHU|Dragonkeeper",
+    "KMTBj18whqvjGZBz|Mushroom Grotto", "QFVMina0vPQXKUxC|Setting the Scene",
+    "UP1WB6tI0SFgMMzC|Introduction", "WpWULbveo4SMmMj5|Pathfinder Society"
+  ] },
+  { id: "S1UnJk4t55aRFaCs", name: "Gamemastering", pages: ["ZFjG6Np42VRz5hFu|Encounters"] },
+  { id: "KIpNnMtah73eyPC8", name: "Creating Your Hero", pages: [
+    "DXbYBjutIcp4bmB7|Leveling Up", "RRxNZiD64dvvpWYt|Character Creation",
+    "FM2SxBvhjufkiW44|Pregenerated Heroes"
+  ] }
+];
+
+/* The Beginner Box's playlists, macros, and scenes, by their real ids. */
+const BB_PLAYLISTS = [
+  { id: "heHyhtPMGRCqJ2HL", name: "Floor 1 Exploration Ambience", ids: { "9VjwgeXsiou9mZ5A": "Deeds Done In Darkness" } },
+  { id: "ixYF8x5F4rA6adgo", name: "Floor 2 Exploration Ambience", ids: { V2FUEfrTq9fvKoks: "Drones In The Deep" } },
+  { id: "k0fOCWD3DBgSoHoZ", name: "Exploration Loops", ids: {
+    u4mNGCTn8cPE8X9k: "Crypt Drone Loop", "0N9AZX11G0RYUoZn": "The Occasional Rat", Vl3tC8KlZmkUvR12: "The Occasional Drip" } },
+  { id: "vb7AB47i1FnbnC6M", name: "Otari Fishery", ids: { NA4DUa5JCH6VcnT1: "Otari Fishery" } },
+  { id: "nGTMCWOpjxgn3t3Q", name: "Otari Wharf", ids: { lZH9AhDY6fnhXyvN: "Otari Seaside" } },
+  { id: "2oJDF1thojiM9tWg", name: "Floor 2 Soggy Crossroads", ids: { H7FMzZQcKgZ9XMNQ: "Watery Grave" } },
+  { id: "0qdreI9KgZ0kYMki", name: "Floor 2 Mermaid Fountain", ids: {
+    GNLKIThBSqgQ4tiQ: "The Mermaid Fountain Loop", BIt6uRTjcmXfS2Ao: "The Mermaid Fountain Basin Loop" } },
+  { id: "J9UqsCkkPfzAA9Z1", name: "Soundboard Loops", ids: {
+    upp10gFshBm3o4ts: "The Malevolent Dead", jMVdTW8tkIMG5B13: "Everything Is Fire",
+    GgsDSD88cVftbskJ: "Irritated Xulgath Noises", opUA06LhpkTvpRxh: "Zolgran Plotting",
+    acWIaATXvrV6TCYy: "Muffled Chattering" } },
+  { id: "QN6rFt1K6zlkbI9I", name: "Barricades", ids: {
+    BCLNoSQ51JmvXtWK: "Disassembling Barricade", "50s0sXyj8TlX8kWq": "Shattering Barricade",
+    CI5aakOLeJDMGC6O: "Breaking The Stone Wall" } },
+  { id: "PtzmQZ2WjuUK8XUF", name: "The Cinder Rat", ids: { cZS3HUei09Gxk0dv: "The Rat's On Fire" } },
+  { id: "VS8FZvbRBnqt7Wid", name: "Dragon Soundboard", ids: {
+    Fypler5gP0OSsaNq: "Wyrmling Growl Distant 01", drrfdsrUloVdYc8z: "Wyrmling Growl 1",
+    PzgI66NU5R06KRZE: "Wyrmling Breath Weapon 01" } }
+];
+
+const BB_MACROS = [
+  ["saQTdI63wy22v5yk", "Area 04 - Barricade"], ["pb7k8V9m7cFioy6B", "Area 12 - Barricade"],
+  ["iPvtf4ZGr6qX8OnF", "Area 14- Cinder Rat"], ["NAxPG4cHu4dKrx6h", "Area 15 - Freshly Dug Tunnel"],
+  ["MppBkkOiWyW1z6fW", "Quick Reference: Encounters"], ["x0YlgNBucXkYT6RG", "Quick Reference: DCs"]
+];
+
+const BB_SCENES = [
+  ["c7E7PXzgT5RBkT7S", "Otari"], ["U5t0Mq8glKBXO3qH", "Landing"],
+  ["JJJCFUCadDPRwnSX", "Floor 1"], ["cgv9iVmx3dNIL3YA", "Floor 2"]
+];
+
 const SAMPLE_JOURNALS = [
   { id: "pf2apsog05thewil", name: "Act 1.3: The Willowshore Curse", pages: [
     "05wholeadswill00|Who Leads Willowshore?",
@@ -272,7 +330,7 @@ class StubJournal {
    which they never do inside Foundry, so anything generic — `JOURNALS`, say —
    will eventually collide with a macro's own constant and stop it loading. */
 const STUB_JOURNAL_DOCS = globalThis.__previewJournals === false
-  ? [] : SAMPLE_JOURNALS.map(s => new StubJournal(s));
+  ? [] : [...SAMPLE_JOURNALS, ...BB_JOURNALS].map(s => new StubJournal(s));
 
 const journalCollection = {
   get: (id) => STUB_JOURNAL_DOCS.find(j => j.id === id) ?? null,
@@ -309,7 +367,11 @@ class StubPlaylist {
   constructor(spec) {
     this.id = spec.id;
     this.name = spec.name;
-    const sounds = spec.sounds.map((name, i) => ({ id: `${spec.id}s${i}`, name, playing: false }));
+    /* `sounds` invents ids positionally; `ids` gives them explicitly, which is
+       what a console keyed to a real module's sound ids needs. */
+    const sounds = spec.ids
+      ? Object.entries(spec.ids).map(([id, name]) => ({ id, name, playing: false }))
+      : spec.sounds.map((name, i) => ({ id: `${spec.id}s${i}`, name, playing: false }));
     this.sounds = {
       getName: (n) => sounds.find(s => s.name === n) ?? null,
       get: (id) => sounds.find(s => s.id === id) ?? null,
@@ -325,7 +387,30 @@ class StubPlaylist {
   }
 }
 
-const STUB_PLAYLIST_DOCS = SAMPLE_PLAYLISTS.map(s => new StubPlaylist(s));
+const STUB_PLAYLIST_DOCS = [...SAMPLE_PLAYLISTS, ...BB_PLAYLISTS].map(s => new StubPlaylist(s));
+
+/* ------------------------------------------------------- macros and scenes
+   Enough of each to let a console's "run the module's macro" and "activate
+   the scene" buttons resolve. Neither actually does anything out here. */
+const STUB_MACRO_DOCS = BB_MACROS.map(([id, name]) => ({
+  id, name,
+  execute: async () => console.log("[macro]", name)
+}));
+const macroCollection = {
+  get: (id) => STUB_MACRO_DOCS.find(m => m.id === id) ?? null,
+  getName: (name) => STUB_MACRO_DOCS.find(m => m.name === name) ?? null,
+  [Symbol.iterator]: () => STUB_MACRO_DOCS[Symbol.iterator]()
+};
+
+const STUB_SCENE_DOCS = BB_SCENES.map(([id, name]) => ({
+  id, name,
+  activate: async () => console.log("[scene]", `activate ${name}`)
+}));
+const sceneCollection = {
+  get: (id) => STUB_SCENE_DOCS.find(s => s.id === id) ?? null,
+  getName: (name) => STUB_SCENE_DOCS.find(s => s.name === name) ?? null,
+  [Symbol.iterator]: () => STUB_SCENE_DOCS[Symbol.iterator]()
+};
 const playlistCollection = {
   get size() { return STUB_PLAYLIST_DOCS.length; },
   get: (id) => STUB_PLAYLIST_DOCS.find(p => p.id === id) ?? null,
@@ -345,6 +430,8 @@ globalThis.game = {
   actors: actorCollection,
   journal: journalCollection,
   playlists: playlistCollection,
+  macros: macroCollection,
+  scenes: sceneCollection,
   packs: [],   /* no compendiums out here; the world lookup is what's exercised */
   settings: {
     settings: settingDefs,

@@ -3,6 +3,27 @@
 ## Unreleased
 
 ### Added
+- Menace Under Otari — a console for the Pathfinder Beginner Box adventure: all nineteen
+  rooms across both floors, each with its read-aloud text, checks, and the rule the room is
+  there to teach
+- Menace Under Otari: the XP ledger. Twenty ticked awards worth 1,344 XP, with the three
+  conditional rows greyed until the choice that pays them goes the right way, and the
+  1,000-XP level-up called out with the module's own Leveling Up handout
+- Menace Under Otari: the four choices that reach forward — the barricade the undead did or
+  didn't hear, the puzzle that opens Abadar's vault, the lever that turns the spear trap on
+  the kobolds, and the two different ways to put the warren on alert (derived from both of
+  its causes, so undoing one doesn't undo the other)
+- Menace Under Otari: drives the official Beginner Box module rather than duplicating it —
+  journal pages, creature and loot actors, playlists as play/stop buttons, scene activation,
+  and the module's own four area macros, all by ids read out of its adventure pack
+- Menace Under Otari: eight optional Sequencer cues with JB2A keys verified against the
+  installed database, each pairing its animation with the adventure's own sound
+- Preview stub: `game.macros` and `game.scenes`, Beginner Box journal/playlist/macro/scene
+  documents by their real ids, and explicit sound ids on stub playlists
+- `tools/sequencer-keys/` — lists the exact keys a JB2A or PSFX install has, so an effect
+  cue can be written against a key that exists. A stale key doesn't error, it silently
+  plays nothing, and the preview harness can't catch it either. All 34 keys across the
+  Nova Rush and Menace Under Otari consoles verified with it
 - Mark of the Mantis — a console for the PF2e one-shot, running the whole Infiltration
   subsystem: both legwork phases with their six preparation activities, the five obstacles
   with per-turn tracking, the four complications, Red Mantis Assassination, and all sixteen

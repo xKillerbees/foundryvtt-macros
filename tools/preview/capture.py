@@ -68,6 +68,18 @@ SHOTS = {
     "novarush-fx": (
         "battle-for-nova-rush/nova-rush-console.js", "novarush-fx",
         "battle-for-nova-rush/nova-rush-fx.png"),
+    "otari": (
+        "beginner-box/menace-under-otari-console.js", "otari",
+        "beginner-box/menace-under-otari-console.png"),
+    "otari-floor1": (
+        "beginner-box/menace-under-otari-console.js", "otari-floor1",
+        "beginner-box/menace-under-otari-floor1.png"),
+    "otari-floor2": (
+        "beginner-box/menace-under-otari-console.js", "otari-floor2",
+        "beginner-box/menace-under-otari-floor2.png"),
+    "otari-table": (
+        "beginner-box/menace-under-otari-console.js", "otari-table",
+        "beginner-box/menace-under-otari-table.png"),
     "mantis": (
         "mark-of-the-mantis/mark-of-the-mantis-console.js", "mantis",
         "mark-of-the-mantis/mark-of-the-mantis-console.png"),

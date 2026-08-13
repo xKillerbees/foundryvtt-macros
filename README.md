@@ -6,6 +6,7 @@ manifest, no install step. Open a macro file, copy it, paste it into Foundry, ru
 | Collection | System | Foundry | Macros |
 |---|---|---|---|
 | [Season of Ghosts](macros/season-of-ghosts) | PF2e | v11 – v14 | 5 |
+| [Pathfinder Beginner Box](macros/beginner-box) | PF2e | v11 – v14 | 1 |
 | [Mark of the Mantis](macros/mark-of-the-mantis) | PF2e | v11 – v14 | 1 |
 | [Battle for Nova Rush](macros/battle-for-nova-rush) | SF2e | v11 – v14 | 1 |
 
@@ -71,6 +72,28 @@ Every chapter, and every item that names an area, links straight into the module
 
 ![The campaign tab, on Act 2 Chapter 5](screenshots/season-of-ghosts/campaign-status-tracker.png)
 
+## Pathfinder Beginner Box
+
+A GM console for *Menace Under Otari*. Details in the
+[collection README](macros/beginner-box).
+
+### [Menace Under Otari Console](macros/beginner-box/menace-under-otari-console.js)
+
+All nineteen rooms across both floors, with the XP ledger that decides when the heroes reach
+2nd level and the four earlier choices that quietly change a later room — the barricade the
+undead did or didn't hear, the puzzle that opens the vault, the lever that turns the spear trap
+on its owners, and whether the warren is waiting for them.
+
+![Getting started, with the XP ledger part way through floor 1](screenshots/beginner-box/menace-under-otari-console.png)
+
+Unlike the other consoles here, this one sits on top of the official Beginner Box module rather
+than replacing it: area cards open the module's own journal pages, creature and loot buttons
+open its actors, the audio buttons drive its playlists, and its four area macros are offered
+beside the rooms the journal tells you to run them in. Every id was read out of the module's
+adventure pack.
+
+![Floor 2, with the warren already alerted and the party at 2nd level](screenshots/beginner-box/menace-under-otari-floor2.png)
+
 ## Mark of the Mantis
 
 A GM console for Paizo's *Pathfinder One-Shot: Mark of the Mantis*. Details in the
@@ -125,6 +148,7 @@ macros/<collection>/   the macros themselves, one file each, plus a collection R
 screenshots/           README images, one directory per collection
 tools/preview/         the harness that renders a macro outside Foundry for screenshots
 tools/module-check/    checks the macros' journal and playlist references against the module
+tools/sequencer-keys/  lists the effect keys a JB2A or PSFX install actually has
 ```
 
 ## Contributing

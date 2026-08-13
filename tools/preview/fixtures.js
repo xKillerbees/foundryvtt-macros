@@ -290,6 +290,55 @@ globalThis.FIXTURES = {
     }
   },
 
+  /* Menace Under Otari, part way through floor 1: the crypt and the storeroom
+     behind them, the barricade taken apart quietly, the puzzle solved and the
+     spear trap armed against its owners. */
+  "otari": {
+    "world.pf2eMenaceUnderOtari": {
+      tab: "start",
+      xp: { a1: true, a2: true, a3: true, a4: true, a5: true, a7: true, a8: true, a9: true, a10: true },
+      areas: { a1: true, a2: true, a3: true, a4: true, a5: true, a6: true, a7: true, a8: true, a9: true, a10: true },
+      loot: { a3: true, a5: true, a7: true },
+      flags: { barricade: "quiet", puzzle: "solved", lever: "armed", wall: null, fountain: null }
+    }
+  },
+
+  /* The same session, read on the floor 1 tab so the forks and their
+     downstream notes are visible. */
+  "otari-floor1": {
+    "world.pf2eMenaceUnderOtari": {
+      tab: "f1",
+      xp: { a1: true, a2: true, a3: true, a4: true, a5: true, a7: true, a8: true, a9: true, a10: true },
+      areas: { a1: true, a2: true, a3: true, a4: true, a5: true },
+      loot: { a3: true, a5: true },
+      flags: { barricade: "quiet", puzzle: "solved", lever: "armed", wall: null, fountain: null }
+    }
+  },
+
+  /* Floor 2, with the warren already alerted by a botched wall and enough XP
+     banked that the party has hit 2nd level before the boss. */
+  "otari-floor2": {
+    "world.pf2eMenaceUnderOtari": {
+      tab: "f2",
+      xp: { a1: true, a2: true, a3: true, a4: true, a5: true, a7: true, a8: true, a9: true, a10: true,
+            a11: true, a12: true, a14: true, a15: true, a16: true, a17: true, "a17:boss": true },
+      areas: { a12: true, a13: true, a14: true, a15: true, a16: true },
+      loot: { a15: true, a16: true },
+      flags: { barricade: "quiet", puzzle: "solved", lever: "armed", wall: "loud", fountain: null }
+    }
+  },
+
+  /* The table tab — the module's own audio, scenes, and effect cues, with the
+     Sequencer stand-in switched on so the cues report as ready. */
+  "otari-table": {
+    __sequencer: true,
+    "world.pf2eMenaceUnderOtari": {
+      tab: "table",
+      xp: { a1: true, a2: true, a3: true },
+      flags: { barricade: "quiet", puzzle: null, lever: null, wall: null, fountain: null }
+    }
+  },
+
   /* Mark of the Mantis, with both legwork phases resolved: a scoped manor, a
      tool, a security key, and one botched round of prying that has already
      cost the party a point of Awareness. */
