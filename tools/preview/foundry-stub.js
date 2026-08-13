@@ -29,13 +29,36 @@ function portrait(initials, bg, fg) {
   return `data:image/svg+xml;base64,${btoa(svg)}`;
 }
 
-/* Fictional sample party. Names are invented for the preview only. */
+/* Fictional sample party. Names are invented for the preview only.
+
+   `skills` carries a handful of PF2e-shaped modifiers so macros that ask the
+   party who should take a check have something to answer with. Only the skills
+   worth distinguishing are listed; anything omitted falls back to BASE_SKILL,
+   which is what keeps the sample party from looking uniformly competent. */
+const BASE_SKILL = 8;
 const SAMPLE_PCS = [
-  { name: "Aiko",  cls: "Champion",   ancestry: "Human",    level: 5, bg: "#5d3654", fg: "#efe6d8" },
-  { name: "Daizen", cls: "Wizard",    ancestry: "Kitsune",  level: 5, bg: "#3d4c59", fg: "#efe6d8" },
-  { name: "Miyu",  cls: "Rogue",      ancestry: "Tengu",    level: 5, bg: "#4b5a34", fg: "#efe6d8" },
-  { name: "Tenzo", cls: "Thaumaturge", ancestry: "Nagaji",  level: 5, bg: "#95381f", fg: "#efe6d8" }
+  { name: "Aiko",  cls: "Champion",   ancestry: "Human",    level: 5, bg: "#5d3654", fg: "#efe6d8",
+    perception: 11, saves: { fortitude: 14, reflex: 10, will: 12 },
+    skills: { athletics: 14, diplomacy: 13, intimidation: 12, religion: 11, medicine: 10 } },
+  { name: "Daizen", cls: "Wizard",    ancestry: "Kitsune",  level: 5, bg: "#3d4c59", fg: "#efe6d8",
+    perception: 10, saves: { fortitude: 9, reflex: 11, will: 14 },
+    skills: { arcana: 15, crafting: 14, society: 13, occultism: 12, "absalom-lore": 11, nature: 10 } },
+  { name: "Miyu",  cls: "Rogue",      ancestry: "Tengu",    level: 5, bg: "#4b5a34", fg: "#efe6d8",
+    perception: 14, saves: { fortitude: 10, reflex: 15, will: 12 },
+    skills: { stealth: 16, thievery: 15, acrobatics: 14, deception: 13, "underworld-lore": 12, performance: 10 } },
+  { name: "Tenzo", cls: "Thaumaturge", ancestry: "Nagaji",  level: 5, bg: "#95381f", fg: "#efe6d8",
+    perception: 12, saves: { fortitude: 12, reflex: 12, will: 11 },
+    skills: { intimidation: 15, "assassin-lore": 13, "warfare-lore": 12, survival: 11, athletics: 11 } }
 ];
+
+/* The slugs a macro might ask for, so an unlisted skill still answers. */
+const ALL_SKILLS = ["acrobatics", "arcana", "athletics", "crafting", "deception", "diplomacy",
+  "intimidation", "medicine", "nature", "occultism", "performance", "religion", "society",
+  "stealth", "survival", "thievery"];
+
+function labelFor(slug) {
+  return slug.split("-").map(w => w[0].toUpperCase() + w.slice(1)).join(" ");
+}
 
 class StubActor {
   constructor(spec, i) {
@@ -52,6 +75,13 @@ class StubActor {
         ancestry: { name: spec.ancestry }
       }
     };
+    /* PF2e exposes statistics as objects with `.mod` and `.label`. */
+    this.perception = { mod: spec.perception ?? 10, label: "Perception" };
+    this.saves = Object.fromEntries(["fortitude", "reflex", "will"].map(k =>
+      [k, { mod: spec.saves?.[k] ?? 10, label: labelFor(k) }]));
+    const slugs = new Set([...ALL_SKILLS, ...Object.keys(spec.skills ?? {})]);
+    this.skills = Object.fromEntries([...slugs].map(slug =>
+      [slug, { mod: spec.skills?.[slug] ?? BASE_SKILL, label: labelFor(slug), slug }]));
     /* Character sheets don't exist out here, so opening one is a log line. */
     this.sheet = { render: () => console.log("[sheet]", this.name) };
   }

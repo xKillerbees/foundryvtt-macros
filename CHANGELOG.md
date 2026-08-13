@@ -3,6 +3,21 @@
 ## Unreleased
 
 ### Added
+- Mark of the Mantis — a console for the PF2e one-shot, running the whole Infiltration
+  subsystem: both legwork phases with their six preparation activities, the five obstacles
+  with per-turn tracking, the four complications, Red Mantis Assassination, and all sixteen
+  manor areas plus the cellar
+- Mark of the Mantis: Infiltration, Awareness, and Edge Points are derived from the degrees
+  ticked rather than accumulated, so every Awareness Point names its own cause and unticking
+  a result rewinds the board exactly — including Cornered's 4-point cap, the distraction's
+  negative point, and the +1 to every obstacle DC at 8 Awareness
+- Mark of the Mantis: every check names the PC best suited to it, read live from the PF2e
+  actors in the world rather than from a copy of the pregens' sheets
+- Mark of the Mantis: the adventure's replay options as a switchboard — the villain, both
+  guardians, the traps and their locations, and the route to the cellar — with the legwork
+  facts, area cards, and creature buttons all following the switch
+- Preview stub: sample actors now carry PF2e-shaped `skills`, `perception`, and `saves`, so
+  macros that ask the party who should take a check can be exercised
 - Battle for Nova Rush — a console for the free Starfinder 2e adventure, with the escape
   check's modifiers calculated and a per-round battle damage roller for the bridge fight
 - Nova Rush: the escape can be run as a Cinematic Starship Scene — six roles, a Victory

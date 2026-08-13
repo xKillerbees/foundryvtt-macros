@@ -6,6 +6,7 @@ manifest, no install step. Open a macro file, copy it, paste it into Foundry, ru
 | Collection | System | Foundry | Macros |
 |---|---|---|---|
 | [Season of Ghosts](macros/season-of-ghosts) | PF2e | v11 – v13 | 5 |
+| [Mark of the Mantis](macros/mark-of-the-mantis) | PF2e | v11 – v13 | 1 |
 | [Battle for Nova Rush](macros/battle-for-nova-rush) | SF2e | v11 – v13 | 1 |
 
 ## Installing a macro
@@ -70,6 +71,27 @@ Every chapter, and every item that names an area, links straight into the module
 
 ![The campaign tab, on Act 2 Chapter 5](screenshots/season-of-ghosts/campaign-status-tracker.png)
 
+## Mark of the Mantis
+
+A GM console for Paizo's *Pathfinder One-Shot: Mark of the Mantis*. Details in the
+[collection README](macros/mark-of-the-mantis).
+
+### [Mark of the Mantis Console](macros/mark-of-the-mantis/mark-of-the-mantis-console.js)
+
+The whole one-shot on the Infiltration subsystem: both legwork phases and their six
+preparation activities, the obstacles and complications, all sixteen manor areas, and the
+cellar. Infiltration, Awareness, and Edge Points are all derived from the degrees you tick, so
+every point traces back to what caused it and unticking a result rewinds the board exactly.
+
+![Planning the Strike, with both legwork phases resolved](screenshots/mark-of-the-mantis/mark-of-the-mantis-console.png)
+
+Every check says who in the party should take it, read live from the PF2e actors. The
+adventure's replay options are a switchboard rather than a list of notes — change the guardian,
+the villain, the traps, or where the secret door hides, and the legwork facts, the area cards,
+and the creature buttons all follow.
+
+![The alternates board, with the ghostly choir moved into the chapel](screenshots/mark-of-the-mantis/mark-of-the-mantis-alternates.png)
+
 ## Battle for Nova Rush
 
 A GM console for the free Starfinder Second Edition adventure. Details in the
@@ -116,5 +138,6 @@ especially the rule about scoping every CSS selector.
 Code is released under the [MIT licence](LICENSE) — use it, modify it, ship it.
 
 Adventure content — encounter text, DCs, NPC names, and rewards — is derived from Paizo's
-*Season of Ghosts* and remains Paizo's intellectual property. These macros are unofficial, are
-not endorsed by Paizo, and are intended as an aid for GMs who own the adventure.
+*Season of Ghosts*, *Mark of the Mantis*, and *Battle for Nova Rush*, and remains Paizo's
+intellectual property. These macros are unofficial, are not endorsed by Paizo, and are intended
+as an aid for GMs who own the adventures. No stat blocks are reproduced.

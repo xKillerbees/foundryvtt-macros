@@ -68,6 +68,18 @@ SHOTS = {
     "novarush-fx": (
         "battle-for-nova-rush/nova-rush-console.js", "novarush-fx",
         "battle-for-nova-rush/nova-rush-fx.png"),
+    "mantis": (
+        "mark-of-the-mantis/mark-of-the-mantis-console.js", "mantis",
+        "mark-of-the-mantis/mark-of-the-mantis-console.png"),
+    "mantis-infiltration": (
+        "mark-of-the-mantis/mark-of-the-mantis-console.js", "mantis-infiltration",
+        "mark-of-the-mantis/mark-of-the-mantis-infiltration.png"),
+    "mantis-manor": (
+        "mark-of-the-mantis/mark-of-the-mantis-console.js", "mantis-manor",
+        "mark-of-the-mantis/mark-of-the-mantis-manor.png"),
+    "mantis-alternates": (
+        "mark-of-the-mantis/mark-of-the-mantis-console.js", "mantis-alternates",
+        "mark-of-the-mantis/mark-of-the-mantis-alternates.png"),
     "novarush-scene": (
         "battle-for-nova-rush/nova-rush-console.js", "novarush-scene",
         "battle-for-nova-rush/nova-rush-scene.png"),

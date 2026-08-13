@@ -290,6 +290,87 @@ globalThis.FIXTURES = {
     }
   },
 
+  /* Mark of the Mantis, with both legwork phases resolved: a scoped manor, a
+     tool, a security key, and one botched round of prying that has already
+     cost the party a point of Awareness. */
+  "mantis": {
+    "world.pf2eMarkOfMantis": {
+      tab: "plan",
+      plan: {
+        entries: {
+          "1:0": { activity: "scope", result: "cs" },
+          "1:1": { activity: "prepare", result: "s" },
+          "1:2": { activity: "keys", result: "cs" },
+          "1:3": { activity: "manor", result: "cf" },
+          "2:0": { activity: "distraction", result: "s" },
+          "2:1": { activity: "doatara", result: "s" },
+          "2:2": { activity: "manor", result: "s" },
+          "2:3": { activity: "prepare", result: "f" }
+        },
+        spent: {},
+        facts: {
+          doatara: { history: true, poisoner: true },
+          manor: { ruins: true, iomedae: true, cellars: true },
+          scope: { windows: true, doors: true, roof: true, guardian: true }
+        }
+      },
+      apAdd: [{ n: 1, label: "Inexpert task" }]
+    }
+  },
+
+  /* The break-in itself: one obstacle beaten, a second under way, guards
+     thinning, and Awareness far enough up that the house has tightened. */
+  "mantis-infiltration": {
+    "world.pf2eMarkOfMantis": {
+      tab: "infil",
+      plan: {
+        entries: {
+          "1:0": { activity: "scope", result: "cs" },
+          "1:1": { activity: "prepare", result: "s" },
+          "1:2": { activity: "keys", result: "cs" },
+          "2:3": { activity: "distraction", result: "s" }
+        },
+        spent: { "1:1": true },
+        facts: { doatara: {}, manor: {}, scope: {} }
+      },
+      obstacles: {
+        opening: { turns: [
+          { results: { 0: "cs", 1: "s", 2: "f", 3: "s" }, auto: 0, closed: true }
+        ] },
+        silent: { turns: [
+          { results: { 0: "s", 1: "f", 2: "cf", 3: "s" }, auto: 0, closed: true },
+          { results: { 0: "s" }, auto: 1, closed: false }
+        ] }
+      },
+      comps: [{ key: "socialites", deg: "f" }, { key: "cornered", deg: "cf" }],
+      kills: [{ how: "assassination", deg: "cs" }, { how: "assassination", deg: "sw" },
+              { how: "combat", deg: "combat" }],
+      apAdd: [{ n: 2, label: "A ruckus" }],
+      fired: { 3: true }
+    }
+  },
+
+  /* The manor with the alternate challenges switched on — the ahuizotl in the
+     pond, terra-cotta warriors inside, the ghostly choir moved into the
+     chapel, and the way down hidden behind the gallery's liquor shelves. */
+  "mantis-alternates": {
+    "world.pf2eMarkOfMantis": {
+      tab: "alt",
+      alt: { doatara: "priest", exterior: "ahuizotl", interior: "terracotta", cellar: "a15" },
+      traps: { t1: { type: "choir", where: "a11" }, t2: { type: "scythe", where: "a9" } }
+    }
+  },
+
+  /* The manor tab, read with those same alternates in play. */
+  "mantis-manor": {
+    "world.pf2eMarkOfMantis": {
+      tab: "manor",
+      alt: { doatara: "priest", exterior: "ahuizotl", interior: "terracotta", cellar: "a15" },
+      traps: { t1: { type: "choir", where: "a11" }, t2: { type: "scythe", where: "a9" } },
+      areas: { a6: true, a7: true, a8: true }
+    }
+  },
+
   /* Enlightened Path, opened on the first day of the pilgrimage with the
      ritual behind the party. */
   "path": {
