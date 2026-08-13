@@ -1,6 +1,6 @@
 /* ============================================================================
    SEASON OF GHOSTS — Campaign Status Tracker
-   All four acts, thirteen chapters · Foundry VTT v11 / v12 / v13 · PF2e
+   All four acts, thirteen chapters · Foundry VTT v11 / v12 / v13 / v14 · PF2e
    ----------------------------------------------------------------------------
    Paste into a Macro (Type: Script) and execute.
 

@@ -3,7 +3,7 @@
 A GM console for Paizo's free Starfinder Second Edition adventure *Battle for Nova Rush*
 (Free RPG Day 2025) — four 1st-level characters, one hijacked starship, one very short fuse.
 
-Built for the **sf2e** system on Foundry **v11–v13**.
+Built for the **sf2e** system on Foundry **v11–v14**.
 
 | Macro | Covers | Status |
 |---|---|---|

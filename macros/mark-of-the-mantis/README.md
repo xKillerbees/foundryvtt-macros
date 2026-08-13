@@ -3,7 +3,7 @@
 A GM console for Paizo's *Pathfinder One-Shot: Mark of the Mantis* — four Red Mantis assassins,
 one aristocrat impersonating them, and a garden party to get through before midnight.
 
-Built for the **pf2e** system on Foundry **v11–v13**.
+Built for the **pf2e** system on Foundry **v11–v14**.
 
 | Macro | Covers | Status |
 |---|---|---|

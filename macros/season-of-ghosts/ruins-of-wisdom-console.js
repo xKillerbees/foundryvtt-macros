@@ -1,7 +1,7 @@
 /* ============================================================================
    IN THE RUINS OF WISDOM — Chapter 7 Console
    Season of Ghosts, Act 2 Chapter 3 · party level 6
-   Foundry VTT v11 / v12 / v13  •  built for PF2e
+   Foundry VTT v11 / v12 / v13 / v14  •  built for PF2e
    ----------------------------------------------------------------------------
    Paste into a Macro (Type: Script) and execute.
    Runs the Tan Sugi monastery: the four corrupted statues and the escalating

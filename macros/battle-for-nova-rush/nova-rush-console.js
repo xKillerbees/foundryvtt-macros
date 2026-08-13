@@ -1,7 +1,7 @@
 /* ============================================================================
    BATTLE FOR NOVA RUSH — GM Console
    Starfinder Second Edition · four 1st-level characters · Free RPG Day 2025
-   Foundry VTT v11 / v12 / v13  •  built for the sf2e system
+   Foundry VTT v11 / v12 / v13 / v14  •  built for the sf2e system
    ----------------------------------------------------------------------------
    Paste into a Macro (Type: Script) and execute.
 

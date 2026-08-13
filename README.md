@@ -5,9 +5,9 @@ manifest, no install step. Open a macro file, copy it, paste it into Foundry, ru
 
 | Collection | System | Foundry | Macros |
 |---|---|---|---|
-| [Season of Ghosts](macros/season-of-ghosts) | PF2e | v11 – v13 | 5 |
-| [Mark of the Mantis](macros/mark-of-the-mantis) | PF2e | v11 – v13 | 1 |
-| [Battle for Nova Rush](macros/battle-for-nova-rush) | SF2e | v11 – v13 | 1 |
+| [Season of Ghosts](macros/season-of-ghosts) | PF2e | v11 – v14 | 5 |
+| [Mark of the Mantis](macros/mark-of-the-mantis) | PF2e | v11 – v14 | 1 |
+| [Battle for Nova Rush](macros/battle-for-nova-rush) | SF2e | v11 – v14 | 1 |
 
 ## Installing a macro
 

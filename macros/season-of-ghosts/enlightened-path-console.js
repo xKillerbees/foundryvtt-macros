@@ -1,7 +1,7 @@
 /* ============================================================================
    THE ENLIGHTENED PATH — Chapter 6 Console
    Season of Ghosts, Act 2 Chapter 2 · party level 5
-   Foundry VTT v11 / v12 / v13  •  built for PF2e
+   Foundry VTT v11 / v12 / v13 / v14  •  built for PF2e
    ----------------------------------------------------------------------------
    Paste into a Macro (Type: Script) and execute.
    Tracks the ritual, the vision inside the Wall, and the four-day pilgrimage,

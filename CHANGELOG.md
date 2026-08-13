@@ -73,6 +73,8 @@
   ticked, `ARCS` is empty for you to fill in, and no note names another table's PCs
 
 ### Changed
+- Every macro tested on Foundry v14; the supported range is now v11–v14, in the collection
+  READMEs and in each macro's own header
 - Campaign tracker: only **required** items can go overdue. An unticked box in a finished
   chapter is now **skipped** — the party killed the Abacus Sisters rather than saving them,
   and nothing downstream breaks

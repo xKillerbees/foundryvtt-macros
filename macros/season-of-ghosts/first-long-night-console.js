@@ -1,7 +1,7 @@
 /* ============================================================================
    FIRST LONG NIGHT — Festival Console
    Season of Ghosts, Act 2 Chapter 5, week 3 of fall (the 22nd)
-   Foundry VTT v11 / v12 / v13  •  built for PF2e
+   Foundry VTT v11 / v12 / v13 / v14  •  built for PF2e
    ----------------------------------------------------------------------------
    Paste into a Macro (Type: Script) and execute.
    Points earned here can be pushed straight into the Fall Downtime Tracker.

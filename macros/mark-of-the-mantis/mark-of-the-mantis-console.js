@@ -1,7 +1,7 @@
 /* ============================================================================
    MARK OF THE MANTIS — GM Console
    Pathfinder Second Edition · four 6th-level pregens · Pathfinder One-Shot
-   Foundry VTT v11 / v12 / v13  •  built for the pf2e system
+   Foundry VTT v11 / v12 / v13 / v14  •  built for the pf2e system
    ----------------------------------------------------------------------------
    Paste into a Macro (Type: Script) and execute.
 

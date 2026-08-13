@@ -1,6 +1,6 @@
 /* ============================================================================
    SEASON OF GHOSTS — Act 2 Fall Downtime Tracker
-   Foundry VTT v11 / v12 / v13  •  built for PF2e, but system-agnostic
+   Foundry VTT v11 / v12 / v13 / v14  •  built for PF2e, but system-agnostic
    ----------------------------------------------------------------------------
    Paste this whole file into a new Macro (Type: Script) and execute it.
    State is stored on a JournalEntry flag, so it survives reloads and reboots.

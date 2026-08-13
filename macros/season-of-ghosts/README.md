@@ -3,7 +3,7 @@
 GM consoles for running Paizo's *Season of Ghosts* Adventure Path in Foundry VTT.
 Each macro is a single self-contained script — no module, no manifest, no install step.
 
-Built for **PF2e** on Foundry **v11–v13**.
+Built for **PF2e** on Foundry **v11–v14**.
 
 | Macro | Covers | Status |
 |---|---|---|
