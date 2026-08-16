@@ -1073,9 +1073,12 @@ class Tracker {
     const history = Object.keys(this.s.weeks).map(Number).sort((a, b) => a - b).map(wn => {
       const w = this.s.weeks[String(wn)];
       const done = Object.entries(w.entries ?? {}).filter(([, e]) => e?.activity);
-      if (!done.length) return "";
-      const cells = done.map(([i, e]) =>
-        `${this.s.pcs[i]?.name ?? "?"}: ${ACTIVITIES[e.activity]?.label ?? "?"}${e.result ? ` (${DEGREE_LABEL[e.result]})` : ""}`).join("; ");
+      const feast = wn === 10 ? Object.entries(w.feastPcs ?? {}).flatMap(([i, slots]) =>
+        (slots ?? []).filter(s => s?.act).map(s =>
+          `${this.s.pcs[i]?.name ?? "?"}: ${FEAST_ACTS[s.act]?.label ?? "?"}${s.rolled ? ` (${DEGREE_LABEL[s.rolled]}${s.applied ? "" : ", proposed"})` : ""}`)) : [];
+      const cells = [...done.map(([i, e]) =>
+        `${this.s.pcs[i]?.name ?? "?"}: ${ACTIVITIES[e.activity]?.label ?? "?"}${e.result ? ` (${DEGREE_LABEL[e.result]})` : ""}`), ...feast].join("; ");
+      if (!cells) return "";
       return `<tr><td style="padding:3px 10px 3px 0;white-space:nowrap"><b>Week ${wn}</b></td><td style="padding:3px 0">${cells}</td></tr>`;
     }).join("");
 
@@ -1133,6 +1136,26 @@ class Tracker {
       </tr>`;
     }).join("");
 
+    /* Week 10 replaces the preparation rows with the three feast checks per PC. */
+    const feastRows = this.s.week === 10
+      ? Object.entries(this.w.feastPcs ?? {}).map(([i, slots]) => {
+          const chosen = (slots ?? []).filter(s => s?.act);
+          if (!chosen.length) return "";
+          const cells = chosen.map(s => {
+            const tone = s.applied ? D.moss : s.rolled ? D.ember : D.muted;
+            const state = s.applied ? DEGREE_LABEL[s.rolled]
+              : s.rolled ? `${DEGREE_LABEL[s.rolled]} · proposed` : "chosen";
+            return `${FEAST_ACTS[s.act]?.label ?? "?"} — <span style="color:${tone}">${state}</span>`;
+          }).join("<br>");
+          return `<tr>
+            <td style="padding:3px 8px 3px 0;border-top:1px solid rgba(0,0,0,.1);font-weight:600;white-space:nowrap">${esc(this.s.pcs[i]?.name ?? "?")}</td>
+            <td style="padding:3px 0;border-top:1px solid rgba(0,0,0,.1)">${cells}</td>
+          </tr>`;
+        }).join("")
+      : "";
+    const workRows = this.s.week === 10 ? feastRows : rows;
+    const workEmpty = this.s.week === 10 ? "No feast preparations recorded yet." : "No preparation work recorded yet this week.";
+
     /* Which sources are still worth a PC's second activity, and what they can
        roll. Skill names only — the DCs stay on the GM's side of the screen,
        as do the point totals each source is worth. */
@@ -1165,9 +1188,10 @@ class Tracker {
         <table style="width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:8px"><tr>
           ${meter("Hope", pl.hope, D.ember)}${meter("Food", pl.food, D.moss)}${meter("Security", pl.security, D.slate)}${meter("Teahouse", pl.restoration, D.rust)}${meter("Research", this.rpTotal, "#5d3654")}
         </tr></table>
-        ${rows
-          ? `<table style="width:100%;border-collapse:collapse;font-size:12px">${rows}</table>`
-          : `<div style="font-size:12px;color:${D.muted}">No preparation work recorded yet this week.</div>`}
+        ${this.s.week === 10 ? `<div style="font-size:11px;margin-bottom:6px"><b>Feast of the Kami</b> — Decoration ${this.s.feast?.decoration ?? 0} · Banquet ${this.s.feast?.banquet ?? 0} · Entertainment ${this.s.feast?.entertainment ?? 0}</div>` : ""}
+        ${workRows
+          ? `<table style="width:100%;border-collapse:collapse;font-size:12px">${workRows}</table>`
+          : `<div style="font-size:12px;color:${D.muted}">${workEmpty}</div>`}
         <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:${D.muted};margin:10px 0 2px">
           Researching the curse
         </div>
