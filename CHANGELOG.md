@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-08-15 23:07
+
+### Fixed
+- Downtime Planner: the "house rule" badge on a Dedicated Study card showed even while the GM
+  had that rule switched off. It now only appears while the rule is actually in play — the rest
+  of the house-rule surface (the top-bar chips, the Add-bar activity, and the Craft 75% field)
+  already hid itself from players the moment a rule was unchecked.
+
 ## 2026-08-15 22:55
 
 ### Fixed

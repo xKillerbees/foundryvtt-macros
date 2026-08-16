@@ -1400,7 +1400,7 @@ class DowntimeApp extends BaseApp {
       <section class="row t-${def.tone}" ${def.drop ? `data-drop="${row.id}"` : ""}>
         <header>
           <i class="${def.icon}"></i>
-          <h4>${def.label}${def.house ? `<span class="hr">house rule</span>` : ""}</h4>
+          <h4>${def.label}${def.house && P.on(def.house) ? `<span class="hr">house rule</span>` : ""}</h4>
           <label class="days"><span>Days</span>
             <input type="number" min="${row.act === "craft" ? P.craftFor(pc, row).setup : (def.minDays ?? 0)}"
                    max="365" value="${row.days}" data-act="days" data-row="${row.id}" ${ro}></label>
