@@ -41,6 +41,9 @@ SHOTS = {
     "downtime-player": (
         "season-of-ghosts/fall-downtime-tracker.js", "downtime-player",
         "season-of-ghosts/fall-downtime-player.png"),
+    "downtime-feast": (
+        "season-of-ghosts/fall-downtime-tracker.js", "downtime-feast",
+        "season-of-ghosts/fall-downtime-feast.png"),
     "festival": (
         "season-of-ghosts/first-long-night-console.js", "festival",
         "season-of-ghosts/first-long-night-console.png"),

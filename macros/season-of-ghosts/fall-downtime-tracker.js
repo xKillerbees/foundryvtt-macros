@@ -300,6 +300,42 @@ const FEAST_ACTS = {
               skills: [["Religion", 17], ["Diplomacy", 19]] }
 };
 
+/* The Night of the Feast resolves the preparation: the kami react to the
+   decorations, the PCs serve the tea ceremony, and then perform. The tea
+   ceremony's four degrees are recorded (the result is modified by Banquet
+   Points — shown as a note, not applied — so the GM records the final degree).
+   Each degree's pool delta is applied reversibly. */
+const CEREMONY_OUTCOME = {
+  cs: { delta: { food: 1, hope: 1 },
+        note: "The kami are overwhelmed and bless the teahouse — +1 status bonus to Host Ceremony and to Crafting food and tea here from now on." },
+  s:  { delta: { food: 1 },
+        note: "The kami are delighted and help protect the town's food stores for the rest of winter." },
+  f:  { delta: {},
+        note: "Disappointed, but they don't openly mock the service." },
+  cf: { delta: { food: -1, hope: -1 },
+        note: "Insulted — they abandon the feast (no entertainment) and raid the food stores." }
+};
+
+/* The kami's reaction to the decorations, decided by Decoration Points. */
+const DECOR_REACTION = [
+  { key: "decoLow", label: "Kami mock the decor (3 or fewer)", delta: { security: -1 },
+    note: "the teahouse needs Repair and Restore", when: (f) => f.decoration <= 3 },
+  { key: "decoHigh", label: "Kami overwhelmed by the decor (6+)", delta: { security: 2 },
+    note: "they bolster their own wards on the way home", when: (f) => f.decoration >= 6 }
+];
+
+/* After-the-Feast rewards, each toggled on/off like the event outcomes. */
+const AFTER_FEAST = [
+  { key: "base", label: "Feast complete", delta: { hope: 1 }, xp: 40,
+    note: "regardless of how the feast went", when: () => true },
+  { key: "deco", label: "Decorations 4+", delta: { security: 1 }, xp: 20,
+    when: (f) => f.decoration >= 4 },
+  { key: "banq", label: "Banquet 4+", delta: { food: 1 }, xp: 20,
+    when: (f) => f.banquet >= 4 },
+  { key: "ent",  label: "Entertainment 4+", delta: { hope: 1 }, xp: 20,
+    when: (f) => f.entertainment >= 4 }
+];
+
 /* The second, non-preparation activity each PC gets every week. Stored as the
    label so states saved before this was more than a dropdown still read. */
 const SECOND_SLOT = ["—", "Research the Curse", "Craft", "Earn Income", "Retraining", "Other"];
@@ -436,7 +472,7 @@ function blankState(pcs) {
     pools: { hope: 3, food: 0, security: 0, restoration: 0 },
     rep: { southbank: 0, northridge: 0 },
     research: { sojin: 0, igawa: 0, willow: 0, solo: 0, zoudou: 0 },
-    feast: { decoration: 0, banquet: 0, entertainment: 0 },
+    feast: { decoration: 0, banquet: 0, entertainment: 0, ceremony: null, entertain: {}, after: {} },
     opts: { expansion: false, teaware: false },
     yami: { bonded: false, pc: "", pcIdx: null, lockUntil: 0 },
     milestones: {},
@@ -916,6 +952,73 @@ class Tracker {
     this.afterChange();
   }
 
+  /* ----- Night of the Feast: ceremony, entertainment, rewards ----- */
+
+  async postNightChecks() {
+    await ChatMessage.create({
+      content: `<p style="margin:0 0 4px"><b>Night of the Feast — the tea ceremony</b></p>` +
+        `<p style="margin:0 0 4px">One organizer attempts ${checkCode("Tea Lore", 17)} or ${checkCode("Society", 21)} — other PCs Aid with Tea Lore or Society.</p>` +
+        `<p style="margin:0">Entertainment — each PC describes their act and attempts a check against DC 19 with the skill that fits (e.g. ${checkCode("Performance", 19)}, ${checkCode("Acrobatics", 19)}, ${checkCode("Athletics", 19)}, or a tradition skill).</p>`,
+      speaker: { alias: "Willowshore" }
+    });
+  }
+
+  setCeremony(degree) {
+    const f = this.s.feast ??= { decoration: 0, banquet: 0, entertainment: 0, ceremony: null, entertain: {}, after: {} };
+    if (!DEGREES.includes(degree)) return;
+    const prev = f.ceremony;
+    if (prev === degree) f.ceremony = null;
+    else f.ceremony = degree;
+    if (prev) this.applyDelta(Object.fromEntries(Object.entries(CEREMONY_OUTCOME[prev].delta).map(([k, v]) => [k, -v])));
+    if (f.ceremony) this.applyDelta(CEREMONY_OUTCOME[f.ceremony].delta);
+    this.log(`Feast — tea ceremony: ${f.ceremony ? DEGREE_LABEL[f.ceremony] : "cleared"}.`);
+    this.afterChange();
+  }
+
+  setEntertain(pcIdx, degree) {
+    const f = this.s.feast ??= { decoration: 0, banquet: 0, entertainment: 0, ceremony: null, entertain: {}, after: {} };
+    f.entertain = f.entertain ?? {};
+    if (f.entertain[pcIdx] === degree) delete f.entertain[pcIdx];
+    else f.entertain[pcIdx] = DEGREES.includes(degree) ? degree : undefined;
+    const name = this.s.pcs[pcIdx]?.name ?? "PC";
+    this.log(`Feast — ${name} entertainment: ${f.entertain[pcIdx] ? DEGREE_LABEL[f.entertain[pcIdx]] : "cleared"}.`);
+    this.afterChange();
+  }
+
+  toggleAfterFeast(key) {
+    const f = this.s.feast ??= { decoration: 0, banquet: 0, entertainment: 0, ceremony: null, entertain: {}, after: {} };
+    f.after = f.after ?? {};
+    const row = [...DECOR_REACTION, ...AFTER_FEAST].find(r => r.key === key);
+    if (!row) return;
+    const on = !!f.after[key];
+    const sign = on ? -1 : 1;
+    if (row.delta) this.applyDelta(Object.fromEntries(Object.entries(row.delta).map(([k, v]) => [k, v * sign])));
+    if (row.xp && !on) ui.notifications.info(`Award ${row.xp} XP — ${row.label}.`);
+    f.after[key] = !on;
+    const bits = [];
+    if (row.delta) bits.push(...Object.entries(row.delta).map(([k, v]) => `${v > 0 ? "+" : ""}${v} ${cap(k)}`));
+    if (row.xp) bits.push(`${row.xp} XP`);
+    this.log(`Feast — ${on ? "undid" : "applied"}: ${row.label}${bits.length ? " (" + bits.join(", ") + ")" : ""}.`);
+    this.afterChange();
+  }
+
+  toggleFeastRep(faction) {
+    const f = this.s.feast ??= { decoration: 0, banquet: 0, entertainment: 0, ceremony: null, entertain: {}, after: {} };
+    f.after = f.after ?? {};
+    const cur = f.after.rep;
+    if (cur === faction) {
+      this.s.rep[faction] -= 1;
+      f.after.rep = null;
+      this.log(`Feast — undid: +1 Rep ${cap(faction)} (10+ points).`);
+    } else {
+      if (cur) this.s.rep[cur] -= 1;
+      this.s.rep[faction] += 1;
+      f.after.rep = faction;
+      this.log(`Feast — +1 Rep ${cap(faction)} (10+ points total).`);
+    }
+    this.afterChange();
+  }
+
   activityAvailable(key, pcIdx) {
     const act = ACTIVITIES[key];
     if (act.week && act.week !== this.s.week) return "Week " + act.week + " only";
@@ -1276,7 +1379,7 @@ class Tracker {
         <table style="width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:8px"><tr>
           ${meter("Hope", pl.hope, D.ember)}${meter("Food", pl.food, D.moss)}${meter("Security", pl.security, D.slate)}${meter("Teahouse", pl.restoration, D.rust)}${meter("Research", this.rpTotal, "#5d3654")}
         </tr></table>
-        ${this.s.week === 10 ? `<div style="font-size:11px;margin-bottom:6px"><b>Feast of the Kami</b> — Decoration ${this.s.feast?.decoration ?? 0} · Banquet ${this.s.feast?.banquet ?? 0} · Entertainment ${this.s.feast?.entertainment ?? 0}</div>` : ""}
+        ${this.s.week === 10 ? `<div style="font-size:11px;margin-bottom:6px"><b>Feast of the Kami</b> — Decoration ${this.s.feast?.decoration ?? 0} · Banquet ${this.s.feast?.banquet ?? 0} · Entertainment ${this.s.feast?.entertainment ?? 0}${this.s.feast?.ceremony ? ` · Tea ceremony ${DEGREE_LABEL[this.s.feast.ceremony]}` : ""}</div>` : ""}
         ${workRows
           ? `<table style="width:100%;border-collapse:collapse;font-size:12px">${workRows}</table>`
           : `<div style="font-size:12px;color:${D.muted}">${workEmpty}</div>`}
@@ -1308,7 +1411,7 @@ const JPAGE = {
   hope: "07bolsteringho00", food: "07gatheringfoo00", security: "07increasingse00",
   teahouse: "07restoringthe00", research: "07researchingt00",
   feastPrep: "07preparingfor01", feastNight: "07nightofthefe00", afterFeast: "07afterthefeas00",
-  shinzo: "07shinzosvisit00"
+  nextDay: "07thenextday0000", shinzo: "07shinzosvisit00"
 };
 /* The twelve town events, each its own page. */
 const JWEEK = {
@@ -1470,6 +1573,8 @@ class SoGDowntimeApp extends BaseApp {
               </div>
             </div>`).join("")}
         </div>
+        ${this.feastNight(ro)}
+        ${this.feastAfter(ro)}
       </section>` : "";
 
     const logRows = t.w.log.length
@@ -1797,6 +1902,113 @@ class SoGDowntimeApp extends BaseApp {
       </div>`;
   }
 
+  /* The Night of the Feast: the kami's reaction to the decorations, the tea
+     ceremony, and the post-meal show — the GM-side resolution of week 10. */
+  feastNight(ro) {
+    const t = this.tracker, s = t.s;
+    const f = s.feast ?? { decoration: 0, banquet: 0, entertainment: 0 };
+    const banquet = f.banquet ?? 0, ent = f.entertainment ?? 0;
+
+    const banquetMod = banquet <= 3
+      ? `<span class="mod bad">−1 degree</span> (3 or fewer Banquet Points)`
+      : banquet >= 7
+        ? `<span class="mod good">+1 degree</span> (7 or more Banquet Points)`
+        : `<span class="mod">no change</span> (4–6 Banquet Points)`;
+    const entMod = ent <= 3
+      ? `<span class="mod bad">−2 circumstance</span>`
+      : ent >= 7
+        ? `<span class="mod good">+1 circumstance, one degree up</span>`
+        : `<span class="mod good">+1 circumstance</span>`;
+
+    const cerBtns = DEGREES.slice().reverse().map(d =>
+      `<button type="button" class="deg ${d} ${f.ceremony === d ? "on" : ""}" data-act="ceremony" data-deg="${d}" title="${DEGREE_LABEL[d]}" ${ro ? "disabled" : ""}>${DEGREE_LABEL[d]}</button>`).join("");
+    const cer = f.ceremony ? CEREMONY_OUTCOME[f.ceremony] : null;
+    const cerBits = cer ? Object.entries(cer.delta).filter(([, v]) => v).map(([k, v]) => `${v > 0 ? "+" : ""}${v} ${cap(k)}`).join(", ") : "";
+
+    const entertainRows = s.pcs.map((pc, i) => {
+      const deg = f.entertain?.[i];
+      const btns = DEGREES.slice().reverse().map(d =>
+        `<button type="button" class="deg ${d} ${deg === d ? "on" : ""}" data-act="entertain" data-pc="${i}" data-deg="${d}" title="${DEGREE_LABEL[d]}" ${ro ? "disabled" : ""}>${d === "cs" ? "CS" : d === "s" ? "S" : d === "f" ? "F" : "CF"}</button>`).join("");
+      return `<div class="secrow"><span class="en-pc">${esc(pc.name)}</span><span class="en-degrees">${btns}</span></div>`;
+    }).join("");
+    const entSucceeded = s.pcs.filter((_, i) => ["s", "cs"].includes(f.entertain?.[i])).length;
+
+    const deco = f.decoration ?? 0;
+    const decoNote = deco <= 3
+      ? `<span class="mod bad">${deco} — they mock and get rowdy</span>`
+      : deco >= 6
+        ? `<span class="mod good">${deco} — they're overwhelmed</span>`
+        : `<span class="mod">${deco} — impressed, they treat the teahouse with respect</span>`;
+    const decorBtns = DECOR_REACTION.filter(r => r.when(f)).map(r => {
+      const on = !!f.after?.[r.key];
+      const bits = Object.entries(r.delta).filter(([, v]) => v).map(([k, v]) => `${v > 0 ? "+" : ""}${v} ${cap(k)}`).join("");
+      return `<button type="button" class="eout ${on ? "on" : ""}" data-act="afterfeast" data-key="${r.key}" ${ro ? "disabled" : ""}>${r.label}<span class="ebits">${bits}${r.note ? " · " + r.note : ""}</span></button>`;
+    }).join("");
+
+    return `
+      <div class="feast-night">
+        <h4>Night of the Feast ${this.jbtn(JPAGE.feastNight)}</h4>
+        <div class="fn-block">
+          <div class="fn-head">Tea ceremony <span class="fn-sub">one organizer — DC 17 Tea Lore or DC 21 Society, other PCs Aid · result modified by Banquet Points: ${banquetMod}</span></div>
+          <div class="degrees">${cerBtns}</div>
+          ${cer ? `<div class="fn-result">${DEGREE_LABEL[f.ceremony]}: ${cer.note}${cerBits ? ` <b>(${cerBits})</b>` : ""}</div>` : ""}
+          <button type="button" class="postchecks" data-act="postnight" ${ro ? "disabled" : ""}><i class="fa-solid fa-dice-d20"></i> Post the night's checks</button>
+        </div>
+        <div class="fn-block">
+          <div class="fn-head">Entertainment <span class="fn-sub">each PC vs DC 19, skill to suit the act · Entertainment Points set the modifier: ${entMod}</span></div>
+          ${entertainRows}
+          <div class="fn-line">${entSucceeded} of ${s.pcs.length} succeeded — ${entSucceeded >= 2 ? "the kami leave a gift to find in the morning." : "no morning gift (two successes needed)."}</div>
+        </div>
+        <div class="fn-block">
+          <div class="fn-head">Decorations <span class="fn-sub">${decoNote}</span></div>
+          ${decorBtns ? `<div class="fn-decor">${decorBtns}</div>` : ""}
+        </div>
+      </div>`;
+  }
+
+  /* After the Feast: the threshold rewards, the Reputation point, and the next
+     morning's visit from Shinzo. */
+  feastAfter(ro) {
+    const t = this.tracker, s = t.s;
+    const f = s.feast ?? { decoration: 0, banquet: 0, entertainment: 0 };
+    f.after = f.after ?? {};
+
+    const rewardBtns = AFTER_FEAST.map(r => {
+      const met = r.when(f);
+      const on = !!f.after[r.key];
+      const bits = [];
+      if (r.delta) bits.push(...Object.entries(r.delta).filter(([, v]) => v).map(([k, v]) => `${v > 0 ? "+" : ""}${v} ${cap(k)}`));
+      if (r.xp) bits.push(`${r.xp} XP`);
+      return `<button type="button" class="eout ${on ? "on" : ""}" data-act="afterfeast" data-key="${r.key}"
+        ${ro || !met ? "disabled" : ""}>${r.label}
+        ${met ? `<span class="ebits">${bits.join(" · ")}${r.note ? " · " + r.note : ""}</span>` : `<span class="ebits">not met</span>`}</button>`;
+    }).join("");
+
+    const repMet = (f.decoration + f.banquet + f.entertainment) >= 10;
+    const repRow = repMet ? `
+      <div class="fn-line">10+ points overall — 1 Reputation to the faction of the party's choice:
+        ${[["southbank", "Southbank"], ["northridge", "Northridge"]].map(([k, label]) =>
+          `<button type="button" class="eout ${f.after.rep === k ? "on" : ""}" data-act="feastrep" data-faction="${k}" ${ro ? "disabled" : ""}>+1 ${label}</button>`).join(" ")}
+      </div>` : "";
+
+    const entSucceeded = s.pcs.filter((_, i) => ["s", "cs"].includes(f.entertain?.[i])).length;
+    const attempted = Object.values(t.w.feastPcs ?? {}).some(slots => (slots ?? []).some(x => x?.applied)) || !!f.ceremony;
+    const nextDay = `
+      <div class="fn-block">
+        <div class="fn-head">The next day ${this.jbtn(JPAGE.nextDay)}</div>
+        ${entSucceeded >= 2 ? `<div class="fn-line">Shinzo's gift — a 5th-level permanent item for each PC (a +1 armor potency rune or a 2nd-level wand fit well).</div>` : ""}
+        ${attempted ? `<div class="fn-line">Shinzo returns with a green-cloth book holding every Magic Tea formula, plus the <em>Winter's Breath</em> formula.</div>` : ""}
+      </div>`;
+
+    return `
+      <div class="feast-after">
+        <h4>After the feast ${this.jbtn(JPAGE.afterFeast)}</h4>
+        <div class="fn-decor">${rewardBtns}</div>
+        ${repRow}
+        ${nextDay}
+      </div>`;
+  }
+
   /* The second activity, made doable rather than just named. Shared by the GM
      card and the player card — the only difference is who may touch it and
      that banking a research roll is the GM's. */
@@ -1970,6 +2182,11 @@ class SoGDowntimeApp extends BaseApp {
       else if (a === "sec-bank") t.bankResearch(pc);
       else if (a === "feast-roll") t.rollFeast(pc, Number(btn.dataset.slot));
       else if (a === "feast-bank") t.bankFeast(pc, Number(btn.dataset.slot));
+      else if (a === "ceremony") t.setCeremony(btn.dataset.deg);
+      else if (a === "entertain") t.setEntertain(pc, btn.dataset.deg);
+      else if (a === "afterfeast") t.toggleAfterFeast(btn.dataset.key);
+      else if (a === "feastrep") t.toggleFeastRep(btn.dataset.faction);
+      else if (a === "postnight") t.postNightChecks();
       else if (a === "opendoc") {
         const doc = await fromUuid(btn.dataset.uuid).catch(() => null);
         if (doc?.sheet) doc.sheet.render(true);
@@ -2512,6 +2729,25 @@ class SoGDowntimeApp extends BaseApp {
       .sog .feast-pc-head { font-size:.68rem; text-transform:uppercase; letter-spacing:.06em;
                             color:var(--muted); margin-bottom:.35rem; display:flex; align-items:center;
                             justify-content:space-between; gap:.5rem; }
+
+      /* Night of the Feast / After the Feast — the week-10 resolution. */
+      .sog .feast-night, .sog .feast-after { border-top:1px dashed var(--line); margin-top:.5rem; padding-top:.45rem; }
+      .sog .feast-night h4, .sog .feast-after h4 { font-size:.72rem; text-transform:uppercase; letter-spacing:.07em;
+        color:var(--ember); margin:0 0 .4rem; display:flex; align-items:center; gap:.4rem; border:none; padding:0; }
+      .sog .fn-block { border:1px solid var(--line); border-radius:3px; padding:.4rem .5rem; margin-bottom:.4rem; background:var(--stripe); }
+      .sog .fn-head { font-size:.72rem; font-weight:700; margin-bottom:.3rem; line-height:1.35; }
+      .sog .fn-sub { font-weight:400; color:var(--muted); font-size:.68rem; }
+      .sog .fn-line { font-size:.72rem; line-height:1.4; margin:.25rem 0; }
+      .sog .fn-result { font-size:.74rem; line-height:1.4; margin-top:.35rem; padding:.3rem .4rem;
+        border-left:3px solid var(--moss); background:var(--card); border-radius:3px; }
+      .sog .fn-result b { color:var(--moss); }
+      .sog .fn-decor { display:flex; flex-wrap:wrap; gap:.35rem; align-items:center; }
+      .sog .en-pc { flex:0 0 7.5rem; font-size:.74rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .sog .en-degrees { display:inline-flex; gap:.2rem; }
+      .sog .en-degrees .deg { padding:.18rem .32rem; font-size:.62rem; }
+      .sog .feast-night .degrees { margin-bottom:.35rem; }
+      .sog .feast-night .postchecks { margin:.35rem 0 0; }
+      .sog .feast-night .fn-block .eout { margin-top:.25rem; }
 
       .sog .setup-grid { display:grid; grid-template-columns:1fr 1fr; gap:.4rem .75rem; font-size:.8rem; }
       .sog .setup-grid label { display:block; font-size:.7rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }

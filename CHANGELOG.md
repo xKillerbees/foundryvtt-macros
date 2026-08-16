@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-08-16 02:37
+
+### Added
+- Fall Downtime Tracker: week 10's Feast of the Kami now resolves in the macro instead of stopping
+  at the preparations. A **Night of the Feast** block carries the kami's reaction to the decorations
+  (toggleable −1/+2 Security at 3-or-fewer / 6+ Decoration Points), the **tea ceremony** itself (Tea
+  Lore DC 17 / Society DC 21, with the Banquet-Points degree shift shown and each of the four degrees
+  applying its Hope/Food delta and blessing reversibly), and the post-meal **entertainment** (each PC
+  vs DC 19 with the Entertainment-Points modifier, tracking who succeeded). An **After the Feast**
+  block holds the threshold rewards (Feast complete, Decorations/Banquet/Entertainment 4+, and 10+
+  points for a Reputation point to the party's chosen faction), and a **next day** note covers
+  Shinzo's gift and the magic-tea book with the Winter's Breath formula. A "Post the night's checks"
+  button sends the ceremony and entertainment rolls to chat as rollable checks.
+
 ## 2026-08-16 02:04
 
 ### Changed

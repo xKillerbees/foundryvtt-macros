@@ -68,6 +68,46 @@ globalThis.FIXTURES = {
     }
   },
 
+  /* Week 10 — the Feast of the Kami. The preparations are banked, the Night
+     of the Feast is resolved (ceremony recorded, three PCs succeeded at the
+     entertainment), and part of the After-the-Feast rewards are toggled on. */
+  "downtime-feast": {
+    "world.sogFallDowntime": {
+      week: 10,
+      pools: { hope: 8, food: 5, security: 4, restoration: 5 },
+      rep: { southbank: 1, northridge: 2 },
+      research: { sojin: 3, igawa: 1, willow: 1, solo: 2, zoudou: 1 },
+      opts: { expansion: false, teaware: true },
+      feast: {
+        decoration: 6, banquet: 7, entertainment: 4,
+        ceremony: "s", entertain: { 0: "cs", 1: "s", 2: "f", 3: "cs" },
+        after: { base: true, deco: true }
+      },
+      weeks: {
+        10: {
+          entries: {}, locks: {}, pen: {}, eventDone: false, log: [],
+          feastPcs: {
+            0: [
+              { act: "decorate", skill: "Art Lore|17", rolled: "s", applied: true },
+              { act: "banquet", skill: "Food Lore|17", rolled: "s", applied: true },
+              { act: "invite", skill: "Religion|17", rolled: null, applied: false }
+            ],
+            1: [
+              { act: "banquet", skill: "Drink Lore|17", rolled: "cs", applied: true },
+              { act: "decorate", skill: "Performance|19", rolled: null, applied: false },
+              {}
+            ],
+            2: [
+              { act: "invite", skill: "Diplomacy|19", rolled: "s", applied: true },
+              {}, {}
+            ],
+            3: [{}, {}, {}]
+          }
+        }
+      }
+    }
+  },
+
   /* First Long Night, with the grand show under way and the ledger filling. */
   "festival": {
     "world.sogFirstLongNight": {

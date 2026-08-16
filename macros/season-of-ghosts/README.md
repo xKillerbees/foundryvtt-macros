@@ -43,6 +43,11 @@ The Hope / Food / Security preparation subsystem, plus teahouse restoration and 
 - Chat summary card and an optional journal-page writeup
 - Journal links to the module's own pages — the week's event, the chosen preparation activity,
   the research rules — and a PC's name opens their character sheet
+- Week 10's **Feast of the Kami** carries the whole night: the kami's reaction to the decorations,
+  the tea ceremony (four degrees, modified by Banquet Points), each PC's entertainment check, the
+  After-the-Feast threshold rewards and the Reputation point, and the next day's gift and magic-tea book
+
+![The Night of the Feast resolution, on week 10](../../screenshots/season-of-ghosts/fall-downtime-feast.png)
 
 #### The player board
 
