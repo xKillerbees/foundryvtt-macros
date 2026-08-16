@@ -77,10 +77,10 @@ Earn Income and Craft don't touch the town's pools, so they need no GM approval 
 does. For the full downtime treatment, including multi-day Craft cost reduction, the
 [PF2e Downtime planner](../pf2e-downtime) covers the same activities in depth.
 
-Players can't write world settings, so their changes are relayed to the GM's client over
-`game.socket`, which re-checks ownership before writing rather than trusting the sender. Nothing
-needs installing. The relayed op set is deliberately narrow — choose, roll, propose — and none
-of it touches a pool, a milestone, or another character.
+Players can't write world settings, so their changes are relayed to the GM's client through a
+flag on the player's own User document, which re-checks ownership before writing rather than
+trusting the sender. Nothing needs installing. The relayed op set is deliberately narrow —
+choose, roll, propose — and none of it touches a pool, a milestone, or another character.
 
 ### First Long Night Console
 

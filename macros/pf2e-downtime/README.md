@@ -107,9 +107,9 @@ which optional rules are live.
 ### Who can change what
 
 Players can't write world settings in Foundry, so a player's edits are relayed to the GM's
-client over `game.socket`, which validates and performs the write. Nothing needs installing —
-Foundry relays any event under the `module.` namespace whether or not a module by that name
-exists.
+client through a flag on the player's own User document, which validates and performs the
+write. Nothing needs installing — a user can always update their own User, and that update
+fires `updateUser` on every client.
 
 - A player edits **only** the characters they own. Someone else's card is visible but read-only,
   and the ownership check is re-run on the GM's side rather than trusted from the sender
@@ -124,8 +124,8 @@ Shares the shape of the other consoles in this repo:
 - **Storage** — a hidden world setting (`world.pf2eDowntimePlan`). Settings don't fire
   document-update notifications, unlike journal or actor flags.
 - **One reducer** — every change is an op in `OPS`. The GM's client runs it locally; a player's
-  client sends the same op over the socket and the GM runs it there. There is one implementation
-  of each rule, not two.
+  client sends the same op through a flag on their own User, and the GM runs it there. There is
+  one implementation of each rule, not two.
 - **Rendering** — one `markup()` method returning an HTML string, re-rendered wholesale on every
   state change. No templates, no partial updates.
 - **Compatibility** — extends `ApplicationV2` where available, falls back to `Application`.

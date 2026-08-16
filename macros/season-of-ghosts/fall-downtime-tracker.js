@@ -485,13 +485,20 @@ function registerSetting() {
 /* ------------------------------------------------------------ player relay
    Players can't write world settings, so the few things a player is allowed to
    change are sent to the GM's client, which re-checks ownership and performs
-   the write. Foundry relays any event namespaced module.* whether or not a
-   module by that name is installed, so nothing needs installing.
+   the write.
+
+   The channel is a flag on the player's own User document. `game.socket` is
+   not an option here: a socket namespace has to be registered with the server
+   by an installed package, so an invented `module.something` name is accepted
+   by emit and then silently dropped — the sender's own optimistic repaint
+   makes it look like it worked. A user may always update their own User, and
+   that update fires `updateUser` on every client, including the GM's.
 
    Deliberately narrow: a player assigns their own character's work and rolls
    for it. Recording the result moves the town's pools, and that stays the GM's
    to do — a player's roll only proposes a degree. */
-const SOCKET = "module.sog-fall-downtime";
+const REQ_SCOPE = "world";
+const REQ_KEY = "sogDowntimeRequest";
 
 const PLAYER_OPS = {
   pick(t, { pc, key }) {
@@ -639,7 +646,14 @@ class Tracker {
     }
     PLAYER_OPS[op](this, data);
     this.render();
-    game.socket.emit(SOCKET, { op, data, userId: game.user.id });
+    /* The timestamp guarantees a diff, so repeating the same choice still
+       reaches the GM rather than being collapsed as a no-op update. */
+    try {
+      await game.user.setFlag(REQ_SCOPE, REQ_KEY, { op, data, t: Date.now() });
+    } catch (err) {
+      console.error("Fall Downtime Tracker — couldn't send that to the GM.", err);
+      ui.notifications.error("That couldn't be sent to the GM. Your change was not kept.");
+    }
   }
 
   /* Rolls the character's own statistic where the system offers one, so the
@@ -2272,19 +2286,16 @@ async function confirmReset() {
   /* The GM's client is the only one that can write, so it is the only one that
      listens. Ownership is re-checked here rather than trusted from the sender,
      and the op set is the narrow player one — nothing here moves a pool. */
-  if (game.user.isGM) {
-    if (globalThis.__sogDowntimeSocket) game.socket.off(SOCKET, globalThis.__sogDowntimeSocket);
-    globalThis.__sogDowntimeSocket = async ({ op, data, userId }) => {
-      if (!isPrimaryGM()) return;
-      const user = game.users.get(userId);
-      if (!user || !PLAYER_OPS[op]) return;
-      if (!ownsPC(user, tracker.s, data?.pc)) return;
-      PLAYER_OPS[op](tracker, data);
-      tracker.render();
-      await tracker.save();
-    };
-    game.socket.on(SOCKET, globalThis.__sogDowntimeSocket);
-  }
+  if (globalThis.__sogDowntimeReq) Hooks.off("updateUser", globalThis.__sogDowntimeReq);
+  globalThis.__sogDowntimeReq = Hooks.on("updateUser", async (user, changes) => {
+    if (!game.user.isGM || !isPrimaryGM()) return;
+    const req = changes?.flags?.[REQ_SCOPE]?.[REQ_KEY];
+    if (!req || !PLAYER_OPS[req.op]) return;
+    if (!ownsPC(user, tracker.s, req.data?.pc)) return;
+    PLAYER_OPS[req.op](tracker, req.data);
+    tracker.render();
+    await tracker.save();
+  });
 
   /* Re-registered rather than guarded: running the macro again builds a new
      tracker, and a hook still closed over the previous one would keep the

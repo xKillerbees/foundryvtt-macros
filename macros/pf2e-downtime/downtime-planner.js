@@ -7,8 +7,9 @@
 
    Players plan their own character's downtime; the GM owns the calendar.
    State lives in a hidden world setting. Players can't write world settings,
-   so a player's edits are relayed over game.socket to the GM's client, which
-   validates ownership and performs the write. No module needs installing.
+   so a player's edits are relayed through a flag on their own User document to
+   the GM's client, which validates ownership and performs the write. No module
+   needs installing.
 
    Everything here is rules as written by default. Three optional house rules
    ship switched off, and only the GM can turn them on:
@@ -42,9 +43,14 @@ const SETTING_NS = "world";
 const SETTING_KEY = "pf2eDowntimePlan";
 const SETTING_ID = `${SETTING_NS}.${SETTING_KEY}`;
 
-/* Foundry relays any socket event namespaced under module.* or system.*,
-   whether or not a module by that name is installed. */
-const SOCKET = "module.pf2e-downtime-planner";
+/* A player's edits reach the GM through a flag on the player's own User
+   document. `game.socket` is not an option: a socket namespace has to be
+   registered with the server by an installed package, so an invented
+   `module.something` name is accepted by emit and then silently dropped — the
+   sender's own optimistic repaint makes it look like it worked. A user may
+   always update their own User, and that fires `updateUser` on every client. */
+const REQ_SCOPE = "world";
+const REQ_KEY = "pf2eDowntimeRequest";
 
 const MAX_PCS = 8;
 const DEGREES = ["cf", "f", "s", "cs"];
@@ -714,10 +720,17 @@ class Planner {
     if (!anyGMOnline()) {
       return ui.notifications.error("No GM is logged in, so the plan can't be saved. Your change was not kept.");
     }
-    /* Render straight away and let the GM's write come back and reconcile. */
+    /* Render straight away and let the GM's write come back and reconcile.
+       The timestamp guarantees a diff, so repeating the same choice still
+       reaches the GM rather than being collapsed as a no-op update. */
     OPS[op](this.s, data);
     this.render();
-    game.socket.emit(SOCKET, { op, data, userId: game.user.id });
+    try {
+      await game.user.setFlag(REQ_SCOPE, REQ_KEY, { op, data, t: Date.now() });
+    } catch (err) {
+      console.error("Downtime Planner — couldn't send that to the GM.", err);
+      ui.notifications.error("That couldn't be sent to the GM. Your change was not kept.");
+    }
   }
 
   /* ----- day budget ----- */
@@ -1794,18 +1807,16 @@ if (AppV2) {
 
   /* The GM's client is the only one that can write, so it is the only one that
      listens. Ownership is re-checked here rather than trusted from the sender. */
-  if (game.user.isGM && !globalThis.__dtpSocket) {
-    globalThis.__dtpSocket = true;
-    game.socket.on(SOCKET, async ({ op, data, userId }) => {
-      if (!isPrimaryGM()) return;
-      const user = game.users.get(userId);
-      if (!user || !OPS[op] || GM_ONLY.has(op)) return;
-      if (data?.actorId && !ownsActor(user, data.actorId)) return;
-      const fresh = loadState();
-      OPS[op](fresh, data);
-      await game.settings.set(SETTING_NS, SETTING_KEY, fresh);
-    });
-  }
+  if (globalThis.__dtpReq) Hooks.off("updateUser", globalThis.__dtpReq);
+  globalThis.__dtpReq = Hooks.on("updateUser", async (user, changes) => {
+    if (!game.user.isGM || !isPrimaryGM()) return;
+    const req = changes?.flags?.[REQ_SCOPE]?.[REQ_KEY];
+    if (!req || !OPS[req.op] || GM_ONLY.has(req.op)) return;
+    if (req.data?.actorId && !ownsActor(user, req.data.actorId)) return;
+    const fresh = loadState();
+    OPS[req.op](fresh, req.data);
+    await game.settings.set(SETTING_NS, SETTING_KEY, fresh);
+  });
 
   /* Re-registered rather than guarded: running the macro again builds a new
      planner, and a hook still closed over the previous one would keep the

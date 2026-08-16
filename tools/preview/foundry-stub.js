@@ -8,7 +8,10 @@
      game.settings.{register, get, set, settings.has}
      game.actors (iterable, .get, .find, .party)
      game.users (iterable, .get, .activeGM), game.user, game.journal.getName
-     game.socket.{on, emit} — looped back, so a relayed write round-trips
+     user.{getFlag, setFlag} — a real setFlag fires the updateUser hook
+     game.socket.{on, emit} — looped back, but only for a namespace an
+       installed package would have registered; anything else is dropped,
+       exactly as the real server drops it
      actor.{skills, itemTypes.lore, system.abilities, testUserPermission}
      ChatMessage.{create, getSpeaker}, Dialog.confirm, Hooks.on, ui.notifications
 
@@ -501,22 +504,54 @@ const settingDefs = new Map();
    as a player, so a macro that relays writes to the GM doesn't take its "no
    GM logged in" branch. */
 const PREVIEW_PLAYER = globalThis.__previewPlayer ?? null;
-const userList = [{ id: "gm", isGM: true, active: true, character: null, name: "Gamemaster" }];
+
+/* A User a macro can hang a flag on. Setting one fires `updateUser` with the
+   same `changes` shape Foundry sends, which is how a player-facing board
+   relays a request to the GM without a registered socket namespace. */
+function stubUser(spec) {
+  const u = { flags: {}, ...spec };
+  u.getFlag = (scope, key) => u.flags?.[scope]?.[key];
+  u.setFlag = async (scope, key, value) => {
+    (u.flags[scope] ??= {})[key] = value;
+    globalThis.Hooks.call("updateUser", u, { flags: { [scope]: { [key]: value } } }, {}, u.id);
+    return u;
+  };
+  u.unsetFlag = async (scope, key) => { delete u.flags?.[scope]?.[key]; return u; };
+  return u;
+}
+
+const userList = [stubUser({ id: "gm", isGM: true, active: true, character: null, name: "Gamemaster" })];
 if (PREVIEW_PLAYER) {
-  userList.push({ id: "player", isGM: false, active: true, name: "Player",
-                  character: ACTORS.find(a => a.id === PREVIEW_PLAYER) ?? null });
+  userList.push(stubUser({ id: "player", isGM: false, active: true, name: "Player",
+                           character: ACTORS.find(a => a.id === PREVIEW_PLAYER) ?? null }));
 }
 userList.get = (id) => userList.find(u => u.id === id) ?? null;
 Object.defineProperty(userList, "activeGM", {
   get: () => userList.find(u => u.isGM && u.active) ?? null
 });
 
-/* Looped straight back, so a macro that relays a write to the GM and waits for
-   it to come round again can be exercised with one browser open. */
+/* Looped back, but only for a namespace the real server would actually relay.
+   A socket namespace has to be registered by an installed package, so
+   `module.<id>` works only for an active module and `system.<id>` only for the
+   active system; anything else is accepted by emit and silently dropped. That
+   silence is worth reproducing — a macro that invents a namespace looks like it
+   works on the sender's own screen, and this is the harness that should catch
+   it rather than a live table. */
 const socketHandlers = new Map();
+const socketRelays = (event) => {
+  const [kind, id] = String(event).split(".");
+  if (kind === "system") return id === globalThis.game?.system?.id;
+  if (kind === "module") return !!globalThis.game?.modules?.get(id)?.active;
+  return false;
+};
 const socketStub = {
   on: (event, fn) => { socketHandlers.set(event, fn); },
   emit: (event, data) => {
+    if (!socketRelays(event)) {
+      console.warn("[socket] dropped —", event,
+        "is not a namespace any installed package registered. Foundry accepts the emit and relays nothing.");
+      return;
+    }
     console.log("[socket]", event, data);
     const fn = socketHandlers.get(event);
     if (fn) setTimeout(() => fn(data), 0);
@@ -529,6 +564,10 @@ globalThis.game = {
     : userList.find(u => u.id === "gm"),
   users: userList,
   socket: socketStub,
+  /* No modules installed unless a fixture asks for the Sequencer stand-in,
+     which is what makes the socket namespace check above mean something. */
+  system: { id: "pf2e", title: "Pathfinder Second Edition" },
+  modules: { get: () => ({ active: false }) },
   actors: actorCollection,
   journal: journalCollection,
   playlists: playlistCollection,

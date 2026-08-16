@@ -53,9 +53,10 @@ Sequencer installed" branch needs testing too.
 
 ## Testing a macro the players run
 
-`game.socket` is looped straight back, so a macro that relays a write to the GM and waits for
-it to return can be exercised with one browser open. The sample party carries proficiency
-ranks, Lore items, and `testUserPermission`, which is enough to drive the player path by hand:
+A player's relay goes through `game.user.setFlag`, which the stub models by firing `updateUser`
+with the same `changes` shape Foundry sends, so a macro that relays a write to the GM can be
+exercised with one browser open. The sample party carries proficiency ranks, Lore items, and
+`testUserPermission`, which is enough to drive the player path by hand:
 reassign `game.user` to a non-GM who owns one actor, re-evaluate the macro, and the read-only
 branches, the ownership checks, and the relay all run for real.
 
