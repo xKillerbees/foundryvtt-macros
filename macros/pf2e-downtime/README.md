@@ -60,6 +60,14 @@ and what the party will be richer by at the end of it.
   level, the master and legendary ranks that level 9 and 17 items need, and anything uncommon or
   rare needing access before you can make one
 - A chat card for one character's plan or the whole party's
+- Every period carries a **creation timestamp** — the real-world clock and the game's own
+  calendar (read from SimpleCalendar where it's installed) — shown to the players in the top
+  bar and stamped onto the posted chat card, so the party's downtime has a historical record.
+  A period opened before this feature existed shows a plain dash rather than a made-up date
+- A **period ledger for the GM**: the "Periods" button opens a list of every period, in order,
+  with its days, its rows, and its creation stamp. The GM can jump straight to any of them, add
+  the next one explicitly, and remove the ones that got there by accident — an empty period (the
+  usual duplicate) deletes on the spot, and one full of plans asks first
 - A **request the next period** button for players — always visible to a party member. The
   calendar is the GM's, so a player who's done with this stretch asks for the next one instead
   of reaching for the ▶; the request always names the next period that doesn't exist yet, and
@@ -120,6 +128,8 @@ fires `updateUser` on every client.
   and the ownership check is re-run on the GM's side rather than trusted from the sender
 - The calendar — period name, days available, settlement level — and the house-rule switches are
   the GM's, on both sides
+- The period ledger is the GM's too: viewing every period, jumping between them, and removing
+  the accidental duplicates happens on the GM's side, and a remove is refused from a player
 - A player can **request the next period** instead of changing the calendar. The button
   relays to the GM's client — the sender is read from the hook, never the payload — and the
   GM gets a banner naming who asked, a one-click "Open period N", and a chat notice.

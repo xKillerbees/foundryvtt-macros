@@ -24,7 +24,8 @@ const MACRO = path.resolve(__dirname, "../../../macros/pf2e-downtime/downtime-pl
 const REQ_SCOPE = "world";
 const REQ_KEY = "pf2eDowntimeRequest";
 const EXPOSE = ["OPS", "blankState", "blankRow", "blankPeriod", "planFor", "studyFor",
-  "Planner", "detectPCs", "loadState", "registerSetting", "uid", "ACTS", "HOUSE", "STUDY"];
+  "Planner", "detectPCs", "loadState", "registerSetting", "uid", "ACTS", "HOUSE", "STUDY",
+  "fmtReal", "worldDate", "stampPeriod", "newPeriod"];
 
 let failures = 0;
 function check(label, cond, detail) {
@@ -38,7 +39,7 @@ function check(label, cond, detail) {
   /* ============ 1. player side: id minting + reducer determinism ========== */
   console.log("== 1. Row id must be identical on both sides of the relay ==");
   let { exports: X } = await loadMacro(MACRO, { user: "player", expose: EXPOSE });
-  const { OPS, blankState, Planner, detectPCs } = X;
+  const { OPS, blankState, Planner, detectPCs, fmtReal, worldDate, stampPeriod, newPeriod } = X;
 
   const playerPlanner = new Planner(foundry.utils.deepClone(blankState()));
   playerPlanner.pcs = detectPCs();
@@ -148,6 +149,11 @@ function check(label, cond, detail) {
   await sleep(30);
   check("GM-only setPeriod refused from a player relay", read().period === periodBefore, "period=" + read().period);
 
+  const delBefore = JSON.stringify(read().periods);
+  playerUser.setFlag(REQ_SCOPE, REQ_KEY, { op: "delPeriod", data: { n: 1 }, t: 5 });
+  await sleep(30);
+  check("GM-only delPeriod refused from a player relay", JSON.stringify(read().periods) === delBefore);
+
   /* ============ 5. a player requests the next period ============ */
   console.log("\n== 5. A player requests the next period; the GM opens it ==");
   const chatBefore = (globalThis.__chat ?? []).length;
@@ -194,6 +200,33 @@ function check(label, cond, detail) {
   check("request from an older period targets the newest + 1",
     !back.requests?.["2"] && back.requests?.["3"]?.["player"] === "Aiko",
     JSON.stringify(back.requests));
+
+  /* ============ 6. period management: stamps + deletion ============ */
+  console.log("\n== 6. Period management: creation stamps and deletion ==");
+  const s6 = blankState();
+  check("a fresh period 1 is unstamped (predates the feature)", !s6.periods["1"].created);
+
+  stampPeriod(s6.periods["1"]);
+  check("stampPeriod adds a real-world stamp", !!s6.periods["1"].created?.real);
+  check("stamp is a wall-clock string", /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(s6.periods["1"].created.real));
+  check("stamp carries a numeric ts", Number.isFinite(s6.periods["1"].created.ts));
+  check("no calendar module -> no in-game date", s6.periods["1"].created.world === null);
+
+  const np = newPeriod(7);
+  check("newPeriod stamps the period it creates", !!np.created && !!np.created.real && np.label === "Downtime 7");
+
+  OPS.setPeriod(s6, { n: 2 });
+  check("setPeriod stamps a newly opened period", !!s6.periods["2"].created?.real);
+  OPS.setPeriod(s6, { n: 3 });
+  OPS.delPeriod(s6, { n: 3 });
+  check("delPeriod removes the period", !s6.periods["3"] && !!s6.periods["2"] && !!s6.periods["1"]);
+  OPS.delPeriod(s6, { n: 2 });
+  check("deleting the current period jumps to the highest remaining", s6.period === 1);
+  OPS.delPeriod(s6, { n: 1 });
+  check("deleting the last period re-creates a fresh period 1", !!s6.periods["1"] && s6.period === 1);
+  check("re-created period 1 is stamped", !!s6.periods["1"].created);
+  check("fmtReal renders a stable wall-clock string", /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(fmtReal(Date.now())));
+  check("worldDate is null with no calendar module", worldDate() === null);
 
   console.log("\n" + (failures === 0 ? "ALL CHECKS PASSED" : failures + " CHECK(S) FAILED"));
   process.exit(failures === 0 ? 0 : 1);

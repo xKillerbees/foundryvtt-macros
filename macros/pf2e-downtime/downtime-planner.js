@@ -5,11 +5,13 @@
    Paste this whole file into a new Macro (Type: Script) and execute it.
    Give the macro to your players — this one is meant to be run by them.
 
-   Players plan their own character's downtime; the GM owns the calendar.
-   State lives in a hidden world setting. Players can't write world settings,
-   so a player's edits are relayed through a flag on their own User document to
-   the GM's client, which validates ownership and performs the write. No module
-   needs installing.
+   Players plan their own character's downtime; the GM owns the calendar — and
+   with it the period ledger (open, review, and remove any period) and the
+   creation stamp every period carries, in both the real world and the game's
+   own calendar. State lives in a hidden world setting. Players can't write
+   world settings, so a player's edits are relayed through a flag on their own
+   User document to the GM's client, which validates ownership and performs the
+   write. No module needs installing.
 
    Everything here is rules as written by default. Three optional house rules
    ship switched off, and only the GM can turn them on:
@@ -536,9 +538,70 @@ const myPCs = (pcs) => pcs.filter(p => ownsActor(game.user, p.actorId));
 
 /* ------------------------------------------------------------------- state */
 
+/* A period carries the moment it was opened, in both the real world and the
+   game's own calendar, for the historical record. The real-world stamp is a
+   plain wall-clock string; the in-game one reads SimpleCalendar when that
+   module is installed (the de-facto standard for PF2e games) and is simply
+   left out of worlds with no calendar module. Periods opened before this
+   feature shipped carry neither. */
+
+function fmtReal(ms) {
+  const d = new Date(ms);
+  if (Number.isNaN(d.getTime())) return null;
+  const p = (x) => String(x).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+/* The game's current date, through SimpleCalendar's API where it's present. */
+function worldDate() {
+  try {
+    const api = globalThis.SimpleCalendar?.api;
+    if (!api) return null;
+    if (typeof api.currentDateTime === "function") {
+      const d = api.currentDateTime();
+      if (!d) return null;
+      /* v2 returns a DateTime with a ready-made display string. */
+      if (d.display?.date) {
+        const t = d.display.time && d.display.time !== "00:00:00" ? " " + d.display.time : "";
+        return d.display.date + t;
+      }
+      /* ...and a numeric shape (year/month/day/hour/minute) as a fallback. */
+      if (d.year != null) {
+        const p = (x) => String(x).padStart(2, "0");
+        let s = `${d.year}-${p(d.month ?? 1)}-${p(d.day ?? 1)}`;
+        if (d.hour != null) s += ` ${p(d.hour)}:${p(d.minute ?? 0)}`;
+        return s;
+      }
+    } else if (typeof api.currentDateTimeDisplay === "function") {
+      const x = api.currentDateTimeDisplay();
+      if (x?.date) return x.date + (x.time && x.time !== "00:00:00" ? " " + x.time : "");
+    }
+  } catch { /* no calendar module — fine */ }
+  return null;
+}
+
+function now() {
+  const ts = Date.now();
+  return { ts, real: fmtReal(ts), world: worldDate() };
+}
+
+/* Stamp a period the moment it first exists, and never again: the stamp is the
+   period's birth, so editing it must not move it. */
+function stampPeriod(p) {
+  if (p && !p.created) p.created = now();
+}
+
 function blankPeriod(n) {
   return { label: `Downtime ${n}`, days: 7, plans: {} };
 }
+
+/* A period that has just come into existence, stamped with when it opened. */
+function newPeriod(n) {
+  const p = blankPeriod(n);
+  stampPeriod(p);
+  return p;
+}
+
 function blankState() {
   return {
     v: 1,
@@ -546,6 +609,9 @@ function blankState() {
     settlement: 5,
     /* Rules as written until a GM opts in. */
     house: Object.fromEntries(Object.keys(HOUSE).map(k => [k, false])),
+    /* The initial period is unstamped on purpose: blankState is also the merge
+       base in loadState, and a live stamp there would re-date every legacy
+       period each load. The boot stamps period 1 once, when the world is new. */
     periods: { 1: blankPeriod(1) },
     study: {},
     /* Period requests: { <period number>: { <userId>: <name> } }. */
@@ -609,7 +675,7 @@ const loadState = () => {
    GM runs it there, so there is exactly one implementation of each rule. */
 
 function planFor(s, actorId) {
-  const p = s.periods[String(s.period)] ??= blankPeriod(s.period);
+  const p = s.periods[String(s.period)] ??= newPeriod(s.period);
   return (p.plans[actorId] ??= { rows: [] });
 }
 function studyFor(s, actorId) {
@@ -688,15 +754,31 @@ const OPS = {
   /* GM only, below. */
   setPeriod(s, { n }) {
     s.period = Math.max(1, Math.round(n));
-    s.periods[String(s.period)] ??= blankPeriod(s.period);
+    s.periods[String(s.period)] ??= newPeriod(s.period);
     /* A request is satisfied the moment its period exists. */
     const reqs = s.requests ?? {};
     for (const k of Object.keys(reqs)) if (Number(k) <= s.period) delete reqs[k];
   },
   setPeriodMeta(s, { label, days }) {
-    const p = s.periods[String(s.period)] ??= blankPeriod(s.period);
+    const p = s.periods[String(s.period)] ??= newPeriod(s.period);
     if (label != null) p.label = String(label).slice(0, 60);
     if (days != null) p.days = Math.max(0, Math.min(365, Math.round(days)));
+  },
+  /* GM only — remove a period entirely. Duplicates are the usual reason: the
+     GM navigated forward once too often and empty periods sit between the real
+     ones. Removing the current period jumps the view to the highest that
+     remains; removing the last one re-creates a fresh period 1 rather than
+     leaving the planner with no period at all. */
+  delPeriod(s, { n }) {
+    n = Math.max(1, Math.round(n));
+    delete s.periods[String(n)];
+    const nums = Object.keys(s.periods).map(Number).filter(Number.isFinite);
+    if (!nums.length) {
+      s.periods["1"] = newPeriod(1);
+      s.period = 1;
+    } else if (s.period === n) {
+      s.period = Math.max(...nums);
+    }
   },
   setSettlement(s, { level }) {
     s.settlement = Math.max(0, Math.min(25, Math.round(level)));
@@ -706,7 +788,7 @@ const OPS = {
     (s.house ??= {})[key] = !!on;
   }
 };
-const GM_ONLY = new Set(["setPeriod", "setPeriodMeta", "setSettlement", "setHouse"]);
+const GM_ONLY = new Set(["setPeriod", "setPeriodMeta", "delPeriod", "setSettlement", "setHouse"]);
 
 const isPrimaryGM = () => {
   const gm = game.users.activeGM;
@@ -720,7 +802,7 @@ const anyGMOnline = () => game.users.some(u => u.isGM && u.active);
 class Planner {
   constructor(state) { this.state = state; }
   get s() { return this.state; }
-  get period() { return this.s.periods[String(this.s.period)] ??= blankPeriod(this.s.period); }
+  get period() { return this.s.periods[String(this.s.period)] ??= newPeriod(this.s.period); }
   get isGM() { return game.user.isGM; }
 
   /* The single gate every optional rule reads. Off unless a GM said otherwise,
@@ -733,6 +815,14 @@ class Planner {
   rows(actorId) { return this.period.plans?.[actorId]?.rows ?? []; }
   held(actorId) { return this.s.study?.[actorId]?.held ?? null; }
   canEdit(actorId) { return this.isGM || ownsActor(game.user, actorId); }
+
+  /* A period's creation stamp as one plain string (for chat cards): the
+     real-world clock and the in-game calendar, whichever are present. */
+  stampText(p) {
+    const c = p?.created;
+    if (!c) return "";
+    return [c.real, c.world].filter(Boolean).join(" · ");
+  }
 
   /* One entry point for every change. The GM writes; a player relays. */
   async apply(op, data) {
@@ -1006,6 +1096,7 @@ class Planner {
           <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:${D.muted}">Downtime plan</div>
           <div style="font-size:15px;font-weight:600">${esc(this.period.label)}</div>
           <div style="font-size:11px;color:${D.muted}">${days2(this.period.days)} · work available up to level ${this.s.settlement}</div>
+          ${this.stampText(this.period) ? `<div style="font-size:10px;color:${D.muted}">Created ${esc(this.stampText(this.period))}</div>` : ""}
         </div>
         <table style="width:100%;border-collapse:collapse">${body}</table>
         ${gold ? `<div style="margin-top:6px;padding-top:5px;border-top:1px solid rgba(0,0,0,.12);
@@ -1016,6 +1107,26 @@ class Planner {
 }
 
 const slugify = (s) => String(s ?? "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+/* A yes/no confirm that works on every supported Foundry version: DialogV2
+   where it exists (v12+), the deprecated Dialog.confirm elsewhere (v11). Both
+   resolve to a boolean. Closing the dialog is treated as "no" — deletion is
+   the destructive branch, so the safe default is to not. */
+async function confirmDialog(content, title) {
+  title = title ?? "Are you sure?";
+  const V2 = foundry.applications?.api?.DialogV2;
+  if (V2?.confirm) {
+    try {
+      return !!(await V2.confirm({ window: { title }, content, yes: { label: "Remove" }, no: { label: "Keep" } }));
+    } catch { return false; }
+  }
+  try {
+    return !!(await Dialog.confirm({ title, content, defaultYes: false }));
+  } catch (err) {
+    console.warn("Downtime Planner — confirm dialog unavailable, treating as \"no\".", err);
+    return false;
+  }
+}
 
 /* --------------------------------------------------------------- interface */
 const AppV2 = foundry.applications?.api?.ApplicationV2;
@@ -1313,26 +1424,73 @@ class DowntimeApp extends BaseApp {
     }).join("")}</div>`;
   }
 
+  /* The period's creation stamp, labelled for the UI. Players see this too —
+     the stamp is part of the period's record, not a GM-only detail. */
+  stampHtml(p, { compact = false } = {}) {
+    const c = p?.created;
+    if (!c?.real && !c?.world) {
+      return `<span class="stamp none" title="This period was opened before timestamps were tracked.">${compact ? "—" : "Created —"}</span>`;
+    }
+    const bits = [];
+    if (c.real) bits.push(`<span class="sr" title="Real-world clock">${esc(c.real)}</span>`);
+    if (c.world) bits.push(`<span class="sw" title="In-game calendar">${esc(c.world)}</span>`);
+    return `<span class="stamp" title="When this period was created">${compact ? "" : "Created "}${bits.join(" · ")}</span>`;
+  }
+
   gmBar() {
     const P = this.planner;
     if (!P.isGM) {
       return `<div class="gmbar reading">
         <span><b>${esc(P.period.label)}</b> — ${days2(P.period.days)}</span>
         <span>Work available up to level ${P.s.settlement}</span>
+        ${this.stampHtml(P.period)}
         ${anyGMOnline() ? "" : `<span class="warn">No GM online — changes won't save.</span>`}
       </div>`;
     }
     return `<div class="gmbar">
-      <label class="fld wide"><span>Period</span>
-        <input type="text" value="${esc(P.period.label)}" data-act="plabel"></label>
-      <label class="fld num"><span>Days</span>
-        <input type="number" min="0" max="365" value="${P.period.days}" data-act="pdays"></label>
-      <label class="fld num"><span>Settlement level</span>
-        <input type="number" min="0" max="25" value="${P.s.settlement}" data-act="settle"></label>
-      <span class="spacer"></span>
-      <button type="button" data-act="period" data-n="-1" title="Previous period">◀</button>
-      <span class="pnum">${P.s.period}</span>
-      <button type="button" data-act="period" data-n="1" title="Next period">▶</button>
+      <div class="gmrow">
+        <label class="fld wide"><span>Period</span>
+          <input type="text" value="${esc(P.period.label)}" data-act="plabel"></label>
+        <label class="fld num"><span>Days</span>
+          <input type="number" min="0" max="365" value="${P.period.days}" data-act="pdays"></label>
+        <label class="fld num"><span>Settlement level</span>
+          <input type="number" min="0" max="25" value="${P.s.settlement}" data-act="settle"></label>
+        <span class="spacer"></span>
+        <button type="button" data-act="manage" class="${this.showPeriods ? "on" : ""}">
+          <i class="fa-solid fa-list"></i> Periods</button>
+        <button type="button" data-act="period" data-n="-1" title="Previous period">◀</button>
+        <span class="pnum">${P.s.period}</span>
+        <button type="button" data-act="period" data-n="1" title="Next period">▶</button>
+      </div>
+      <div class="gmsub">${this.stampHtml(P.period)}</div>
+    </div>`;
+  }
+
+  /* The GM's period ledger: every period, in order, with its stamp, a jump
+     button, and a way to remove the ones that got there by accident. Players
+     never see this — the list is the GM's, like the calendar itself. */
+  periodsPanel() {
+    const P = this.planner;
+    if (!P.isGM || !this.showPeriods) return "";
+    const nums = Object.keys(P.s.periods ?? {}).map(Number).filter(Number.isFinite).sort((a, b) => a - b);
+    const rows = nums.map(n => {
+      const p = P.s.periods[String(n)];
+      const count = Object.values(p.plans ?? {}).reduce((a, pl) => a + (pl.rows?.length ?? 0), 0);
+      return `<div class="prow ${n === P.s.period ? "cur" : ""}">
+        <button type="button" class="pgo" data-act="goperiod" data-n="${n}" title="Open period ${n}">
+          <span class="pn">${n}</span><span class="pl">${esc(p.label)}</span></button>
+        <span class="pmeta">${days2(p.days)}${count ? ` · ${count} ${count === 1 ? "row" : "rows"}` : ""}</span>
+        <span class="pstamp">${this.stampHtml(p, { compact: true })}</span>
+        <button type="button" class="x" data-act="delperiod" data-n="${n}"
+                title="Remove this period" ${nums.length === 1 ? "disabled" : ""}>✕</button>
+      </div>`;
+    }).join("");
+    return `<div class="periods">
+      <div class="phead">
+        <span>Periods — ${nums.length}</span>
+        <button type="button" data-act="newperiod" data-n="${nextPeriodNum(P.s)}">+ New period</button>
+      </div>
+      ${rows || `<p class="muted">No periods yet.</p>`}
     </div>`;
   }
 
@@ -1461,6 +1619,7 @@ class DowntimeApp extends BaseApp {
       ${this.styles()}
       <div class="dtp">
         ${this.gmBar()}
+        ${this.periodsPanel()}
         ${this.requestBar()}
         ${this.houseBar()}
         ${this.pcStrip()}
@@ -1569,6 +1728,11 @@ class DowntimeApp extends BaseApp {
           case "undostudy": return P.apply("undoStudy", { actorId: el.dataset.pc });
           case "period": return P.apply("setPeriod", { n: P.s.period + Number(el.dataset.n) });
           case "newperiod": return P.apply("setPeriod", { n: Number(el.dataset.n) });
+          case "manage":
+            this.showPeriods = !this.showPeriods; return this.render();
+          case "goperiod":
+            this.showPeriods = false; return P.apply("setPeriod", { n: Number(el.dataset.n) });
+          case "delperiod": return this.deletePeriod(Number(el.dataset.n));
           case "requestperiod":
             return P.apply("requestPeriod", { by: game.user.id, name: game.user.character?.name ?? game.user.name });
           case "cancelrequest":
@@ -1607,6 +1771,24 @@ class DowntimeApp extends BaseApp {
     const facts = itemFacts(doc, game.actors.get(pc.actorId));
     await P.apply("setCraft", { actorId: pc.actorId, rowId, item: facts });
     ui.notifications.info(`${facts.name} — level ${facts.level}, ${facts.price} gp.`);
+  }
+
+  /* Removing a period is the GM's alone, and it is the one destructive action
+     on the board — a period full of plans confirms before it goes, an empty one
+     (the usual duplicate) is just removed. */
+  async deletePeriod(n) {
+    const P = this.planner;
+    const p = P.s.periods?.[String(n)];
+    if (!p) return;
+    const count = Object.values(p.plans ?? {}).reduce((a, pl) => a + (pl.rows?.length ?? 0), 0);
+    if (count) {
+      const ok = await confirmDialog(
+        `<p>Remove period ${n} — “${esc(p.label)}”? It holds ${count} ${count === 1 ? "row" : "rows"} of plans.</p>`,
+        "Remove period"
+      );
+      if (!ok) return;
+    }
+    return P.apply("delPeriod", { n });
   }
 
   /* Roll through the actor's own statistic where the system offers one, so the
@@ -1688,13 +1870,39 @@ class DowntimeApp extends BaseApp {
       .dtp .spacer { flex:1; }
       .dtp .empty { padding:2rem; text-align:center; }
 
-      .dtp .gmbar { display:flex; align-items:flex-end; gap:.5rem; flex-wrap:wrap;
+      .dtp .gmbar { display:flex; flex-direction:column; gap:.35rem; align-items:stretch;
                     background:var(--card); border:1px solid var(--line); border-radius:4px;
                     padding:.4rem .5rem; margin-bottom:.5rem; }
-      .dtp .gmbar.reading { align-items:center; font-size:.82rem; color:var(--muted); gap:1rem; }
+      .dtp .gmbar .gmrow { display:flex; align-items:flex-end; gap:.5rem; flex-wrap:wrap; }
+      .dtp .gmbar .gmsub { font-size:.72rem; color:var(--muted); }
+      .dtp .gmbar.reading { flex-direction:row; align-items:center; flex-wrap:wrap;
+                            font-size:.82rem; color:var(--muted); gap:1rem; }
       .dtp .gmbar.reading b { color:var(--ink); }
       .dtp .gmbar .warn { color:var(--rust); font-weight:600; }
+      .dtp .gmbar button.on { border-color:var(--slate); box-shadow:inset 0 0 0 1px var(--slate); }
       .dtp .pnum { font-size:1rem; font-weight:600; min-width:1.4rem; text-align:center; }
+
+      .dtp .stamp { font-size:.72rem; color:var(--muted); }
+      .dtp .stamp.none { font-style:italic; }
+      .dtp .stamp .sr { color:var(--slate); }
+      .dtp .stamp .sw { color:var(--teal); }
+
+      .dtp .periods { background:var(--card); border:1px solid var(--line); border-left:3px solid var(--slate);
+                       border-radius:4px; padding:.4rem .5rem; margin-bottom:.5rem; }
+      .dtp .periods .phead { display:flex; align-items:center; gap:.5rem; margin-bottom:.25rem; }
+      .dtp .periods .phead > span { font-size:.66rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+      .dtp .periods .phead button { margin-left:auto; font-size:.72rem; }
+      .dtp .prow { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; padding:.2rem 0; }
+      .dtp .prow + .prow { border-top:1px solid var(--line); }
+      .dtp .prow.cur { background:var(--stripe); border-left:3px solid var(--ember); padding-left:.4rem; border-radius:3px; }
+      .dtp .prow .pgo { display:inline-flex; align-items:baseline; gap:.4rem; padding:.1rem .3rem;
+                         border:none; background:transparent; font-size:.8rem; }
+      .dtp .prow .pgo .pn { font-weight:600; color:var(--ember); min-width:1.1rem; text-align:right; }
+      .dtp .prow .pgo .pl { font-weight:600; color:var(--ink); }
+      .dtp .prow .pmeta { font-size:.72rem; color:var(--muted); }
+      .dtp .prow .pstamp { margin-left:auto; }
+      .dtp .prow .x { color:var(--muted); padding:.1rem .3rem; }
+      .dtp .prow .x:hover:not(:disabled) { color:var(--rust); }
 
       .dtp .fld { display:flex; flex-direction:column; gap:.15rem; flex:1 1 8rem; min-width:0; }
       .dtp .fld > span { font-size:.66rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
@@ -1884,6 +2092,8 @@ if (AppV2) {
 
   let state = loadState();
   if (game.user.isGM && !game.settings.get(SETTING_NS, SETTING_KEY)) {
+    /* First run in this world: the initial period is born now. */
+    stampPeriod(state.periods["1"]);
     await game.settings.set(SETTING_NS, SETTING_KEY, state);
   }
 

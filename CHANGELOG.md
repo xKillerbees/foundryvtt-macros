@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-08-15 21:52
+
+### Added
+- Downtime Planner: the GM can now manage periods. A "Periods" button in the calendar bar opens
+  a ledger of every period in order, each with its days, its row count, and its creation stamp;
+  the GM can jump straight to any of them, add the next one explicitly, and remove the ones that
+  got there by accident (navigating forward once too often leaves empty periods sitting between
+  the real ones). Removing the current period jumps the view to the highest remaining one, and
+  removing the last one re-creates a fresh period 1 rather than leaving the planner with none. An
+  empty period deletes on the spot; one full of plans asks for confirmation first, and the remove
+  is a GM-only op refused from a player relay
+- Downtime Planner: every period now records when it was created, in both the real world and the
+  game's own calendar — the in-game date is read from SimpleCalendar where that module is
+  installed, and left out of worlds without one. The stamp shows in the top bar for the GM and
+  the players alike, and is stamped onto the posted chat card for the historical record. Periods
+  opened before this feature carry neither and show a plain dash rather than a made-up date
+
 ## 2026-08-15 21:35
 
 ### Fixed
