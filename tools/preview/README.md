@@ -64,6 +64,25 @@ Set `__player: "pc1"` on a fixture to boot the whole preview that way instead �
 user becomes a player who owns only that actor, and a GM stays active so the "no GM logged in"
 branch doesn't fire. That's what lets `capture.py` screenshot a player-facing board.
 
+## Testing the player→GM relay in Node
+
+The browser harness can't exercise a two-client relay — one browser is one `game.user`, and its
+`settings.set` doesn't broadcast `updateSetting`. The relay (a player's edits reaching the GM's
+world-setting write, and the GM's ownership re-check) is the part that bites silently, so it has
+its own Node harness that loads a real macro against a stubbed Foundry and drives the relay both
+ways:
+
+```bash
+node tools/preview/relay-test/test-downtime-planner.js
+```
+
+`relay-test/harness.js` is the stubbed Foundry (actors, users, settings, hooks — no DOM), and
+`loadMacro(path, { user, expose })` evaluates the macro with named top-level identifiers exposed
+on `globalThis.__macro` after its boot IIFE finishes. The test covers the two invariants the relay
+depends on: row ids are minted once and carried through the op, and the GM's handler applies to
+the live state so back-to-back relays see each other. Add a `test-<macro>.js` beside it for any
+new player-facing macro.
+
 ## Testing journal links
 
 The stub ships a small journal directory whose ids follow the Season of Ghosts module's own
