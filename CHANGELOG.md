@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-08-16 01:22
+
+### Added
+- Season of Ghosts: the **No Breath to Cry** winter console — a single GM tool for all of Act 3
+  (Chapters 8–10). The landing tab is the winter clock, which reads and writes the Fall Downtime
+  Tracker's Hope / Food / Security pools live and tracks the population (225 at the start of
+  winter) alongside the weekly attrition, the Unexpected Troubles table, and the depleted-track
+  costs. Chapter 8 carries the three fights of Red Smoke, Gold Eyes, the Mindscape Shift research,
+  and Heh Shan-Bao's mindscape (the chase, the reveal, End of the Dream). Chapter 9 carries the
+  seventy-two-day timeline, the transmigrate research with the kiln / feathers / slats components,
+  and the seance and Interview-with-a-Spider set pieces. Chapter 10 carries the Terror engine and
+  the whole Karahai fortress. The Two Weavers rework seeds in Chapter 9 (the woman in crimson
+  silks, Ren Mei Li's "owed a quarrel") are carried and flagged as rework-only, not printed-book
+  content.
+
 ## 2026-08-15 23:07
 
 ### Fixed

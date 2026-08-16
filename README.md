@@ -5,7 +5,7 @@ manifest, no install step. Open a macro file, copy it, paste it into Foundry, ru
 
 | Collection | System | Foundry | Macros |
 |---|---|---|---|
-| [Season of Ghosts](macros/season-of-ghosts) | PF2e | v11 – v14 | 5 |
+| [Season of Ghosts](macros/season-of-ghosts) | PF2e | v11 – v14 | 6 |
 | [Pathfinder Beginner Box](macros/beginner-box) | PF2e | v11 – v14 | 2 |
 | [PF2e Downtime](macros/pf2e-downtime) | PF2e | v11 – v14 | 1 |
 | [Mark of the Mantis](macros/mark-of-the-mantis) | PF2e | v11 – v14 | 1 |
@@ -27,7 +27,7 @@ macros keep their state in a world setting, so re-pasting doesn't wipe your camp
 
 ## Season of Ghosts
 
-Five GM tools for Paizo's *Season of Ghosts* Adventure Path.
+Six GM tools for Paizo's *Season of Ghosts* Adventure Path.
 Full details in the [collection README](macros/season-of-ghosts).
 
 ### [Fall Downtime Tracker](macros/season-of-ghosts/fall-downtime-tracker.js)
@@ -66,6 +66,19 @@ activity and the escalating events each purification fires, all sixteen areas, a
 aftermath ledger that pushes Hope and Reputation back into the Fall Downtime Tracker.
 
 ![The statue tab of the Ruins of Wisdom console](screenshots/season-of-ghosts/ruins-of-wisdom-console.png)
+
+### [No Breath to Cry Console](macros/season-of-ghosts/no-breath-to-cry-console.js)
+
+The whole of winter — Act 3, Chapters 8–10 — in one window. The landing tab is the winter clock,
+which reads and writes the Fall Downtime Tracker's Hope / Food / Security pools live and tracks the
+population against the weekly attrition. Chapter 8 holds the three fights of Red Smoke, Gold Eyes
+and Heh Shan-Bao's mindscape; Chapter 9 holds the seventy-two-day timeline, the transmigrate
+research, and the seance and Interview-with-a-Spider set pieces; Chapter 10 holds the Terror engine
+and the whole Karahai fortress.
+
+![The winter clock, part way through the season](screenshots/season-of-ghosts/no-breath-to-cry-clock.png)
+
+![The Karahai fortress tab, mid-raid](screenshots/season-of-ghosts/no-breath-to-cry-console.png)
 
 ### [Campaign Status Tracker](macros/season-of-ghosts/campaign-status-tracker.js)
 

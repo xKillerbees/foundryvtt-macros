@@ -11,6 +11,7 @@ Built for **PF2e** on Foundry **v11–v14**.
 | [`first-long-night-console.js`](first-long-night-console.js) | Act 2 Ch. 5, week 3 — the First Long Night festival | Complete |
 | [`enlightened-path-console.js`](enlightened-path-console.js) | Act 2 Ch. 6 — the Wall of Ghosts and the Pilgrim's Path | Complete |
 | [`ruins-of-wisdom-console.js`](ruins-of-wisdom-console.js) | Act 2 Ch. 7 — the ruined Tan Sugi monastery | Complete |
+| [`no-breath-to-cry-console.js`](no-breath-to-cry-console.js) | Act 3 Ch. 8–10 — the whole of winter | Complete |
 | [`campaign-status-tracker.js`](campaign-status-tracker.js) | All four acts — a checklist for the whole AP | Complete |
 
 ## Install
@@ -140,6 +141,38 @@ The ruined Tan Sugi monastery, from the arch at the end of the Path to Kugaptee'
   purification rules, the resting rules, and the act's conclusion
 
 ![The libraries and the sugi tree](../../screenshots/season-of-ghosts/ruins-of-wisdom-grove.png)
+
+### No Breath to Cry
+
+![The winter clock, part way through the season](../../screenshots/season-of-ghosts/no-breath-to-cry-clock.png)
+
+The whole of Act 3 — winter — in one window: the clock and the three chapters.
+
+- **The winter clock** (the landing tab) reads and writes the Fall Downtime Tracker's
+  Hope / Food / Security pools live, so winter's attrition draws down the same pools the rest of
+  the act banked in — one source of truth, and the campaign tracker's rollup stays correct.
+  Population starts at 225 and is tracked against the book's warning that the final number shapes
+  the AP's ending. The weekly attrition (−1d4 Hope, −1 Food, −1 Security), the Unexpected
+  Troubles complication roll, and the depleted-track costs all sit on this one tab.
+- **Chapter 8 — Oblivion of Truth**: the three fights of *Red Smoke, Gold Eyes* at the Cloud Paper
+  House (every trapped NPC, hazard, and rescue reward), the *Mindscape Shift* research, and Heh
+  Shan-Bao's mindscape — the ill omens, the five-obstacle chase, the *Know and Despair* reveal
+  with its full question-and-answer, and *End of the Dream*.
+- **Chapter 9 — Face-to-Face with Death**: the seventy-two-day timeline (all thirteen events plus
+  the three optional ones, each on its book day), the *transmigrate* research with the kiln,
+  heron-feathers, and sakaki-slats components, and the two set pieces — *The Seance* (an influence
+  tracker over Cao Chen, Pan Fenfang, and Sha Guanghao whose results carry into Chapter 10) and
+  *Interview with a Spider* (Ren Mei Li's influence 0–16 with the silver collars at 12).
+- **Chapter 10 — This Place Is Ours**: the Terror engine (the full threshold table and the published
+  Terror menu), the whole Karahai fortress from the village through C22, and the aftermath — the
+  warding bell spared or destroyed, the Eternal Lantern relit, and the preparation-points cash-out
+  that decides Willowshore's fate.
+
+![The Karahai fortress tab, mid-raid](../../screenshots/season-of-ghosts/no-breath-to-cry-console.png)
+
+The **Two Weavers rework** seeds in Chapter 9 — the exorcist's murmur about a woman in crimson
+silks, and Ren Mei Li's "owed a quarrel" warning — are carried as beats flagged *rework-only*, so
+the printed-book content stays distinguishable from the homebrew that pays off in Act 4.
 
 ### Campaign Status Tracker
 

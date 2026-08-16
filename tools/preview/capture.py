@@ -56,6 +56,12 @@ SHOTS = {
     "monastery-grove": (
         "season-of-ghosts/ruins-of-wisdom-console.js", "monastery-grove",
         "season-of-ghosts/ruins-of-wisdom-grove.png"),
+    "winter": (
+        "season-of-ghosts/no-breath-to-cry-console.js", "winter",
+        "season-of-ghosts/no-breath-to-cry-console.png"),
+    "winter-clock": (
+        "season-of-ghosts/no-breath-to-cry-console.js", "winter-clock",
+        "season-of-ghosts/no-breath-to-cry-clock.png"),
     "campaign": (
         "season-of-ghosts/campaign-status-tracker.js", "campaign",
         "season-of-ghosts/campaign-status-tracker.png"),

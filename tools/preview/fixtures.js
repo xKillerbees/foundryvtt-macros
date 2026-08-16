@@ -572,5 +572,148 @@ globalThis.FIXTURES = {
       shrines: { d1: { cleared: true, slept: true }, d2: {}, d3: {} },
       xp: 280
     }
+  },
+
+  /* No Breath to Cry, mid-winter: the clock running, research part way on both
+     rituals, and Chapter 10's Terror climbing as the party works the fortress. */
+  "winter": {
+    "world.sogFallDowntime": {
+      week: 6,
+      pools: { hope: 5, food: 3, security: 2, restoration: 5 },
+      rep: { southbank: 2, northridge: 1 }
+    },
+    "world.sogWinter": {
+      tab: "ch10",
+      ctab: { ch8: "events", ch9: "timeline", ch10: "fortress" },
+      week: 6,
+      population: 208,
+      rp: { ch8: 8, ch9: 6 },
+      components: { kiln: true, feathers: true, slats: false },
+      terror: 4,
+      xp: 540
+    }
+  },
+
+  /* The landing view: the winter clock, with the pools live from the downtime
+     tracker and the attrition/complication tables front and centre. */
+  "winter-clock": {
+    "world.sogFallDowntime": {
+      week: 6,
+      pools: { hope: 5, food: 3, security: 2, restoration: 5 },
+      rep: { southbank: 2, northridge: 1 }
+    },
+    "world.sogWinter": {
+      tab: "clock",
+      week: 6,
+      population: 208,
+      terror: 4,
+      xp: 540
+    }
+  },
+
+  /* Chapter 8's mindscape: part way through the dream, the governor run to
+     ground, several obstacles behind them. */
+  "winter-dream": {
+    "world.sogFallDowntime": {
+      week: 2,
+      pools: { hope: 9, food: 5, security: 4, restoration: 5 },
+      rep: { southbank: 2, northridge: 1 }
+    },
+    "world.sogWinter": {
+      tab: "ch8",
+      ctab: { ch8: "dream", ch9: "timeline", ch10: "terror" },
+      week: 2,
+      population: 221,
+      rp: { ch8: 8, ch9: 0 },
+      xp: 180
+    }
+  },
+
+  /* Chapter 9's set pieces: the seance resolved enough to settle Cao Chen, and
+     the interview with the jorogumo princess under way. */
+  "winter-seance": {
+    "world.sogFallDowntime": {
+      week: 9,
+      pools: { hope: 6, food: 2, security: 3, restoration: 5 },
+      rep: { southbank: 2, northridge: 1 }
+    },
+    "world.sogWinter": {
+      tab: "ch9",
+      ctab: { ch8: "events", ch9: "pieces", ch10: "terror" },
+      week: 9,
+      population: 215,
+      rp: { ch8: 8, ch9: 8 },
+      components: { kiln: true, feathers: true, slats: true },
+      influence: { chen: 4 },
+      xp: 700
+    }
+  },
+
+  /* Chapter 10's Terror engine, mid-raid, the table lit up at 4. */
+  "winter-terror": {
+    "world.sogFallDowntime": {
+      week: 10,
+      pools: { hope: 4, food: 1, security: 2, restoration: 5 },
+      rep: { southbank: 2, northridge: 1 }
+    },
+    "world.sogWinter": {
+      tab: "ch10",
+      ctab: { ch8: "events", ch9: "timeline", ch10: "terror" },
+      week: 10,
+      population: 212,
+      terror: 4,
+      xp: 800
+    }
+  },
+
+  /* Chapter 8's opening: the three fights and the rescue ledger. */
+  "winter-events": {
+    "world.sogFallDowntime": {
+      week: 1,
+      pools: { hope: 9, food: 5, security: 4, restoration: 5 },
+      rep: { southbank: 2, northridge: 1 }
+    },
+    "world.sogWinter": {
+      tab: "ch8",
+      ctab: { ch8: "events", ch9: "timeline", ch10: "terror" },
+      week: 1,
+      population: 223,
+      xp: 120
+    }
+  },
+
+  /* Chapter 9's research: the transmigrate ritual, components gathered. */
+  "winter-research": {
+    "world.sogFallDowntime": {
+      week: 9,
+      pools: { hope: 6, food: 2, security: 3, restoration: 5 },
+      rep: { southbank: 2, northridge: 1 }
+    },
+    "world.sogWinter": {
+      tab: "ch9",
+      ctab: { ch8: "events", ch9: "research", ch10: "terror" },
+      week: 9,
+      population: 215,
+      rp: { ch8: 8, ch9: 8 },
+      components: { kiln: true, feathers: true, slats: false },
+      xp: 700
+    }
+  },
+
+  /* Chapter 8's research: Mindscape Shift discovered, Softened Death to hand. */
+  "winter-ch8research": {
+    "world.sogFallDowntime": {
+      week: 2,
+      pools: { hope: 9, food: 5, security: 4, restoration: 5 },
+      rep: { southbank: 2, northridge: 1 }
+    },
+    "world.sogWinter": {
+      tab: "ch8",
+      ctab: { ch8: "research", ch9: "timeline", ch10: "terror" },
+      week: 2,
+      population: 221,
+      rp: { ch8: 8, ch9: 0 },
+      xp: 300
+    }
   }
 };
