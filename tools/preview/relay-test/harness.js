@@ -135,7 +135,11 @@ const settingDefs = new Map();
 
 /* ---------------------------------------------------------------- globals */
 globalThis.ui = { notifications: { info: () => {}, warn: (m) => console.warn("[warn]", m), error: (m) => console.error("[error]", m) } };
-globalThis.ChatMessage = { getSpeaker: () => ({ alias: "GM" }), create: async () => ({}) };
+globalThis.__chat = [];
+globalThis.ChatMessage = {
+  getSpeaker: () => ({ alias: "GM" }),
+  create: async (data) => { globalThis.__chat.push(data); return {}; }
+};
 globalThis.fromUuid = async () => null;
 
 function buildGame(userId) {

@@ -1905,7 +1905,20 @@ if (AppV2) {
     OPS[req.op](planner.state, req.data);
     await game.settings.set(SETTING_NS, SETTING_KEY, planner.state);
     if (req.op === "requestPeriod") {
-      ui.notifications.info(`${req.data.name} asks for a new downtime period.`);
+      const name = req.data.name;
+      const target = planner.state.period + 1;
+      const label = planner.state.periods[String(target)]?.label ?? `Downtime ${target}`;
+      const D = PALETTES.parchment;
+      ui.notifications.info(`${name} asks for a new downtime period.`);
+      await ChatMessage.create({
+        content: `<div style="background:${D.paper};color:${D.ink};border:1px solid ${D.line};border-radius:4px;padding:6px 10px;font-family:Signika,sans-serif;line-height:1.35">
+          <div style="border-left:3px solid ${D.gold};padding-left:8px">
+            <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:${D.muted}">Downtime</div>
+            <div style="font-size:13px"><b>${esc(name)}</b> asks the GM for a new downtime period — <b>${esc(label)}</b>.</div>
+          </div>
+        </div>`,
+        speaker: { alias: "Downtime" }
+      });
     }
   });
 

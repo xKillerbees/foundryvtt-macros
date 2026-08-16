@@ -150,6 +150,7 @@ function check(label, cond, detail) {
 
   /* ============ 5. a player requests the next period ============ */
   console.log("\n== 5. A player requests the next period; the GM opens it ==");
+  const chatBefore = (globalThis.__chat ?? []).length;
   playerUser.setFlag(REQ_SCOPE, REQ_KEY, { op: "requestPeriod", data: { by: "spoofed", name: "spoofed" }, t: 6 });
   await sleep(30);
   s = read();
@@ -158,6 +159,11 @@ function check(label, cond, detail) {
   check("sender is read from the hook, not the payload",
     s.requests?.["2"]?.["spoofed"] === undefined && Object.values(s.requests?.["2"] ?? {}).length === 1);
   check("a request does not itself change the period", s.period === 1, "period=" + s.period);
+  check("request also lands in chat",
+    (globalThis.__chat ?? []).length === chatBefore + 1 &&
+    /asks the GM/.test(globalThis.__chat[globalThis.__chat.length - 1]?.content ?? "") &&
+    /Aiko/.test(globalThis.__chat[globalThis.__chat.length - 1]?.content ?? ""),
+    JSON.stringify((globalThis.__chat ?? []).map(m => m.content)));
 
   // A repeat request from the same player stays one entry, still the real sender.
   playerUser.setFlag(REQ_SCOPE, REQ_KEY, { op: "requestPeriod", data: { by: "someone-else", name: "Evil" }, t: 7 });
