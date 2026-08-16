@@ -540,11 +540,11 @@ const myPCs = (pcs) => pcs.filter(p => ownsActor(game.user, p.actorId));
 
 /* A period carries the moment it was opened, in both the real world and the
    game's own clock, for the historical record. The real-world stamp is a plain
-   wall-clock string; the in-game one reads SimpleCalendar when that module is
-   installed (the de-facto standard for PF2e games) and otherwise falls back to
-   Foundry's own world clock — the seconds the world time has advanced, rendered
-   "N days, N hours" by the core. A world with neither reads neither, and the
-   period shows a dash. Periods opened before this feature shipped carry none. */
+   wall-clock string; the in-game one reads whichever calendar the world has —
+   SimpleCalendar, then Calendaria, then the PF2e system's own world clock, then
+   Foundry's bare elapsed clock. A world with none of them reads neither, and
+   the period shows a dash. Periods opened before this feature shipped carry
+   none. */
 
 function fmtReal(ms) {
   const d = new Date(ms);
@@ -553,14 +553,18 @@ function fmtReal(ms) {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
-/* The game's current in-game time. SimpleCalendar (the de-facto calendar on
-   PF2e tables) wins when it's installed; a world without it falls back to
-   Foundry's native world clock — `game.time.worldTime`, the seconds the world
-   time has advanced since the world's epoch, rendered "N days, N hours" by
-   `GameTime.getWorldTime`. A world with neither reads null, and the UI shows a
-   dash rather than inventing a date. */
+/* The game's current in-game date, read from whichever calendar source the
+   world actually has, in order of preference:
+     1. SimpleCalendar   — the de-facto calendar module on PF2e tables (v10–v12)
+     2. Calendaria       — the v14 calendar module
+     3. the PF2e system's own world clock — the GM's themed calendar (always
+        present with PF2e; "Moonday, 12 of Abadius, 4722 AR")
+     4. Foundry's bare world clock — `game.time.worldTime` in seconds, rendered
+        "N days, N hours"; a world with no calendar at all
+   A world with none of these reads null, and the UI shows a dash rather than
+   inventing a date. */
 function worldDate() {
-  /* SimpleCalendar first: a real calendar date where one exists. */
+  /* 1. SimpleCalendar. */
   try {
     const api = globalThis.SimpleCalendar?.api;
     if (api) {
@@ -585,15 +589,56 @@ function worldDate() {
         if (x?.date) return x.date + (x.time && x.time !== "00:00:00" ? " " + x.time : "");
       }
     }
-  } catch { /* SimpleCalendar present but throwing — fall through to the world clock */ }
+  } catch { /* SimpleCalendar present but throwing — fall through */ }
 
-  /* No calendar module: read Foundry's native world clock. */
+  /* 2. Calendaria (Foundry v14's calendar module). */
+  try {
+    const ca = globalThis.CALENDARIA?.api;
+    if (ca) {
+      if (typeof ca.formatDate === "function") {
+        const s = ca.formatDate(null, "dateLong");
+        if (typeof s === "string" && s) return s;
+      }
+      if (typeof ca.getCurrentDateTime === "function") {
+        const d = ca.getCurrentDateTime();
+        if (d?.year != null) {
+          const p = (x) => String(x).padStart(2, "0");
+          let s = `${d.year}-${p(d.month ?? 1)}-${p(d.day ?? 1)}`;
+          if (d.hour != null) s += ` ${p(d.hour)}:${p(d.minute ?? 0)}`;
+          return s;
+        }
+      }
+    }
+  } catch { /* Calendaria present but throwing — fall through */ }
+
+  /* 3. The PF2e system's own world clock — a real themed calendar date. */
+  try {
+    const wc = game.pf2e?.worldClock;
+    const t = wc?.worldTime;   /* a luxon DateTime, month/day 1-indexed */
+    if (wc && t && t.isValid !== false) {
+      const p = (x) => String(x).padStart(2, "0");
+      const time = (t.hour || t.minute) ? ` ${p(t.hour)}:${p(t.minute)}` : "";
+      /* The themed, localized names where the getters exist. */
+      if (typeof wc.weekday === "string" && typeof wc.month === "string" &&
+          typeof wc.year === "number" && typeof wc.era === "string" &&
+          Number.isInteger(t.day)) {
+        return `${wc.weekday}, ${t.day} of ${wc.month}, ${wc.year} ${wc.era}${time}`;
+      }
+      /* Numeric fallback off the luxon fields. */
+      if (Number.isInteger(t.year) && Number.isInteger(t.month) && Number.isInteger(t.day)) {
+        return `${t.year}-${p(t.month)}-${p(t.day)}${time}`;
+      }
+    }
+  } catch { /* no usable PF2e world clock — fall through */ }
+
+  /* 4. Foundry's bare world clock: seconds since the world's epoch. */
   try {
     const t = game?.time;
-    if (!t) return null;
-    const secs = Number(t.worldTime ?? t.getCurrentTick?.());
-    if (Number.isFinite(secs) && secs > 0 && typeof t.getWorldTime === "function") {
-      return t.getWorldTime(secs);
+    if (t) {
+      const secs = Number(t.worldTime ?? t.getCurrentTick?.());
+      if (Number.isFinite(secs) && secs > 0 && typeof t.getWorldTime === "function") {
+        return t.getWorldTime(secs);
+      }
     }
   } catch { /* no usable world clock — fine */ }
 

@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-08-15 22:55
+
+### Fixed
+- Downtime Planner: the world-clock fallback for a period's creation stamp read Foundry's
+  bare elapsed-time clock ("N days, N hours"), but with the PF2e system installed the world
+  clock is the system's own themed calendar. The fallback now reads `game.pf2e.worldClock`
+  — month, day, and year from the GM's calendar theme (e.g. "Moonday, 15 of Abadius, 4722
+  AR") — instead of the elapsed-seconds string.
+
+### Added
+- Downtime Planner: the creation stamp now also reads **Calendaria** (the v14 calendar
+  module) when it's installed. The source order is SimpleCalendar → Calendaria → the PF2e
+  world clock → Foundry's bare elapsed clock, so the GM's real calendar wins wherever one
+  exists, and a world with none still shows a dash rather than a made-up date.
+
 ## 2026-08-15 22:17
 
 ### Changed

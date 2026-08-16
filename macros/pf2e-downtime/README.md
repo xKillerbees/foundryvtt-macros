@@ -61,10 +61,11 @@ and what the party will be richer by at the end of it.
   rare needing access before you can make one
 - A chat card for one character's plan or the whole party's
 - Every period carries a **creation timestamp** — the real-world clock and the game's own
-  time (read from SimpleCalendar where it's installed, else Foundry's native world clock) —
-  shown to the players in the top bar and stamped onto the posted chat card, so the party's
-  downtime has a historical record. A period opened before this feature existed shows a plain
-  dash rather than a made-up date
+  time (read from SimpleCalendar where it's installed, else Calendaria, else the PF2e
+  system's own world clock, else Foundry's bare elapsed clock) — shown to the players in the
+  top bar and stamped onto the posted chat card, so the party's downtime has a historical
+  record. A period opened before this feature existed shows a plain dash rather than a
+  made-up date
 - A **period ledger for the GM**: the "Periods" button opens a list of every period, in order,
   with its days, its rows, and its creation stamp. The GM can jump straight to any of them, add
   the next one explicitly, and remove the ones that got there by accident — an empty period (the

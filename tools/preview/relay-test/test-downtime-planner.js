@@ -226,22 +226,38 @@ function check(label, cond, detail) {
   check("deleting the last period re-creates a fresh period 1", !!s6.periods["1"] && s6.period === 1);
   check("re-created period 1 is stamped", !!s6.periods["1"].created);
   check("fmtReal renders a stable wall-clock string", /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(fmtReal(Date.now())));
-  /* worldDate precedence: SimpleCalendar > Foundry world clock > null. */
+  /* worldDate precedence: SimpleCalendar > Calendaria > PF2e world clock >
+     bare world clock > null. */
   delete globalThis.SimpleCalendar;
+  delete globalThis.CALENDARIA;
   globalThis.game.time = undefined;
-  check("worldDate is null with no calendar module and no world clock", worldDate() === null);
+  globalThis.game.pf2e = undefined;
+  check("worldDate is null with no date source at all", worldDate() === null);
 
   globalThis.game.time = { worldTime: 3 * 86400 + 4 * 3600, getWorldTime: (s) => `${Math.floor(s / 86400)} days, ${Math.floor((s % 86400) / 3600)} hours` };
-  check("worldDate falls back to the Foundry world clock", worldDate() === "3 days, 4 hours");
-  const sClock = {};
-  stampPeriod(sClock);
-  check("a period stamped with a world clock carries it", sClock.created?.world === "3 days, 4 hours");
-
+  check("worldDate falls back to the bare world clock", worldDate() === "3 days, 4 hours");
   globalThis.game.time = { worldTime: 0, getWorldTime: () => "0 days" };
-  check("an un-advanced world clock reads null", worldDate() === null);
+  check("an un-advanced bare world clock reads null", worldDate() === null);
+
+  globalThis.game.pf2e = { worldClock: {
+    worldTime: { year: 2026, month: 8, day: 15, hour: 0, minute: 0, weekday: 6, isValid: true },
+    year: 4722, month: "Abadius", weekday: "Moonday", era: "AR", dateTheme: "AR"
+  } };
+  check("worldDate reads the PF2e world clock's themed date", worldDate() === "Moonday, 15 of Abadius, 4722 AR");
+
+  globalThis.game.pf2e = { worldClock: {
+    worldTime: { year: 2026, month: 8, day: 15, hour: 9, minute: 30, weekday: 6, isValid: true }
+  } };
+  check("PF2e world clock numeric fallback without themed getters", worldDate() === "2026-08-15 09:30");
+
+  globalThis.CALENDARIA = { api: {
+    formatDate: () => "Abadius 15, 4722 AR",
+    getCurrentDateTime: () => ({ year: 4722, month: 8, day: 15, hour: 0, minute: 0 })
+  } };
+  check("worldDate prefers Calendaria over the PF2e world clock", worldDate() === "Abadius 15, 4722 AR");
 
   globalThis.SimpleCalendar = { api: { currentDateTime: () => ({ display: { date: "Abadius 12, 4722 AR", time: "14:00" } }) } };
-  check("worldDate prefers SimpleCalendar when installed", worldDate() === "Abadius 12, 4722 AR 14:00");
+  check("worldDate prefers SimpleCalendar over Calendaria and the world clock", worldDate() === "Abadius 12, 4722 AR 14:00");
 
   console.log("\n" + (failures === 0 ? "ALL CHECKS PASSED" : failures + " CHECK(S) FAILED"));
   process.exit(failures === 0 ? 0 : 1);
