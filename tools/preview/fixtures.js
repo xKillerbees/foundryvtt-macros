@@ -251,6 +251,15 @@ globalThis.FIXTURES = {
         "4.intime": true, "4.mengsung": true, "4.abductees": true,
         "5.festival": true, "5.yami": true
       }
+    },
+    "world.sogSummer": {
+      lantern: true,
+      ringleaders: { gurglegut: true, graybutcher: true, modouqiu: true },
+      level: 4
+    },
+    "world.sogWhoLeads": {
+      winner: "south",
+      leveled: true
     }
   },
 
@@ -281,7 +290,8 @@ globalThis.FIXTURES = {
         "4.ledger": true, "4.advance": true, "4.bargain": true, "4.gift": true,
         "4.intime": true, "4.mengsung": true, "4.abductees": true
       },
-      cues: { "3.rollers": true, "3.seasons": true }
+      cues: { "3.rollers": true, "3.seasons": true },
+      quests: { "3.boats": true, "3.teahouse": true, "3.peachwood": true }
     }
   },
 
@@ -309,6 +319,10 @@ globalThis.FIXTURES = {
         "3.governor": true, "3.xungu": true
       },
       cues: { "3.singing": true }
+    },
+    "world.sogSummer": {
+      lantern: true,
+      ringleaders: { gurglegut: true, graybutcher: true, modouqiu: false }
     }
   },
 

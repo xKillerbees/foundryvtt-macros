@@ -251,8 +251,9 @@ produced them.
   listed as **skipped**, because most of these are choices rather than obligations. The Abacus
   Sisters don't survive if the party kills them, and nothing downstream breaks; an unticked box
   in a finished chapter is the shape the campaign took, not a warning
-- A live rollup strip read from the other four consoles' saved state — pools, week, shrine
-  enlightenments, statues purified — so the campaign view doesn't need re-typing
+- A live rollup strip read from the chapter consoles' saved state — the Act 1 lantern and
+  ringleader toggles, the named leader, the downtime pools and week, the shrine enlightenments,
+  and the statues purified — so the campaign view doesn't need re-typing
 - The party panel reads the **First Long Night** console too: the titles and keepsakes each PC
   won at the games, so *Iron-Gut* and the gourd flask are still on the table's mind in Act 4.
   Clicking a name opens that character's sheet
@@ -264,11 +265,13 @@ produced them.
 - **Module macros** per chapter — all 58 macros from the Season of Ghosts Foundry module's
   directory, named exactly as they appear there, with their folder. Reference only: they're
   run from the macro directory, so there's nothing to tick
-- **Consoles in this collection** per chapter — the other four macros here, against the
-  chapters they're for, so the Enlightened Path console is named where Chapter 6 is on screen
+- **Consoles in this collection** per chapter — the other six macros here, against the
+  chapters they're for, so the Summer console is named on every Act 1 chapter, Who Leads
+  Willowshore on Chapter 3, and the Enlightened Path console where Chapter 6 is on screen —
   rather than remembered
-- **Journal links** — 120 of the 128 checklist items and 40 of the 42 treasure rows open the
-  page of the Season of Ghosts module's own journal that covers them. Xungu opens the Infested
+- **Journal links** — 120 of the 128 checklist items, all ten Act 1 side quests, and 40 of the
+  42 treasure rows open the page of the Season of Ghosts module's own journal that covers
+  them. Xungu opens the Infested
   Grove, the Week 11 curse opens *The Face at the Foot of the Bed*, Yen Rui opens the Hidden
   Library. The eight items with no link are the Two Weavers beats, which aren't in the book.
   A few links deliberately cross chapters, because that's where the text is: Chapter 1's
@@ -282,10 +285,17 @@ produced them.
   `<entry ordinal><area code><name slug>`, so `C1` can't be confused with `C11`. Entries
   resolve by id, then by name, then through the compendiums; without the adventure in the
   world the links don't render at all and the journals panel says why
+- **Side quests** — a per-chapter checklist for the optional asks in Act 1: Granny Hu's two
+  extra requests in Chapter 1, and the eight hinterlands opportunities in Chapter 3, each with
+  a link into the book. Kept apart from the decisions count, because a side quest the party
+  never took is a road not walked, not a skipped obligation
 - **Running procedures** — the loops you keep turning for a whole chapter rather than tick
-  once. Chapter 3 carries the hinterlands wandering-monster table: the daily DC 17 flat check,
-  what's actually out there, the two finite populations, and the book's instruction not to
-  scale the table up as the party levels
+  once, and now **rollable**. Chapter 1 carries the town's random-encounter table (the DC 10
+  flat check, +5 at night, gone once the lantern is lit) and Chapter 3 the hinterlands
+  wandering-monster table — the daily DC 17 flat check, then a d12 within two hexes of
+  Willowshore or a d20 deeper out, rolled to chat with the rows and threats printed beside the
+  buttons. The two finite populations and the book's instruction not to scale the table up as
+  the party levels are noted in place
 - **Audio** per chapter — the module's ambience, loops, and SFX matched to the beats that want
   them, plus the looped soundtrack placed against the chapter each track was written for. Every
   sound is a **play button**: it starts and stops that sound in the module's own playlist, fills
@@ -302,8 +312,9 @@ produced them.
 
 Two levels of heading, and they don't compete. A panel is titled in large ink over a thick
 rule in its own tone; a block inside it wears a small filled bar in its accent — ink for the
-chapter's decisions, gold for treasure, moss for a running procedure, plum for this
-collection's consoles, ember for module macros, slate for audio, rust for scenes and cues.
+chapter's decisions, gold for treasure, teal for side quests, moss for a running procedure,
+plum for this collection's consoles, ember for module macros, slate for audio, rust for scenes
+and cues.
 The tab strip uses the same colours: an act tab carries its season, and the four views are
 plum, told apart by their icon.
 

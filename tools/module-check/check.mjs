@@ -100,6 +100,18 @@ const checkPages = (map, keys, what) => {
 checkPages(PAGES, itemKeys, "item");
 checkPages(LOOT_PAGES, lootKeys, "loot");
 
+/* ---- the new Act 1 data: side quests and the random-encounter tables ---- */
+const SIDE_QUESTS = table("SIDE_QUESTS", "{", "}");
+const ENCOUNTERS = table("ENCOUNTERS", "{", "}");
+for (const [n, list] of Object.entries(SIDE_QUESTS)) for (const q of list) {
+  const p = pages.get(q.page);
+  if (!p) { fail(`side quest ${n}.${q.key}: no page ${q.page}`); continue; }
+  if (BY_ORD[q.page.slice(0, 2)] !== p.entry) fail(`side quest ${n}.${q.key}: ${q.page} lives in ${p.entryName}`);
+}
+for (const [k, e] of Object.entries(ENCOUNTERS)) {
+  if (!pages.has(e.page)) fail(`encounter table ${k}: no page ${e.page}`);
+}
+
 /* ---- coverage, which is information rather than a failure ---- */
 const AREA_RE = /(?:^|[\s(])([A-E]\d{1,2}[a-d]?)(?=[\s),.:—→]|$)/;
 let itemsLinked = 0;
@@ -120,7 +132,8 @@ for (const [n, list] of Object.entries(LOOT)) for (const i of list) {
    source for anything shaped like a module id catches a stale one without
    needing to know how each macro is laid out. */
 const OTHERS = ["fall-downtime-tracker", "first-long-night-console",
-                "enlightened-path-console", "ruins-of-wisdom-console"];
+                "enlightened-path-console", "ruins-of-wisdom-console",
+                "summer-console", "who-leads-willowshore-console"];
 for (const name of OTHERS) {
   const file = path.join(here, `../../macros/season-of-ghosts/${name}.js`);
   if (!fs.existsSync(file)) { fail(`${name}: not found`); continue; }

@@ -20,6 +20,8 @@ const MAX_PCS = 4;
 
 /* The chapter consoles, read for the rollup strip. Never written to. */
 const CONSOLES = {
+  summer: "world.sogSummer",
+  duel: "world.sogWhoLeads",
   downtime: "world.sogFallDowntime",
   festival: "world.sogFirstLongNight",
   path: "world.sogEnlightenedPath",
@@ -245,12 +247,12 @@ const PALETTES = {
   parchment: {
     paper: "#efe6d8", card: "#fbf7f0", ink: "#241c18", line: "#b9a687", muted: "#6d6052",
     stripe: "rgba(0,0,0,.05)", hover: "rgba(0,0,0,.07)", field: "#fffdf8",
-    rust: "#95381f", ember: "#a45c14", moss: "#4b5a34", slate: "#3d4c59", plum: "#5d3654", gold: "#8a6a12"
+    rust: "#95381f", ember: "#a45c14", moss: "#4b5a34", slate: "#3d4c59", plum: "#5d3654", gold: "#8a6a12", teal: "#3f6f68"
   },
   dark: {
     paper: "#1f1d1b", card: "#2a2724", ink: "#ece5da", line: "#544d44", muted: "#a4988a",
     stripe: "rgba(255,255,255,.04)", hover: "rgba(255,255,255,.08)", field: "#171513",
-    rust: "#d4664a", ember: "#e0a052", moss: "#96b06a", slate: "#7fa0bb", plum: "#b98ab0", gold: "#d9b74f"
+    rust: "#d4664a", ember: "#e0a052", moss: "#96b06a", slate: "#7fa0bb", plum: "#b98ab0", gold: "#d9b74f", teal: "#7fc0b4"
   }
 };
 
@@ -671,15 +673,75 @@ const CUES = {
   ]
 };
 
+/* ------------------------------------------------------ random encounters
+   The module ships no RollTable documents — the two Act 1 random-encounter
+   tables are HTML tables inside journal pages. So the dice live here: a flat
+   check to gate the encounter, then a die against the rows, rolled with the
+   Foundry dice API and posted to chat. Rows transcribed from the module's
+   own pages. */
+const ENCOUNTERS = {
+  hinterlands: {
+    page: "05exploringthe00", title: "Hinterlands Random Encounters",
+    flat: 17, flatNote: "once per day in the hinterlands",
+    dice: [
+      { key: "near", die: "d12", label: "within 2 hexes of Willowshore" },
+      { key: "far", die: "d20", label: "deeper wilderness" }
+    ],
+    rows: [
+      { lo: 1, hi: 3, name: "2 Giant Centipedes", threat: "Trivial 2" },
+      { lo: 4, hi: 6, name: "1 Slime Mold", threat: "Trivial 2" },
+      { lo: 7, hi: 9, name: "2 Thatchlings", threat: "Trivial 2" },
+      { lo: 10, hi: 11, name: "2 Hunting Spiders", threat: "Low 2" },
+      { lo: 12, hi: 13, name: "2 Wolves", threat: "Low 2" },
+      { lo: 14, hi: 15, name: "3 Thatchlings", threat: "Low 2" },
+      { lo: 16, hi: 17, name: "2 Jinkins", threat: "Low 2" },
+      { lo: 18, hi: 18, name: "1 Giant Stag Beetle", threat: "Moderate 2" },
+      { lo: 19, hi: 19, name: "4 Noppera-bo Grunts", threat: "Moderate 2" },
+      { lo: 20, hi: 20, name: "2 Boars", threat: "Moderate 2" }
+    ]
+  },
+  town: {
+    page: "03randomencoun00", title: "Willowshore Random Encounters",
+    flat: 10, flatNote: "every 4–8 hours in town; +5 at night (over 20 = 20); ends once the Eternal Lantern is lit",
+    dice: [
+      { key: "near", die: "d20", label: "in town" }
+    ],
+    rows: [
+      { lo: 1, hi: 2, name: "1 Giant Cockroach", threat: "Trivial 1" },
+      { lo: 3, hi: 4, name: "Haunting Presence", threat: "Trivial 1" },
+      { lo: 5, hi: 6, name: "1 Jinkin", threat: "Trivial 1" },
+      { lo: 7, hi: 8, name: "1 Spider Swarm", threat: "Trivial 1" },
+      { lo: 9, hi: 10, name: "Haunting Presence", threat: "Trivial 1" },
+      { lo: 11, hi: 12, name: "Haunting Presences (2)", threat: "Low 1" },
+      { lo: 13, hi: 14, name: "1 Jinkin and 1 Viper", threat: "Low 1" },
+      { lo: 15, hi: 16, name: "3 Phantom Ravens", threat: "Low 1" },
+      { lo: 17, hi: 18, name: "1 Phantom Boar", threat: "Low 1" },
+      { lo: 19, hi: 20, name: "2 Phantom Wolves", threat: "Moderate 1" }
+    ]
+  }
+};
+
 /* ------------------------------------------------------- table procedures
    Running rules that aren't a decision to tick — they're a loop you keep
    turning for a whole chapter. Kept out of `items` so they don't dilute the
    checklist count, and rendered wherever the chapter is on screen. */
 const PROCEDURES = {
+  1: [{
+    key: "townwander",
+    title: "Town random encounters",
+    sub: "the Willowshore table, until the lantern is lit",
+    lines: [
+      "While the town is monster-held, roll a <b>DC 10 flat check</b> every four to eight hours the party travels town. At night, add +5 to the table roll, treating results over 20 as a 20.",
+      "Each PC Avoiding Notice or Scouting raises the flat-check DC by 1; each Hustling or Searching lowers it by 2. At most one random encounter a day."
+    ],
+    note: "These stop once the Eternal Lantern is lit. Phantoms outdoors by day are no encounter; the vermin fight to the death under Kugaptee's growing influence.",
+    roll: "town"
+  }],
   3: [{
     key: "wander",
     title: "Hinterlands random encounters",
     sub: "the wandering monster table, D1–D13",
+    roll: "hinterlands",
     lines: [
       "<b>Once per day</b> the party spends in the hinterlands, roll a <b>DC 17 flat check</b>. On a success, an encounter happens — you decide whether it lands while they travel or while they camp.",
       "Roll on the <b>Hinterlands Random Encounters</b> table. The book uses one die within <b>2 hexes of Willowshore</b> and another further out into the wilderness; the two rolls are not the same.",
@@ -697,11 +759,62 @@ const PROCEDURES = {
   }]
 };
 
+/* ------------------------------------------------------------- side quests
+   The optional asks in Act 1 — Granny Hu's two extra requests and the eight
+   hinterlands opportunities. Kept apart from the decisions checklist, because
+   a side quest the party never took isn't a skipped obligation; it's a road
+   not walked. The Summer Console carries the full VP trackers for the eight;
+   these are the tick-it-done reminders with a link into the book. */
+const SIDE_QUESTS = {
+  1: [
+    { key: "doctor", name: "Checking the Doctor — Clash at the Clinic", page: "03a2clashatthe00",
+      note: "Granny Hu's request. Giant centipedes swarm the Hand of Spring clinic; keep Doctor Dami alive." },
+    { key: "children", name: "Missing Grandchildren — The Worst Puzzle", page: "03theworstpuzz00",
+      note: "Granny Hu's request. Four revelers stranded in a jinkin-rigged drying yard." }
+  ],
+  3: [
+    { key: "boats", name: "Missing Boats (D2)", page: "05d2gourdlake000",
+      note: "Rajul Samudra's boats, at Gourd Lake. Win three-of-five sumo matches to get them back." },
+    { key: "ranch", name: "Fixing the Ranch (W2)", page: "05opportunitie00",
+      note: "Kum Soon-chong's stables. Round up livestock and mend the fence — 10 VP." },
+    { key: "shrine", name: "Moving Desna's Shrine (W8)", page: "05opportunitie00",
+      note: "Choe Chung-hu's shrine. Sway the kami Kohoshi, then move it — 5 VP." },
+    { key: "expansion", name: "Investigate the Old Expansion (D8)", page: "05d8oldvillage00",
+      note: "Matsuki Shou's survey for emergency cropland — 8 VP, pays off in Act 2." },
+    { key: "smith", name: "Smith Troubles (W1)", page: "05opportunitie00",
+      note: "Yong Wu-Xiu vs. the guards. Two exclusive outcomes — 6 VP." },
+    { key: "peachwood", name: "Collecting Peachwood", page: "05ppeachwoodgr00",
+      note: "Yun Mong-un's rare fulus. A crit failure loses a grove for the campaign." },
+    { key: "teahouse", name: "The Teahouse Owner's Will (D9)", page: "05d9eyesoffume00",
+      note: "Two pearls from the Eyes of Fumeiyoshi. Triggers the Tea Farm quest a week later." },
+    { key: "teafarm", name: "Tea Farm Infestation (W35)", page: "05opportunitie00",
+      note: "Mountain Summit Grass's blight — 10 VP." }
+  ]
+};
+
 /* ---------------------------------------------------- this repo's consoles
    The other macros in this collection, against the chapters they're for. The
    tracker can't launch them — they're separate macros in your directory — so
    this is a pointer, the same as the module macro lists. */
 const OUR_MACROS = {
+  1: [
+    { name: "Summer Console", file: "summer-console.js",
+      what: "the whole of Act 1 — the town tab (lantern, ringleaders, level, reputation) and Chapter 1's lantern quest" }
+  ],
+  2: [
+    { name: "Summer Console", file: "summer-console.js",
+      what: "Act 1's console — Chapter 2's downtown clearance and the Cerulean Teahouse" }
+  ],
+  3: [
+    { name: "Who Leads Willowshore Console", file: "who-leads-willowshore-console.js",
+      what: "the Chapter 3 champions' duel for the town's leadership — the Level 3 milestone" },
+    { name: "Summer Console", file: "summer-console.js",
+      what: "Act 1's console — Chapter 3's hinterlands sandbox, the eight opportunities, and the three investigations" }
+  ],
+  4: [
+    { name: "Summer Console", file: "summer-console.js",
+      what: "Act 1's console — Chapter 4's lumber camp, the Ritual Site, and the Horror from Beyond" }
+  ],
   5: [
     { name: "Fall Downtime Tracker", file: "fall-downtime-tracker.js",
       what: "the whole twelve weeks — Hope, Food, Security, teahouse restoration, the research caps, and every weekly event" },
@@ -980,6 +1093,7 @@ function blankState(pcs) {
     /* Chapter 1, running. Advance it from the act tabs. */
     chapters: { 1: "active" },
     flags: {},
+    quests: {},
     loot: {},
     cues: {},
     rework: {},
@@ -1133,6 +1247,24 @@ function targetFor(n, item, { loot = false } = {}) {
   return null;
 }
 
+/* A journal target from a bare page id, for content that lives on a page but
+   isn't a chapter decision (side quests, the encounter tables). */
+function pageTarget(pageId) {
+  const id = JOURNAL_BY_ORD[pageId.slice(0, 2)];
+  const desc = Object.values(JOURNAL.chapters).find(d => d.id === id)
+    ?? JOURNAL.reference.find(d => d.id === id)
+    ?? { id, name: id };
+  return { desc, pageId };
+}
+
+/* Roll a formula with whatever dice API this Foundry version exposes. Null
+   when there is none, and the caller falls back to an inline roll. */
+async function rollDie(formula) {
+  const C = globalThis.Roll ?? foundry.dice?.Roll ?? foundry.dice?.terms?.Roll;
+  if (!C) return null;
+  try { return await new C(formula).evaluate({ async: true }); } catch { return null; }
+}
+
 /* ----------------------------------------------------------------- engine */
 class Campaign {
   constructor(state) { this.state = state; }
@@ -1218,6 +1350,21 @@ class Campaign {
     const id = `${n}.${key}`;
     const on = !!this.s.cues[id];
     if (on) delete this.s.cues[id]; else this.s.cues[id] = true;
+    this.touch();
+  }
+
+  /* ----- side quests -----
+     The Act 1 asks: Granny Hu's two extra requests and the eight hinterlands
+     opportunities. Same toggle shape as flags, kept in their own bucket so
+     the decisions count isn't diluted by quests the party simply never took. */
+  questsFor(n) { return SIDE_QUESTS[n] ?? []; }
+  quested(n, key) { return !!this.s.quests[`${n}.${key}`]; }
+  toggleQuest(n, key) {
+    const id = `${n}.${key}`;
+    const on = !!this.s.quests[id];
+    if (on) delete this.s.quests[id]; else this.s.quests[id] = true;
+    const q = this.questsFor(n).find(x => x.key === key);
+    this.log(`Ch ${n} quest — ${q?.name ?? key}: ${on ? "unticked" : "done"}.`);
     this.touch();
   }
 
@@ -1308,10 +1455,18 @@ class Campaign {
   consoleState(which) { return game.settings.get("world", CONSOLES[which].split(".")[1]); }
 
   get rollup() {
+    const summer = this.consoleState("summer");
+    const duel = this.consoleState("duel");
     const dt = this.consoleState("downtime");
     const ruins = this.consoleState("ruins");
     const path = this.consoleState("path");
     const out = [];
+    if (summer) {
+      const down = Object.values(summer.ringleaders ?? {}).filter(Boolean).length;
+      out.push({ label: "Lantern", value: summer.lantern ? "lit" : "dark", tone: "gold" });
+      out.push({ label: "Ringleaders", value: `${down} of 3`, tone: "rust" });
+    }
+    if (duel?.winner) out.push({ label: "Leader", value: "named", tone: "plum" });
     if (dt?.pools) {
       out.push({ label: "Hope", value: dt.pools.hope, tone: "ember" });
       out.push({ label: "Food", value: `${dt.pools.food}/12`, tone: "moss" });
@@ -1332,8 +1487,35 @@ class Campaign {
 
   reset() {
     this.state = blankState(this.s.pcs);
-    ui.notifications.info("Campaign tracker reset to the start of Chapter 5.");
+    ui.notifications.info("Campaign tracker reset to the start of Chapter 1.");
     this.touch();
+  }
+
+  /* ----- random encounters ----- */
+  async rollFlat(key) {
+    const e = ENCOUNTERS[key];
+    if (!e) return;
+    const r = await rollDie("1d20");
+    if (!r) {
+      this.postCard(e.title, "Flat check", `Roll a <b>@Check[type:flat|dc:${e.flat}]</b> — ${e.flatNote}.`, "moss");
+      return;
+    }
+    const hit = r.total >= e.flat;
+    this.postCard(e.title, hit ? "An encounter happens" : "All quiet",
+      `Flat check DC ${e.flat} → rolled <b>${r.total}</b>.${hit ? " Roll the table below." : " No encounter today."}`, "moss");
+  }
+  async rollTable(key, dieKey) {
+    const e = ENCOUNTERS[key];
+    const d = e?.dice.find(x => x.key === dieKey);
+    if (!d) return;
+    const r = await rollDie(`1${d.die}`);
+    if (!r) {
+      this.postCard(e.title, "Encounter roll", `Roll <b>[[/r 1${d.die}]]</b>${d.label ? ` (${d.label})` : ""} and read the row against the table.`, "rust");
+      return;
+    }
+    const row = e.rows.find(x => r.total >= x.lo && r.total <= x.hi);
+    if (!row) return;
+    this.postCard(e.title, row.name, `Rolled <b>${r.total}</b>${d.label ? ` · ${d.label}` : ""} — threat <b>${row.threat}</b>.`, "rust");
   }
 
   /* ----- chat ----- */
@@ -1498,7 +1680,24 @@ class CSApp extends BaseApp {
         ${p.lines.map(l => `<p class="text">${l}</p>`).join("")}
         ${p.what?.length ? `<ul class="bullets">${p.what.map(w => `<li>${w}</li>`).join("")}</ul>` : ""}
         ${p.note ? `<p class="note">${p.note}</p>` : ""}
+        ${this.rollRow(p)}
         ${p.foundry ? `<p class="hint"><i class="fa-solid fa-bolt"></i> ${p.foundry}</p>` : ""}
+      </div>`;
+  }
+  rollRow(p) {
+    const e = ENCOUNTERS[p.roll];
+    if (!e) return "";
+    return `
+      <div class="rollrow">
+        <button type="button" class="rollbtn" data-act="rollflat" data-k="${p.roll}"
+          title="Roll the gate: a flat check against DC ${e.flat}"><i class="fa-solid fa-dice"></i> Flat check DC ${e.flat}</button>
+        ${e.dice.map(d => `<button type="button" class="rollbtn" data-act="rolltable" data-k="${p.roll}" data-die="${d.key}"
+          title="Roll 1${d.die} and read the row"><i class="fa-solid fa-dice-d20"></i> 1${d.die} · ${d.label}</button>`).join("")}
+        ${this.journalBtn(pageTarget(e.page), "Open the table's page")}
+      </div>
+      <div class="rolltable">
+        ${e.rows.map(r => `<div class="rtrow"><span class="rtd">${r.lo === r.hi ? r.lo : `${r.lo}–${r.hi}`}</span>
+          <span class="rtn">${r.name}</span><span class="rtt">${r.threat}</span></div>`).join("")}
       </div>`;
   }
 
@@ -1550,7 +1749,7 @@ class CSApp extends BaseApp {
       </section>` : `
       <section class="panel">
         <h3>Live from the chapter consoles</h3>
-        <p class="hint">Nothing to read yet. Run the Fall Downtime Tracker, the Enlightened Path, or the Ruins of Wisdom console once and their state appears here.</p>
+        <p class="hint">Nothing to read yet. Run the Summer console, Who Leads Willowshore, the Fall Downtime Tracker, the Enlightened Path, or the Ruins of Wisdom console once and their state appears here.</p>
       </section>`}
 
       ${od.length ? `
@@ -1737,6 +1936,29 @@ class CSApp extends BaseApp {
           }).join("")}
           </div>
         </div>
+
+        ${(() => {
+          const qs = t.questsFor(c.n);
+          if (!qs.length) return "";
+          const qdone = qs.filter(q => t.quested(c.n, q.key)).length;
+          return `
+        <div class="sub quests">
+          <div class="subhead"><i class="fa-solid fa-compass"></i> Side quests <span>${qdone} of ${qs.length}</span></div>
+          <div class="items">
+          ${qs.map(q => {
+            const on = t.quested(c.n, q.key);
+            return `
+              <div class="itemrow">
+                <label class="check ${on ? "on" : ""}">
+                  <input type="checkbox" data-act="quest" data-n="${c.n}" data-k="${q.key}" ${on ? "checked" : ""} ${ro ? "disabled" : ""}>
+                  <span class="lbl">${q.name}${q.note ? `<em class="pays">${q.note}</em>` : ""}</span>
+                </label>
+                ${q.page ? this.journalBtn(pageTarget(q.page), "Open") : ""}
+              </div>`;
+          }).join("")}
+          </div>
+        </div>`;
+        })()}
 
         ${p.lootTotal ? `
         <div class="sub loot">
@@ -1932,6 +2154,8 @@ class CSApp extends BaseApp {
         if (actor) actor.sheet?.render(true);
         else ui.notifications.warn("That character's actor is no longer in this world.");
       }
+      else if (a === "rollflat") t.rollFlat(btn.dataset.k);
+      else if (a === "rolltable") t.rollTable(btn.dataset.k, btn.dataset.die);
       else if (a === "postrecap") t.postRecap();
       else if (a === "reset") t.reset();
     });
@@ -1941,6 +2165,7 @@ class CSApp extends BaseApp {
       if (el.dataset.act === "flag") t.toggleFlag(el.dataset.n, el.dataset.k);
       else if (el.dataset.act === "loot") t.toggleLoot(el.dataset.n, el.dataset.k);
       else if (el.dataset.act === "cue") t.toggleCue(el.dataset.n, el.dataset.k);
+      else if (el.dataset.act === "quest") t.toggleQuest(el.dataset.n, el.dataset.k);
       else if (el.dataset.act === "rework") t.toggleRework(el.dataset.k);
     });
   }
@@ -1953,7 +2178,7 @@ class CSApp extends BaseApp {
              overflow-y:auto; max-height:calc(100vh - 140px); }
       #cst-console .window-content > * { background:transparent; }
       .cst { --ink:${p.ink}; --paper:${p.paper}; --card:${p.card}; --line:${p.line}; --rust:${p.rust};
-             --ember:${p.ember}; --moss:${p.moss}; --slate:${p.slate}; --plum:${p.plum}; --gold:${p.gold};
+             --ember:${p.ember}; --moss:${p.moss}; --slate:${p.slate}; --plum:${p.plum}; --gold:${p.gold}; --teal:${p.teal};
              --muted:${p.muted}; --stripe:${p.stripe}; --hover:${p.hover}; --field:${p.field};
              font-family:"Signika","Roboto",sans-serif; color:var(--ink); background:var(--paper); }
       .cst * { box-sizing:border-box; }
@@ -2114,6 +2339,7 @@ class CSApp extends BaseApp {
       .cst .sub.macros { --sub:var(--ember); }
       .cst .sub.audio  { --sub:var(--slate); }
       .cst .sub.cues   { --sub:var(--rust); }
+      .cst .sub.quests { --sub:var(--teal); }
 
       /* The head is a filled bar in the block's accent, bled to the well's
          edges. On parchment a tinted label reads as decoration; a solid one
@@ -2153,6 +2379,18 @@ class CSApp extends BaseApp {
                                  font-weight:400; padding:0; background:none; opacity:.85; }
       .cst .bullets { margin:.2rem 0 .4rem; padding-left:1.1rem; font-size:.79rem; line-height:1.5; }
       .cst .bullets li { margin-bottom:.15rem; }
+      .cst .rollrow { display:flex; flex-wrap:wrap; gap:.3rem; align-items:center; margin:.35rem 0; }
+      .cst .rollbtn { font-size:.72rem; font-weight:600; padding:2px 8px; border-radius:3px;
+                      border-color:var(--moss); color:var(--moss); gap:.3rem; }
+      .cst .rollbtn i { font-size:.62rem; }
+      .cst .rolltable { display:flex; flex-direction:column; margin:.3rem 0 .4rem; border:1px solid var(--line);
+                         border-radius:3px; overflow:hidden; font-size:.76rem; }
+      .cst .rtrow { display:grid; grid-template-columns:2.6rem 1fr 5.5rem; gap:.4rem; align-items:baseline;
+                     padding:.16rem .4rem; border-top:1px solid var(--stripe); }
+      .cst .rtrow:first-child { border-top:0; }
+      .cst .rtrow:nth-child(odd) { background:var(--stripe); }
+      .cst .rtd { color:var(--muted); font-size:.7rem; white-space:nowrap; }
+      .cst .rtt { color:var(--muted); font-size:.68rem; text-align:right; white-space:nowrap; }
 
       .cst .legend { display:flex; flex-wrap:wrap; gap:.2rem 1rem; font-size:.7rem; color:var(--muted);
                      margin:0 0 .4rem; line-height:1.5; }

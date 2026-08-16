@@ -1,5 +1,28 @@
 # Changelog
 
+## 2026-08-16 09:52
+
+### Added
+- Campaign Status Tracker: now reads the **Summer** and **Who Leads Willowshore?** consoles, not
+  just the four it was built around. The live rollup strip gains the Act 1 spine — the Eternal
+  Lantern lit or dark, the three ringleaders down, and the leader named once the duel resolves —
+  read straight from `world.sogSummer` and `world.sogWhoLeads`, and both consoles are listed
+  against their Act 1 chapters in the "Consoles in this collection" block (with
+  `tools/module-check` now scanning their journal ids too).
+- Campaign Status Tracker: an **Act 1 side-quest checklist**, kept in its own bucket so it never
+  dilutes the decisions count. Granny Hu's two extra requests in Chapter 1 (Checking the Doctor,
+  Missing Grandchildren) and all eight hinterlands opportunities in Chapter 3 (Missing Boats,
+  Fixing the Ranch, Moving Desna's Shrine, Investigate the Old Expansion, Smith Troubles,
+  Collecting Peachwood, The Teahouse Owner's Will, Tea Farm Infestation), each with a journal
+  link into the book.
+- Campaign Status Tracker: the Act 1 random-encounter tables are now **rollable from the macro**
+  instead of prose you hand-rolled. The module ships no RollTable documents, so the two tables
+  are transcribed and rolled in place: Chapter 1's Willowshore table (DC 10 flat check, d20, +5
+  at night, gone once the lantern is lit) and Chapter 3's Hinterlands table (DC 17 flat check,
+  then a d12 within two hexes of Willowshore or a d20 deeper out). Every row and threat is
+  printed beside the roll buttons, and the result posts to chat as a card.
+
+
 ## 2026-08-16 09:20
 
 ### Added
