@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-08-15 21:26
+
+### Added
+- Downtime Planner: players can now ask the GM for the next downtime period. A "Request a
+  new period" button sits in the top bar for each player; it relays to the GM's client (the
+  sender is named from the hook, not the payload), and the GM gets a banner listing who's
+  asked with a one-click "Open period N", plus a chat notice the moment a request lands.
+  Requests live in the world setting until the GM opens the period, and a player can withdraw
+  theirs. The button only appears while the next period doesn't exist yet
+
 ## Unreleased
 
 ### Fixed
@@ -55,13 +65,6 @@
 - Preview stub: sample physical items with coin-purse Prices, levels, and rarities that
   `fromUuid` resolves, `TextEditor.getDragEventData` on both its v11 and v13 homes, and
   crafting formulas on the sample party — enough to exercise a drag-and-drop path for real
-- Downtime Planner: players can now ask the GM for the next downtime period. A "Request a
-  new period" button sits in the top bar for each player; it relays to the GM's client (the
-  sender is named from the hook, not the payload), and the GM gets a banner listing who's
-  asked with a one-click "Open period N", plus a chat notice the moment a request lands.
-  Requests live in the world setting until the GM opens the period, and a player can withdraw
-  theirs. The button only appears while the next period doesn't exist yet
-
 ### Fixed
 - Fall Downtime Tracker: the player board went dark and unreadable in some worlds. Two causes —
   the board blanked its own background and leaned on `.window-content`, so wherever the host
