@@ -784,7 +784,8 @@ globalThis.FIXTURES = {
       mode: "thrown",
       north: { kind: "pc", actorId: "pc3", name: "Miyu" },
       south: { kind: "pc", actorId: "pc4", name: "Tenzo" },
-      matsukiKnows: "in",
+      thrownWinner: "north",
+      knows: "in",
       rounds: { r1: "k", r2: "b", r3: "c", r4: "k", r5: null },
       winner: "north",
       leadup: { rehearsed: true, defused: true }
@@ -803,9 +804,24 @@ globalThis.FIXTURES = {
       mode: "thrown",
       north: { kind: "pc", actorId: "pc1", name: "Aiko" },
       south: { kind: "pc", actorId: "pc2", name: "Daizen" },
-      matsukiKnows: "won",
+      thrownWinner: "south",
+      knows: "won",
       favorStart: { north: 2, south: 1 },
       leadup: { courted: true, rallied: true, rehearsed: true }
+    }
+  },
+
+  /* The thrown duel reversed — Granny Hu is the fixed winner, so Matsuki's
+     champion (Aiko) throws. Read on the trial tab to see the round text flip. */
+  "duel-thrown-south": {
+    "world.sogWhoLeads": {
+      tab: "trial",
+      mode: "thrown",
+      north: { kind: "pc", actorId: "pc1", name: "Aiko" },
+      south: { kind: "pc", actorId: "pc2", name: "Daizen" },
+      thrownWinner: "south",
+      knows: "concession",
+      rounds: { r1: "c", r2: "k", r3: "c", r4: "g", r5: null }
     }
   },
 
@@ -821,6 +837,26 @@ globalThis.FIXTURES = {
       rounds: { r1: "n", r2: "s", r3: "S", r4: "s", r5: "t" },
       winner: "south",
       beats: { rift: true },
+      leveled: true
+    },
+    "world.sogFallDowntime": {
+      pools: { hope: 8, food: 6, security: 5, restoration: 2 },
+      rep: { southbank: 1, northridge: 2 }
+    }
+  },
+
+  /* The verdict tab in thrown mode: the fix delivers to Old Matsuki, no
+     winner buttons, the write-through beats still offered. */
+  "duel-verdict-thrown": {
+    "world.sogWhoLeads": {
+      tab: "verdict",
+      mode: "thrown",
+      north: { kind: "pc", actorId: "pc3", name: "Miyu" },
+      south: { kind: "pc", actorId: "pc4", name: "Tenzo" },
+      thrownWinner: "north",
+      knows: "in",
+      rounds: { r1: "c", r2: "c", r3: "g", r4: "c", r5: "c" },
+      winner: "north",
       leveled: true
     },
     "world.sogFallDowntime": {

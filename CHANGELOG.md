@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-08-16 08:44
+
+### Changed
+- Who Leads Willowshore?: the thrown-duel variant no longer hardcodes Granny Hu as the
+  conceding elder. A **"the fix delivers to"** selector on the Challenge tab picks the fixed
+  winner — Old Matsuki or Granny Hu — and the whole thrown surface follows it: the
+  "does the winner know?" panel (and its "knows the other conceded" option), every round's
+  sell text (which champion throws, which lands the money-shot blow, which elder concedes),
+  and the verdict tab's "the fix delivers to" line all re-name themselves to the chosen
+  elder and champions.
+
 ## 2026-08-16 03:31
 
 ### Added

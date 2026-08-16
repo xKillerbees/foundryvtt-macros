@@ -94,10 +94,10 @@ const LEADUP = [
   { key: "defused", label: "Defused the dread (championed the non-lethal Trial)", effect: "goodwill with both factions, win or lose" }
 ];
 
-const MATSUKI_KNOWS = [
+const KNOWS_OPTIONS = [
   { key: "in", label: "In on it", note: "Cleanest, lowest risk — no acting required; the con is airtight." },
-  { key: "won", label: "Thinks he genuinely won", note: "Authentic triumph — but the highest long-term risk if it ever comes out." },
-  { key: "concession", label: "Knows Hu conceded, not that it's thrown", note: "No acting required of him; the fix stays the party's secret." }
+  { key: "won", label: "Thinks they genuinely won", note: "Authentic triumph — but the highest long-term risk if it ever comes out." },
+  { key: "concession", label: "Knows {LE} conceded, not that it's thrown", note: "No acting required of them; the fix stays the party's secret." }
 ];
 
 const ROUNDS = [
@@ -107,7 +107,7 @@ const ROUNDS = [
     dcText: "No fixed DC — the higher degree (then higher total) takes the round; a Society angle (a real, concrete policy) grants +2.",
     text: "Each champion makes the case for their elder before the whole town. Higher degree of success, then higher total, takes the round.",
     crowd: "Faction banners roar; waverers lean toward the better speaker.",
-    thrown: "Hu's champion argues her elder's case half-heartedly and loses with grace — the first sell. Deception or Performance (DC 18) to make the concession read as a close, principled loss.",
+    thrown: "{T} argues {LE}'s case half-heartedly and loses with grace — the first sell. Deception or Performance (DC 18) to make the concession read as a close, principled loss.",
     checks: []
   },
   {
@@ -116,7 +116,7 @@ const ROUNDS = [
     dcText: "Best-of-3 opposed exchanges (attack roll or Athletics); first to two wins. To first yield or disarm.",
     text: "A formal champion's bout to first yield or disarm — non-lethal by the Trial. (Or swap in a formal blood-duel, GM Core pp. 202–203.)",
     crowd: "The loudest round. First blood, if any, flips waverers against the one who drew it.",
-    thrown: "The thrower must fight hard and lose. Deception/Performance DC 18 to sell a valiant near-miss; a clumsy dive reads off. If Hu's champion starts genuinely winning, they have to lose even harder to get back on script.",
+    thrown: "{T} must fight hard and lose. Deception/Performance DC 18 to sell a valiant near-miss; a clumsy dive reads off. If {T} starts genuinely winning, they have to lose even harder to get back on script.",
     checks: []
   },
   {
@@ -125,7 +125,7 @@ const ROUNDS = [
     dcText: "DC 20 Society, or a fitting Lore — or the GM judges the plan the player actually gives.",
     text: "The town's real problem is posed: \"The harvest will fall short and no trade is coming. How do we eat till spring?\" The best plan wins.",
     crowd: "Merchants and farmers swayed; the practical-minded lean to the better plan.",
-    thrown: "Hu's champion offers a solid-but-plain plan and lets Matsuki's \"vision\" outshine it — sell the shrug, not the failure.",
+    thrown: "{T} offers a solid-but-plain plan and lets {W}'s \"vision\" outshine it — sell the shrug, not the failure.",
     checks: ["DC 20 Society"]
   },
   {
@@ -134,7 +134,7 @@ const ROUNDS = [
     dcText: "DC 18 — but judge sincerity over the die.",
     text: "A planted moment of need steps from the crowd — a sick child, a feud between neighbors, a grieving widow. The champion must help, not perform. WORTH DOUBLE FAVOR.",
     crowd: "A cold or cynical handling can lose a champion the whole town, even from ahead.",
-    thrown: "The easiest round to sell — the thrower helps warmly, then defers the credit. But overdoing humility reads as defeatism (+Suspicion).",
+    thrown: "The easiest round to sell — {T} helps warmly, then defers the credit. But overdoing humility reads as defeatism (+Suspicion).",
     checks: ["DC 18 Society", "DC 18 Medicine"],
     double: true
   },
@@ -144,7 +144,7 @@ const ROUNDS = [
     dcText: "Most Favor after Round V wins. A tie is broken by a final opposed Diplomacy before the crowd.",
     text: "Each champion gets one last appeal; then tally all Favor — most Favor acclaims that elder interim governor. The grace note: a unifying gesture (victor honoring loser, loser pledging support) can heal the rift.",
     crowd: "The whole square holds its breath for the tally.",
-    thrown: "THE MONEY SHOT. Matsuki's champion lands the \"deciding\" blow; Hu's champion sells the dramatic, valiant fall — one last Deception/Performance, bonus if Suspicion is low, penalty if high. Granny Hu steps forward, clasps Old Matsuki's hand, and concedes to cheers.",
+    thrown: "THE MONEY SHOT. {W} lands the \"deciding\" blow; {T} sells the dramatic, valiant fall — one last Deception/Performance, bonus if Suspicion is low, penalty if high. {LE} steps forward, clasps {WE}'s hand, and concedes to cheers.",
     checks: []
   }
 ];
@@ -173,7 +173,8 @@ function blankState(pcs) {
     north: { kind: "npc", actorId: "", name: STAND_INS.north },
     south: { kind: "npc", actorId: "", name: STAND_INS.south },
     third: { on: false, kind: "pc", actorId: "", name: "" },
-    matsukiKnows: "in",                  // thrown mode only
+    thrownWinner: "north",               // thrown mode: which elder the fix delivers to
+    knows: "in",                         // thrown mode: does that winner know it's thrown
     favorStart: { north: 0, south: 0 },  // starting Favor set from the lead-up
     leadup: { courted: false, conceded: false, rallied: false, rehearsed: false, defused: false },
     rounds: { r1: null, r2: null, r3: null, r4: null, r5: null },
@@ -265,9 +266,31 @@ class WhoLeads {
     this.touch();
   }
   setKnows(k) {
-    this.s.matsukiKnows = k;
-    this.log(`Old Matsuki knows: ${MATSUKI_KNOWS.find(x => x.key === k)?.label}.`);
+    this.s.knows = k;
+    const opt = KNOWS_OPTIONS.find(x => x.key === k);
+    this.log(`Does ${ELDERS[this.thrownWinnerSide].name} know? — ${this.fillThrown(opt?.label ?? k)}.`);
     this.touch();
+  }
+
+  /* ----- the thrown fix ----- */
+  get thrownWinnerSide() { return this.s.thrownWinner === "south" ? "south" : "north"; }
+  get throwerSide() { return this.thrownWinnerSide === "north" ? "south" : "north"; }
+  get outcomeSide() { return this.s.mode === "thrown" ? this.thrownWinnerSide : this.s.winner; }
+  setThrownWinner(w) {
+    this.s.thrownWinner = w;
+    if (this.s.mode === "thrown") this.s.winner = w;   // keep the verdict in sync
+    this.log(`The fix delivers to ${ELDERS[w].name} — ${ELDERS[this.throwerSide].name}'s champion throws.`);
+    this.touch();
+  }
+  thrownTokens() {
+    const w = this.thrownWinnerSide, t = this.throwerSide;
+    return {
+      "{W}": this.s[w].name, "{T}": this.s[t].name,
+      "{WE}": ELDERS[w].name, "{LE}": ELDERS[t].name
+    };
+  }
+  fillThrown(text) {
+    return Object.entries(this.thrownTokens()).reduce((acc, [k, v]) => acc.split(k).join(v), text);
   }
 
   /* ----- lead-up ----- */
@@ -347,12 +370,12 @@ class WhoLeads {
         rep().southbank = (rep().southbank ?? 0) + d;
         rep().northridge = (rep().northridge ?? 0) + d;
       } else if (key === "backed") {
-        if (this.s.winner === "north") rep().northridge = (rep().northridge ?? 0) + d;
-        else if (this.s.winner === "south") rep().southbank = (rep().southbank ?? 0) + d;
+        if (this.outcomeSide === "north") rep().northridge = (rep().northridge ?? 0) + d;
+        else if (this.outcomeSide === "south") rep().southbank = (rep().southbank ?? 0) + d;
         else ui.notifications.warn("Backing the winner needs a Northridge or Southbank winner selected.");
       } else if (key === "blood") {
-        if (this.s.winner === "north") rep().southbank = (rep().southbank ?? 0) - d;
-        else if (this.s.winner === "south") rep().northridge = (rep().northridge ?? 0) - d;
+        if (this.outcomeSide === "north") rep().southbank = (rep().southbank ?? 0) - d;
+        else if (this.outcomeSide === "south") rep().northridge = (rep().northridge ?? 0) - d;
       }
       await game.settings.set("world", "sogFallDowntime", dt);
     }
@@ -406,7 +429,7 @@ class WhoLeads {
       south: "Granny Hu is acclaimed interim governor of Willowshore. Old Matsuki bows stiffly as the Southbank erupts in cheers.",
       third: `${esc(s.third.name || "A champion")} steps forward to take the town's reins as its new leader.`,
       gm: "The elders step aside, and Willowshore names a new leader to carry it through the coming season."
-    }[s.winner] || "Willowshore names its new leader.";
+    }[this.outcomeSide] || "Willowshore names its new leader.";
     return this.postCard("The People's Verdict", "A new leader for Willowshore",
       `<p style="margin:0">${pro}</p>`, "gold");
   }
@@ -515,6 +538,11 @@ class WLRApp extends BaseApp {
           <button type="button" class="chip ${s.mode === "trial" ? "on" : ""}" data-act="mode" data-m="trial" ${ro ? "disabled" : ""}>Trial of Champions</button>
           <button type="button" class="chip ${s.mode === "thrown" ? "on" : ""}" data-act="mode" data-m="thrown" ${ro ? "disabled" : ""}>Thrown duel</button>
         </div>
+        ${s.mode === "thrown" ? `
+        <div class="fixrow">
+          ${["north", "south"].map(w => `<button type="button" class="chip ${t.thrownWinnerSide === w ? "on" : ""}" data-act="fixwinner" data-w="${w}" ${ro ? "disabled" : ""}>
+            ${esc(ELDERS[w].name)}<small>— ${esc(ELDERS[w === "north" ? "south" : "north"].name)}'s champion throws</small></button>`).join("")}
+        </div>` : ""}
         <div class="champgrid">
           <label class="champsel"><span class="side n">Northridge <i>${esc(ELDERS.north.name)}</i></span>
             <select data-act="champ" data-side="north" ${ro ? "disabled" : ""}>${this.champOptions("north")}</select></label>
@@ -526,11 +554,11 @@ class WLRApp extends BaseApp {
         <p class="hint">PC vs PC is the ideal. One side, or both, can fall to a stand-in — Zheng Peng for Northridge, Yong Wu-Xiu for Southbank. With no PC champion at all it is the two stand-ins.</p>
         ${s.mode === "thrown" ? `
         <div class="knows">
-          <div class="subhead"><i class="fa-solid fa-masks-theater"></i> Does Old Matsuki know? <span>pick one</span></div>
+          <div class="subhead"><i class="fa-solid fa-masks-theater"></i> Does ${esc(ELDERS[t.thrownWinnerSide].name)} know? <span>pick one</span></div>
           <select data-act="knows" ${ro ? "disabled" : ""}>
-            ${MATSUKI_KNOWS.map(k => `<option value="${k.key}" ${s.matsukiKnows === k.key ? "selected" : ""}>${k.label}</option>`).join("")}
+            ${KNOWS_OPTIONS.map(k => `<option value="${k.key}" ${s.knows === k.key ? "selected" : ""}>${esc(t.fillThrown(k.label))}</option>`).join("")}
           </select>
-          <p class="note">${MATSUKI_KNOWS.find(k => k.key === s.matsukiKnows)?.note ?? ""}</p>
+          <p class="note">${esc(t.fillThrown(KNOWS_OPTIONS.find(k => k.key === s.knows)?.note ?? ""))}</p>
         </div>` : ""}
       </section>
 
@@ -600,7 +628,7 @@ class WLRApp extends BaseApp {
   roundPanel(r, ro) {
     const t = this.t, s = t.s;
     const cur = s.rounds[r.key];
-    const body = s.mode === "thrown" && r.thrown ? r.thrown : r.text;
+    const body = s.mode === "thrown" && r.thrown ? t.fillThrown(r.thrown) : r.text;
     const vals = s.mode === "trial"
       ? [["n", `North ${r.double ? "+4" : "+2"}`], ["N", `North ${r.double ? "+6" : "+3"} crit`],
          ["s", `South ${r.double ? "+4" : "+2"}`], ["S", `South ${r.double ? "+6" : "+3"} crit`],
@@ -628,10 +656,12 @@ class WLRApp extends BaseApp {
       <section class="panel" style="--tone:var(--plum)">
         <h3>Who Leads <small>interim governor, until Heh's fate is known</small>
           <button type="button" class="say" data-act="postverdict" title="Post the verdict"><i class="fa-solid fa-comment"></i></button></h3>
-        <div class="winrow">
-          ${WINNERS.map(w => `<button type="button" class="wbtn ${s.winner === w.key ? "on" : ""}" style="--tt:var(--${TONES.includes(w.tone) ? w.tone : "muted"})" data-act="winner" data-w="${w.key}" ${ro ? "disabled" : ""}>
-            <b>${w.label}</b><small>${w.sub}</small></button>`).join("")}
-        </div>
+        ${s.mode === "trial"
+          ? `<div class="winrow">
+              ${WINNERS.map(w => `<button type="button" class="wbtn ${s.winner === w.key ? "on" : ""}" style="--tt:var(--${TONES.includes(w.tone) ? w.tone : "muted"})" data-act="winner" data-w="${w.key}" ${ro ? "disabled" : ""}>
+                <b>${w.label}</b><small>${w.sub}</small></button>`).join("")}
+            </div>`
+          : `<p class="text">The fix delivers to <b>${esc(ELDERS[t.thrownWinnerSide].name)}</b> — set on the Challenge tab. ${esc(ELDERS[t.throwerSide].name)}'s champion throws the fight.</p>`}
       </section>
 
       <section class="panel" style="--tone:var(--moss)">
@@ -665,6 +695,7 @@ class WLRApp extends BaseApp {
       const a = btn.dataset.act;
       if (a === "tab") { t.s.tab = btn.dataset.k; t.touch(); }
       else if (a === "mode") t.setMode(btn.dataset.m);
+      else if (a === "fixwinner") t.setThrownWinner(btn.dataset.w);
       else if (a === "fav") t.setFavorStart(btn.dataset.side, Number(btn.dataset.d));
       else if (a === "round") t.setRound(btn.dataset.k, btn.dataset.code);
       else if (a === "winner") t.setWinner(btn.dataset.w);
@@ -755,6 +786,10 @@ class WLRApp extends BaseApp {
       .wlw .moderow { display:flex; gap:.4rem; margin-bottom:.5rem; }
       .wlw .chip { padding:.3rem .8rem; font-size:.8rem; font-weight:600; }
       .wlw .chip.on { background:var(--ember); border-color:var(--ember); color:var(--paper); }
+      .wlw .fixrow { display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:.5rem; }
+      .wlw .fixrow .chip { flex-direction:column; align-items:flex-start; padding:.3rem .6rem; text-align:left; white-space:normal; }
+      .wlw .fixrow .chip small { font-size:.64rem; font-weight:400; color:var(--muted); }
+      .wlw .fixrow .chip.on small { color:var(--paper); opacity:.85; }
       .wlw .champgrid { display:grid; grid-template-columns:1fr 1fr; gap:.5rem; margin-bottom:.4rem; }
       .wlw .champsel { display:flex; flex-direction:column; gap:.25rem; font-size:.72rem; }
       .wlw .champsel .side { text-transform:uppercase; letter-spacing:.07em; color:var(--muted); }
