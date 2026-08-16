@@ -548,6 +548,8 @@ function blankState() {
     house: Object.fromEntries(Object.keys(HOUSE).map(k => [k, false])),
     periods: { 1: blankPeriod(1) },
     study: {},
+    /* Period requests: { <period number>: { <userId>: <name> } }. */
+    requests: {},
     ui: {}
   };
 }
@@ -660,10 +662,26 @@ const OPS = {
     st.held = st.prevHeld ?? null;
     st.prevHeld = null;
   },
+  /* A player asking the GM to open the next period. Requests are stored under
+     the period number being asked for, so they survive until the GM actually
+     opens it — setPeriod clears them once it does. */
+  requestPeriod(s, { by, name }) {
+    const target = s.period + 1;
+    if (s.periods[String(target)]) return;   // already open — nothing to request
+    const reqs = (s.requests ??= {});
+    (reqs[String(target)] ??= {})[by] = name;
+  },
+  cancelRequest(s, { by }) {
+    const reqs = s.requests ?? {};
+    for (const k of Object.keys(reqs)) delete reqs[k][by];
+  },
   /* GM only, below. */
   setPeriod(s, { n }) {
     s.period = Math.max(1, Math.round(n));
     s.periods[String(s.period)] ??= blankPeriod(s.period);
+    /* A request is satisfied the moment its period exists. */
+    const reqs = s.requests ?? {};
+    for (const k of Object.keys(reqs)) if (Number(k) <= s.period) delete reqs[k];
   },
   setPeriodMeta(s, { label, days }) {
     const p = s.periods[String(s.period)] ??= blankPeriod(s.period);
@@ -1308,6 +1326,43 @@ class DowntimeApp extends BaseApp {
     </div>`;
   }
 
+  /* Players can't touch the calendar, but they can ask the GM to open the next
+     period. For the GM this is the banner naming who asked, with a one-click
+     open; for a player it's the request button and, once asked, a withdraw. */
+  requestBar() {
+    const P = this.planner;
+    const target = P.s.period + 1;
+    const reqs = P.s.requests?.[String(target)] ?? {};
+    const nextExists = !!P.s.periods[String(target)];
+    const label = P.s.periods[String(target)]?.label ?? `Downtime ${target}`;
+
+    if (P.isGM) {
+      const names = Object.values(reqs).filter(Boolean);
+      if (!names.length) return "";
+      return `<div class="reqbar">
+        <i class="fa-solid fa-calendar-plus"></i>
+        <span><b>${esc(names.join(", "))}</b> asked for a new period — ${esc(label)}.</span>
+        <button type="button" data-act="newperiod" data-n="${target}">Open period ${target}</button>
+      </div>`;
+    }
+
+    /* Only a party member asks, and only while the next period doesn't exist —
+       once it does, the GM has already opened it. */
+    if (nextExists || !myPCs(P.pcs).length) return "";
+    const mine = reqs[game.user.id];
+    if (mine) {
+      return `<div class="reqbar">
+        <i class="fa-solid fa-circle-check ok"></i>
+        <span>Requested — the GM will open <b>${esc(label)}</b>.</span>
+        <button type="button" data-act="cancelrequest">Withdraw</button>
+      </div>`;
+    }
+    return `<div class="reqbar">
+      <button type="button" data-act="requestperiod">Request a new period</button>
+      <span>Ask the GM to open <b>${esc(label)}</b> when this one's done.</span>
+    </div>`;
+  }
+
   reference(pc) {
     const P = this.planner;
     const actor = game.actors.get(pc.actorId);
@@ -1397,6 +1452,7 @@ class DowntimeApp extends BaseApp {
       ${this.styles()}
       <div class="dtp">
         ${this.gmBar()}
+        ${this.requestBar()}
         ${this.houseBar()}
         ${this.pcStrip()}
         ${this.playerNote()}
@@ -1503,6 +1559,11 @@ class DowntimeApp extends BaseApp {
           }
           case "undostudy": return P.apply("undoStudy", { actorId: el.dataset.pc });
           case "period": return P.apply("setPeriod", { n: P.s.period + Number(el.dataset.n) });
+          case "newperiod": return P.apply("setPeriod", { n: Number(el.dataset.n) });
+          case "requestperiod":
+            return P.apply("requestPeriod", { by: game.user.id, name: game.user.character?.name ?? game.user.name });
+          case "cancelrequest":
+            return P.apply("cancelRequest", { by: game.user.id });
           case "clear": return P.apply("clearActor", { actorId: el.dataset.pc });
           case "postmine": return P.postPlan(el.dataset.pc);
           case "postall": return P.postPlan(null);
@@ -1668,6 +1729,12 @@ class DowntimeApp extends BaseApp {
 
       .dtp .note { background:var(--card); border:1px solid var(--line); border-left:3px solid var(--slate);
                    border-radius:3px; padding:.4rem .6rem; font-size:.78rem; color:var(--muted); margin-bottom:.5rem; }
+      .dtp .reqbar { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap;
+                     background:var(--card); border:1px solid var(--line); border-left:3px solid var(--gold);
+                     border-radius:4px; padding:.35rem .6rem; margin-bottom:.5rem; font-size:.78rem; color:var(--muted); }
+      .dtp .reqbar b { color:var(--ink); }
+      .dtp .reqbar .ok { color:var(--moss); }
+      .dtp .reqbar button { border-color:var(--gold); }
 
       .dtp .cols { display:grid; grid-template-columns:1fr 20rem; gap:.5rem; align-items:start; }
       .dtp .panel { background:var(--card); border:1px solid var(--line); border-radius:4px; padding:.5rem .6rem; }
@@ -1824,12 +1891,22 @@ if (AppV2) {
     const req = user.getFlag(REQ_SCOPE, REQ_KEY);
     if (!req || !OPS[req.op] || GM_ONLY.has(req.op)) return;
     if (req.data?.actorId && !ownsActor(user, req.data.actorId)) return;
+    /* A period request names its sender from the hook, not from the relayed
+       payload — who asked is the one thing the requester must not supply. */
+    if (req.op === "requestPeriod") {
+      req.data = { ...req.data, by: user.id, name: user.character?.name ?? user.name };
+    } else if (req.op === "cancelRequest") {
+      req.data = { ...req.data, by: user.id };
+    }
     /* Apply to the live state rather than re-reading the setting: two relays
        arriving back-to-back share one object, so the second sees the first's
        change even before its settings write has landed (re-reading the setting
        there reads a stale copy and drops the second op). */
     OPS[req.op](planner.state, req.data);
     await game.settings.set(SETTING_NS, SETTING_KEY, planner.state);
+    if (req.op === "requestPeriod") {
+      ui.notifications.info(`${req.data.name} asks for a new downtime period.`);
+    }
   });
 
   /* Re-registered rather than guarded: running the macro again builds a new

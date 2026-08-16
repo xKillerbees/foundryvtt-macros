@@ -60,6 +60,10 @@ and what the party will be richer by at the end of it.
   level, the master and legendary ranks that level 9 and 17 items need, and anything uncommon or
   rare needing access before you can make one
 - A chat card for one character's plan or the whole party's
+- A **request the next period** button for players. The calendar is the GM's, so a player
+  who's done with this stretch asks for the next one instead of reaching for the ▶ — the GM
+  sees a banner naming who asked with a one-click open, and the request persists in the world
+  setting until then (and can be withdrawn)
 
 ### The house rules
 
@@ -115,6 +119,10 @@ fires `updateUser` on every client.
   and the ownership check is re-run on the GM's side rather than trusted from the sender
 - The calendar — period name, days available, settlement level — and the house-rule switches are
   the GM's, on both sides
+- A player can **request the next period** instead of changing the calendar. The button
+  relays to the GM's client — the sender is read from the hook, never the payload — and the
+  GM gets a banner naming who asked and a one-click "Open period N". Requests persist until
+  the period is opened, and can be withdrawn
 - With no GM logged in, the macro says so rather than silently dropping the change
 
 ## Architecture

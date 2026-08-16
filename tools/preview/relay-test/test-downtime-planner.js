@@ -148,6 +148,44 @@ function check(label, cond, detail) {
   await sleep(30);
   check("GM-only setPeriod refused from a player relay", read().period === periodBefore, "period=" + read().period);
 
+  /* ============ 5. a player requests the next period ============ */
+  console.log("\n== 5. A player requests the next period; the GM opens it ==");
+  playerUser.setFlag(REQ_SCOPE, REQ_KEY, { op: "requestPeriod", data: { by: "spoofed", name: "spoofed" }, t: 6 });
+  await sleep(30);
+  s = read();
+  check("request stored under the next period", s.requests?.["2"]?.["player"] === "Aiko",
+    JSON.stringify(s.requests));
+  check("sender is read from the hook, not the payload",
+    s.requests?.["2"]?.["spoofed"] === undefined && Object.values(s.requests?.["2"] ?? {}).length === 1);
+  check("a request does not itself change the period", s.period === 1, "period=" + s.period);
+
+  // A repeat request from the same player stays one entry, still the real sender.
+  playerUser.setFlag(REQ_SCOPE, REQ_KEY, { op: "requestPeriod", data: { by: "someone-else", name: "Evil" }, t: 7 });
+  await sleep(30);
+  s = read();
+  check("repeat request still names the real sender once",
+    s.requests?.["2"]?.["player"] === "Aiko" && Object.values(s.requests?.["2"] ?? {}).length === 1);
+
+  // Withdraw clears it.
+  playerUser.setFlag(REQ_SCOPE, REQ_KEY, { op: "cancelRequest", data: { by: "spoofed" }, t: 8 });
+  await sleep(30);
+  s = read();
+  check("withdraw clears the player's request", !s.requests?.["2"]?.["player"], JSON.stringify(s.requests));
+
+  // The GM opens the period through the same reducer; its requests clear.
+  playerUser.setFlag(REQ_SCOPE, REQ_KEY, { op: "requestPeriod", data: { by: "x", name: "y" }, t: 9 });
+  await sleep(30);
+  const opened = foundry.utils.deepClone(read());
+  OPS.setPeriod(opened, { n: 2 });
+  check("opening the period clears its requests", !opened.requests?.["2"], JSON.stringify(opened.requests));
+  check("the next period now exists", !!opened.periods["2"]);
+
+  // A request for a period that already exists is a no-op.
+  const back = foundry.utils.deepClone(opened);
+  back.period = 1;
+  OPS.requestPeriod(back, { by: "player", name: "Aiko" });
+  check("a request for an already-open period is a no-op", !back.requests?.["2"]?.["player"]);
+
   console.log("\n" + (failures === 0 ? "ALL CHECKS PASSED" : failures + " CHECK(S) FAILED"));
   process.exit(failures === 0 ? 0 : 1);
 })();
