@@ -65,6 +65,12 @@ SHOTS = {
     "winter-clock": (
         "season-of-ghosts/no-breath-to-cry-console.js", "winter-clock",
         "season-of-ghosts/no-breath-to-cry-clock.png"),
+    "summer": (
+        "season-of-ghosts/summer-console.js", "summer",
+        "season-of-ghosts/summer-console.png"),
+    "summer-wall": (
+        "season-of-ghosts/summer-console.js", "summer-ch4-camp",
+        "season-of-ghosts/summer-console-wall.png"),
     "duel": (
         "season-of-ghosts/who-leads-willowshore-console.js", "duel",
         "season-of-ghosts/who-leads-willowshore-console.png"),

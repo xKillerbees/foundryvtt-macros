@@ -174,6 +174,42 @@ globalThis.FIXTURES = {
     }
   },
 
+  /* Summer console (Act 1) on its landing tab — lantern relit, Gurglegut
+     down, reputation already banked with both factions. */
+  "summer": {
+    "world.sogFallDowntime": {
+      pools: { hope: 0, food: 0, security: 0, restoration: 0 },
+      rep: { southbank: 2, northridge: 1 }
+    },
+    "world.sogSummer": {
+      lantern: true,
+      ringleaders: { gurglegut: true, graybutcher: false, modouqiu: false },
+      level: 2,
+      xp: 80
+    }
+  },
+
+  /* The same console in a world without the adventure module, so the journal
+     links stand down and the panel says why. */
+  "summer-nojournal": {
+    __journals: false,
+    "world.sogSummer": { lantern: false, level: 1 }
+  },
+
+  /* Per-tab seeds for the render smoke test — the cards are static data, so
+     only the tab / sub-tab need to be set. */
+  "summer-ch1-town":      { "world.sogSummer": { tab: "ch1", ctab: { ch1: "town" } } },
+  "summer-ch1-lantern":   { "world.sogSummer": { tab: "ch1", ctab: { ch1: "lantern" } } },
+  "summer-ch2-downtown":  { "world.sogSummer": { tab: "ch2", ctab: { ch2: "downtown" } } },
+  "summer-ch2-butcher":   { "world.sogSummer": { tab: "ch2", ctab: { ch2: "butcher" } } },
+  "summer-ch2-teahouse":  { "world.sogSummer": { tab: "ch2", ctab: { ch2: "teahouse" } } },
+  "summer-ch3-town":      { "world.sogSummer": { tab: "ch3", ctab: { ch3: "town" } } },
+  "summer-ch3-hinterlands": { "world.sogSummer": { tab: "ch3", ctab: { ch3: "hinterlands" } } },
+  "summer-ch3-curse":     { "world.sogSummer": { tab: "ch3", ctab: { ch3: "curse" } } },
+  "summer-ch3-duel":      { "world.sogSummer": { tab: "ch3", ctab: { ch3: "duel" } } },
+  "summer-ch4-camp":      { "world.sogSummer": { tab: "ch4", ctab: { ch4: "camp" } } },
+  "summer-ch4-ritual":    { "world.sogSummer": { tab: "ch4", ctab: { ch4: "ritual" } } },
+
   /* Campaign Status Tracker at the table's real position — Act 2, Chapter 5,
      week 3 — with the downtime tracker's state present so the rollup strip has
      something live to read. */

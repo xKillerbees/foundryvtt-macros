@@ -12,6 +12,7 @@ Built for **PF2e** on Foundry **v11–v14**.
 | [`enlightened-path-console.js`](enlightened-path-console.js) | Act 2 Ch. 6 — the Wall of Ghosts and the Pilgrim's Path | Complete |
 | [`ruins-of-wisdom-console.js`](ruins-of-wisdom-console.js) | Act 2 Ch. 7 — the ruined Tan Sugi monastery | Complete |
 | [`no-breath-to-cry-console.js`](no-breath-to-cry-console.js) | Act 3 Ch. 8–10 — the whole of winter | Complete |
+| [`summer-console.js`](summer-console.js) | Act 1 Ch. 1–4 — the whole of summer | Complete |
 | [`who-leads-willowshore-console.js`](who-leads-willowshore-console.js) | Act 1 Ch. 3 — the champions' duel for the town's leadership | Complete |
 | [`campaign-status-tracker.js`](campaign-status-tracker.js) | All four acts — a checklist for the whole AP | Complete |
 
@@ -179,6 +180,42 @@ The whole of Act 3 — winter — in one window: the clock and the three chapter
 The **Two Weavers rework** seeds in Chapter 9 — the exorcist's murmur about a woman in crimson
 silks, and Ren Mei Li's "owed a quarrel" warning — are carried as beats flagged *rework-only*, so
 the printed-book content stays distinguishable from the homebrew that pays off in Act 4.
+
+### The Summer That Never Was
+
+![The summer console's town tab — the lantern, the ringleaders, and reputation](../../screenshots/season-of-ghosts/summer-console.png)
+
+The whole of Act 1 — summer — in one window: the monster-held town and the four chapters.
+
+- **The town tab** (the act's landing view) carries the act's spine: the Eternal Lantern
+  (lit or dark, with the mirage-mist and blood-rain manifestations it gates), the three
+  monster ringleaders as defeat toggles, a level stepper with the act's milestones, and
+  Southbank / Northridge reputation read and written live from the Fall Downtime Tracker.
+  A panel points the Chapter 3 duel at the Who Leads Willowshore console rather than
+  re-authoring it.
+- **Chapter 1 — To Light the Night**: waking in the woods, the first day of summer, the
+  Sinister Animals, making contact with Old Matsuki and Granny Hu, the First Missions
+  (A1 and A2), then the lantern quest — blessing the coins, the shrines, retaking Dawnstep
+  Bridge, and the Gurglegut fight.
+- **Chapter 2 — Reclaiming Willowshore**: the downtown clearance (all seventeen B-areas,
+  from the vanished Governor's Manor to the kappa bathhouse), the wandering Gray Butcher
+  and his parade of cookware, and the Cerulean Teahouse (C1–C4) with Mo Douqiu. Reputation
+  is the chapter's real currency — nearly every room swings Northridge or Southbank, and
+  each beat records the exact faction and sign.
+- **Chapter 3 — The Willowshore Curse**: the Mysterious Merchant (Shinzo, with his GM-only
+  identity kept out of the read-aloud), the hinterlands sandbox (D1–D13 and the eight
+  opportunities), and the three investigations — the Missing Governor, the Mists and Great
+  Willow, and the Last Kodama / Searching for Ugly Cute.
+- **Chapter 4 — The Wall of Ghosts**: the act's dungeon — the lumber camp (E1–E17) split
+  between the Prayers (Zoudou) and the Rovers (Mugirou), then the Ritual Site, Zoudou's
+  Consecrate rite and the Meng-sung sacrifice, and the Horror from Beyond.
+
+![The lumber camp, the noppera-bos' two factions, and the journal links](../../screenshots/season-of-ghosts/summer-console-wall.png)
+
+Journal links resolve across the act's five entries — the four chapters plus the Willowshore
+gazetteer, so a W-area card opens the town gazetteer rather than a chapter. Beats write
+reputation (both factions, or Southbank / Northridge separately) straight through to the
+Fall Downtime Tracker, so the campaign tracker's rollup stays correct.
 
 ### Who Leads Willowshore?
 

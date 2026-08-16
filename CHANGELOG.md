@@ -1,5 +1,29 @@
 # Changelog
 
+## 2026-08-16 09:20
+
+### Added
+- Season of Ghosts: the **summer console** — the whole of Act 1 (*The Summer That Never Was*)
+  in one window, the Act 1 counterpart to the winter console. A **town tab** carries the act's
+  spine: the Eternal Lantern (lit or dark, with the mirage-mist / blood-rain manifestations it
+  gates), the three monster ringleaders (Gurglegut, Gray Butcher, Mo Douqiu) as defeat toggles,
+  a level stepper with the act's milestones, and Southbank / Northridge reputation read and
+  written live from the Fall Downtime Tracker. Four chapter tabs follow: **To Light the Night**
+  (waking, the first day, contacting both elders, the First Missions A1/A2, then the lantern
+  quest — bless the coins, the shrines, retake Dawnstep, and the Gurglegut fight),
+  **Reclaiming Willowshore** (all seventeen B-areas, the wandering Gray Butcher's parade of
+  cookware, and the Cerulean Teahouse with Mo Douqiu — reputation recorded per faction, since
+  nearly every room swings Northridge or Southbank), **The Willowshore Curse** (Shinzo the
+  merchant with his GM-only identity kept out of the read-aloud, the D1–D13 hinterlands sandbox
+  and eight opportunities, and the three investigations), and **The Wall of Ghosts** (the E1–E17
+  lumber camp split between the Prayers and the Rovers, then the Ritual Site, Zoudou's Consecrate
+  rite, and the Horror from Beyond). Chapter 3's duel is a pointer panel to the
+  who-leads-willowshore console, not a re-authoring. Journal links resolve across the act's five
+  entries — the four chapters plus the Willowshore gazetteer, so W-area cards open the town
+  gazetteer rather than a chapter. Beats write reputation (both factions, or Southbank /
+  Northridge separately) through to the Fall Downtime Tracker so the campaign tracker's rollup
+  stays correct.
+
 ## 2026-08-16 08:44
 
 ### Changed
