@@ -70,6 +70,17 @@ function linkifyChecks(text) {
   return text.replace(rx, (_m, dc, skill) => checkCode(skill, dc));
 }
 
+/* Roll a die formula through Foundry's Roll, tolerating the v13+ move of the
+   constructor under foundry.dice. Returns the evaluated Roll, or null. */
+async function rollDie(formula) {
+  const C = globalThis.Roll ?? foundry.dice?.Roll ?? foundry.dice?.terms?.Roll;
+  if (!C) return null;
+  try { return await new C(formula).evaluate({ async: true }); } catch (err) {
+    console.warn("Fall Downtime Tracker — die roll failed.", err);
+    return null;
+  }
+}
+
 /* --------------------------------------------------------- event details */
 const EVENT_DETAIL = {
   1: {
@@ -264,6 +275,19 @@ const ACTIVITIES = {
   }
 };
 
+/* Yami's Gifts — the d8 table the bonded PC rolls at the end of each week after
+   a successful DC 11 flat check. Gifts 5–8 are one-time-only. */
+const YAMI_GIFTS = {
+  1: "A potato.",
+  2: "Someone's undergarments.",
+  3: "1 gold piece.",
+  4: "A piece of parchment with a haiku written about the PC (it changes each time; each is written by Yami in secret).",
+  5: "A jade cat talisman — one-time only; further rolls of this gift give 1 platinum piece.",
+  6: "A minor armory bracelet — one-time only; further rolls give 1 platinum piece.",
+  7: "A silver dagger with an inlaid emerald, worth 100 gp — one-time only; further rolls give 1 platinum piece.",
+  8: "A wand of crushing leaps — one-time only; further rolls of this gift give 1 platinum piece."
+};
+
 /* Week 10's Feast of the Kami replaces downtime: each PC gets three
    Prepare-for-the-Feast checks, choosing from decorating, the banquet, or
    inviting the kami. Each check's points land in the existing feast totals. */
@@ -414,8 +438,9 @@ function blankState(pcs) {
     research: { sojin: 0, igawa: 0, willow: 0, solo: 0, zoudou: 0 },
     feast: { decoration: 0, banquet: 0, entertainment: 0 },
     opts: { expansion: false, teaware: false },
-    yami: { bonded: false, pc: "", lockUntil: 0 },
+    yami: { bonded: false, pc: "", pcIdx: null, lockUntil: 0 },
     milestones: {},
+    researchDone: false,
     playerVisible: false,
     ui: { eventOpen: true },
     weeks: { 1: blankWeek() }
@@ -796,6 +821,56 @@ class Tracker {
     this.save();
   }
 
+  /* ----- Yami's weekly gift ----- */
+  /* Which PC Yami is bonded to, by stored index with a name fallback for states
+     saved before the index existed. */
+  yamiPcIndex() {
+    const y = this.s.yami;
+    if (!y?.bonded) return null;
+    if (y.pcIdx != null && this.s.pcs[y.pcIdx]) return y.pcIdx;
+    const byName = this.s.pcs.findIndex(p => p.name === y.pc);
+    return byName >= 0 ? byName : null;
+  }
+
+  /* The reminder shown inside the bonded PC's own card: an obvious banner with
+     the end-of-week DC 11 flat check and the follow-up d8 gift roll. */
+  yamiBanner(i, ro) {
+    if (this.yamiPcIndex() !== i) return "";
+    const name = this.s.pcs[i]?.name ?? this.s.yami.pc;
+    return `
+      <div class="yami-banner">
+        <div class="yb-title"><i class="fa-solid fa-cat"></i> Yami is bonded to ${esc(name)}</div>
+        <div class="yb-text">At the end of each week, roll a DC 11 flat check. On a success, Yami brings a gift — roll a d8 on Yami's Gifts.</div>
+        <button type="button" class="yb-btn" data-act="yamigift" ${ro ? "disabled" : ""}><i class="fa-solid fa-dice-d20"></i> Roll Yami's gift <small>DC 11 flat check, then d8</small></button>
+      </div>`;
+  }
+
+  /* Rolls the DC 11 flat check; on a success it rolls the d8 and names the
+     gift. Personal, so it posts straight to chat — no pool moves, no relay. */
+  async rollYamiGift() {
+    const i = this.yamiPcIndex();
+    const pc = i != null ? this.s.pcs[i] : null;
+    const name = pc?.name ?? this.s.yami?.pc ?? "the PC";
+    const actor = pc?.actorId ? game.actors.get(pc.actorId) : null;
+    const speaker = actor ? ChatMessage.getSpeaker({ actor }) : { alias: "Yami" };
+
+    const flat = await rollDie("1d20");
+    if (!flat) {
+      return ChatMessage.create({
+        content: `<p style="margin:0 0 4px"><b>${esc(name)}</b> — Yami's gift: DC 11 flat check (on a success, roll a d8 on Yami's Gifts)</p>@Check[type:flat|dc:11]`,
+        speaker
+      });
+    }
+    const ok = flat.total >= 11;
+    await flat.toMessage({ flavor: `Yami's gift — ${esc(name)} rolls a DC 11 flat check: ${ok ? "success" : "failure"}`, speaker });
+    if (!ok) return ChatMessage.create({ content: "<p>No gift this week — Yami keeps her treasures to herself.</p>", speaker: { alias: "Yami" } });
+
+    const d8 = await rollDie("1d8");
+    if (!d8) return ChatMessage.create({ content: `<p>Yami brings ${esc(name)} a gift — roll a d8 on Yami's Gifts.</p>`, speaker: { alias: "Yami" } });
+    const gift = YAMI_GIFTS[d8.total] ?? "Something unexpected.";
+    await d8.toMessage({ flavor: `Yami brings ${esc(name)} a gift — ${gift}`, speaker });
+  }
+
   /* ----- Week 10: Feast of the Kami ----- */
 
   feastSlots(pcIdx) {
@@ -903,6 +978,7 @@ class Tracker {
       if (final === "cs") {
         this.s.yami.bonded = true;
         this.s.yami.pc = pc;
+        this.s.yami.pcIdx = pcIdx;
         notes.push(`Yami adopts ${pc} — DC 11 flat check each week for a gift. Award 80 XP`);
       }
       if (final === "cf") { this.s.yami.lockUntil = this.s.week + 1; notes.push("Yami bolts — unavailable this week and next"); }
@@ -983,6 +1059,18 @@ class Tracker {
       }
     }
     this.afterChange();
+  }
+
+  /* Once the research reaches 10 RP and the GM has explained the milestone to
+     the players, this swaps the research panel for the next steps. */
+  toggleResearchDone() {
+    if (this.rpTotal < 10) return ui.notifications.warn("Reach 10 Research Points before marking the research complete.");
+    this.s.researchDone = !this.s.researchDone;
+    this.log(this.s.researchDone
+      ? "★ Research complete — the Open the Wall of Ghosts ritual is known. Next: Chapter 6."
+      : "Research panel reopened.");
+    this.render();
+    this.save();
   }
 
   bump(pool, n) {
@@ -1438,6 +1526,7 @@ class SoGDowntimeApp extends BaseApp {
 
         ${feast}
 
+        ${s.researchDone ? this.researchDonePanel(ro) : `
         <section class="panel research">
           <h3>Researching the Curse <small>one non-preparation activity per PC per week</small> ${this.jbtn(JPAGE.research)}</h3>
           <div class="rp-total">
@@ -1445,7 +1534,8 @@ class SoGDowntimeApp extends BaseApp {
             <div class="bar"><i style="width:${rpPct}%"></i></div>
           </div>
           <div class="res-list">${researchRows}</div>
-        </section>
+          ${t.rpTotal >= 10 ? `<button type="button" class="markdone" data-act="researchdone" ${ro ? "disabled" : ""}>Mark research complete — explained to the players</button>` : ""}
+        </section>`}
 
         <section class="panel setup">
           <h3>Campaign state ${this.jbtn(JPAGE.chapter)}</h3>
@@ -1547,6 +1637,21 @@ class SoGDowntimeApp extends BaseApp {
       title="Open the journal: ${esc(page ? page.name : entry.name)}"><i class="fa-solid fa-book-open"></i>${label ? ` ${label}` : ""}</button>`;
   }
 
+  /* Shown in place of the research panel once the GM marks the research done.
+     The next step is the Open the Wall of Ghosts ritual, and when to begin it. */
+  researchDonePanel(ro) {
+    return `
+      <section class="panel research done">
+        <h3>Next steps — Open the Wall of Ghosts ${this.jbtn(JPAGE.research)}</h3>
+        <div class="nextsteps">
+          <p>The party has researched the <b>Open the Wall of Ghosts</b> ritual and can now attempt to bring down the Wall of Ghosts at their leisure <b>(Through the Wall of Ghosts)</b>.</p>
+          <p>Everything the curse can teach within town has been learned — what remains lies beyond the wall, in the ruins of the <b>Tan Sugi monastery</b>. <b>Award 120 XP</b> for completing this research.</p>
+          <p>They may begin Chapter 6 during <b>any remaining week of fall</b>. Once they set out, they can't pursue downtime activities during any week they spend on Chapters 6–7 — expect those chapters to take about one to two weeks.</p>
+          <button type="button" class="markdone" data-act="researchdone" ${ro ? "disabled" : ""}>Reopen the research panel</button>
+        </div>
+      </section>`;
+  }
+
   pcCard(pc, i, ro) {
     const t = this.tracker;
     if (t.s.week === 10) return this.feastCard(pc, i, ro);
@@ -1626,6 +1731,7 @@ class SoGDowntimeApp extends BaseApp {
         ${resolved ? `<div class="outcome">${DEGREE_LABEL[resolved]}${deltaBits ? ` · ${deltaBits}` : " · no change"}</div>` : ""}
 
         ${this.secondBlock(i, ro)}
+        ${t.yamiBanner(i, ro)}
       </article>`;
   }
 
@@ -1649,6 +1755,7 @@ class SoGDowntimeApp extends BaseApp {
         </div>
         <div class="trackbar hope">Feast of the Kami</div>
         ${this.feastBlock(i, ro)}
+        ${t.yamiBanner(i, ro)}
       </article>`;
   }
 
@@ -1893,6 +2000,8 @@ class SoGDowntimeApp extends BaseApp {
         t.render();
         t.save();
       }
+      else if (a === "yamigift") t.rollYamiGift();
+      else if (a === "researchdone") t.toggleResearchDone();
     });
 
     root.addEventListener("change", (ev) => {
@@ -2006,6 +2115,14 @@ class SoGDowntimeApp extends BaseApp {
           </table>
         </section>
 
+        ${s.researchDone ? `
+        <section class="panel research done">
+          <h3>Next steps — Open the Wall of Ghosts</h3>
+          <div class="nextsteps">
+            <p>The party has researched the <b>Open the Wall of Ghosts</b> ritual and can now attempt to bring down the Wall of Ghosts at their leisure.</p>
+            <p>More lies beyond the wall, in the ruins of the <b>Tan Sugi monastery</b>. Chapter 6 can begin during any remaining week of fall.</p>
+          </div>
+        </section>` : `
         <section class="panel">
           <h3>Researching the curse</h3>
           <div class="rp-total">
@@ -2018,7 +2135,7 @@ class SoGDowntimeApp extends BaseApp {
                 <div class="res-val">${s.research[k]}</div>
               </div>`).join("")}
           </div>
-        </section>
+        </section>`}
 
         <p class="hint" style="text-align:center">${mine.length
           ? "Your roll is sent to the GM, who records what it does for the town."
@@ -2080,6 +2197,7 @@ class SoGDowntimeApp extends BaseApp {
         ${act?.hint ? `<p class="hint">${act.hint}</p>` : ""}
 
         ${this.secondBlock(i, false)}
+        ${t.yamiBanner(i, false)}
       </section>`;
   }
 
@@ -2098,6 +2216,7 @@ class SoGDowntimeApp extends BaseApp {
           </div>
         </div>
         ${this.feastBlock(i, false)}
+        ${t.yamiBanner(i, false)}
       </section>`;
   }
 
@@ -2400,6 +2519,19 @@ class SoGDowntimeApp extends BaseApp {
       .sog .rep-row { display:flex; align-items:center; gap:.3rem; }
       .sog .rep-row button { width:20px; height:20px; line-height:1; border:1px solid var(--line); background:transparent; border-radius:3px; }
       .sog .yami { font-size:.75rem; color:var(--moss); margin:.4rem 0 0; }
+      .sog .yami-banner { margin-top:.45rem; padding:.5rem .6rem; border:1px solid var(--moss);
+             border-left:4px solid var(--moss); border-radius:3px; background:rgba(75,90,52,.12); }
+      .sog .yami-banner .yb-title { font-size:.8rem; font-weight:700; color:var(--moss); margin-bottom:.15rem; }
+      .sog .yami-banner .yb-text { font-size:.72rem; line-height:1.35; margin-bottom:.35rem; }
+      .sog .yami-banner .yb-btn { font-size:.75rem; padding:.3rem .5rem; border:1px solid var(--moss);
+             color:var(--moss); border-radius:3px; background:transparent; }
+      .sog .yami-banner .yb-btn:hover:not(:disabled) { background:var(--moss); color:var(--paper); }
+      .sog .yami-banner .yb-btn small { display:block; font-size:.62rem; opacity:.85; }
+      .sog .nextsteps p { font-size:.8rem; line-height:1.4; margin:.15rem 0 .4rem; }
+      .sog .panel.research.done { border-color:var(--plum); }
+      .sog .markdone { margin-top:.45rem; font-size:.75rem; padding:.3rem .5rem;
+             border:1px solid var(--plum); color:var(--plum); border-radius:3px; background:transparent; }
+      .sog .markdone:hover:not(:disabled) { background:var(--plum); color:var(--paper); }
 
       .sog .log { list-style:none; margin:0; padding:0; max-height:150px; overflow-y:auto; font-size:.75rem; }
       .sog .log li { padding:.2rem 0; border-bottom:1px dotted var(--line); line-height:1.35; }

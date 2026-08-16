@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-08-16 01:47
+
+### Added
+- Fall Downtime Tracker: once the GM reaches 10 Research Points and marks the research complete
+  (after explaining the milestone to the players), the "Researching the Curse" panel is replaced by
+  a "Next steps — Open the Wall of Ghosts" panel — the ritual can now be attempted at their leisure,
+  award 120 XP, and Chapter 6 can begin during any remaining week of fall (expect Chapters 6–7 to
+  take one to two weeks, with no downtime during those weeks). The same swap appears on the player
+  board.
+- Fall Downtime Tracker: when Yami is adopted, the bonded PC's card (GM and player views, including
+  the Week 10 feast cards) now shows a prominent reminder banner with a button that rolls the DC 11
+  flat check and, on a success, the d8 on Yami's Gifts table, naming the gift in chat.
+
 ## 2026-08-16 01:22
 
 ### Added
