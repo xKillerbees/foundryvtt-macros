@@ -1810,7 +1810,8 @@ if (AppV2) {
   if (globalThis.__dtpReq) Hooks.off("updateUser", globalThis.__dtpReq);
   globalThis.__dtpReq = Hooks.on("updateUser", async (user, changes) => {
     if (!game.user.isGM || !isPrimaryGM()) return;
-    const req = changes?.flags?.[REQ_SCOPE]?.[REQ_KEY];
+    if (!changes?.flags?.[REQ_SCOPE]?.[REQ_KEY]) return;
+    const req = user.getFlag(REQ_SCOPE, REQ_KEY);
     if (!req || !OPS[req.op] || GM_ONLY.has(req.op)) return;
     if (req.data?.actorId && !ownsActor(user, req.data.actorId)) return;
     const fresh = loadState();

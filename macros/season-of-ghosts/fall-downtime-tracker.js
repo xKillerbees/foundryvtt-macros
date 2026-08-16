@@ -264,6 +264,18 @@ const ACTIVITIES = {
   }
 };
 
+/* Week 10's Feast of the Kami replaces downtime: each PC gets three
+   Prepare-for-the-Feast checks, choosing from decorating, the banquet, or
+   inviting the kami. Each check's points land in the existing feast totals. */
+const FEAST_ACTS = {
+  decorate: { label: "Decorate the teahouse", category: "decoration",
+              skills: [["Art Lore", 17], ["Performance", 19]] },
+  banquet:  { label: "Prepare the banquet", category: "banquet",
+              skills: [["Food Lore", 17], ["Drink Lore", 17], ["Crafting", 19]] },
+  invite:   { label: "Invite the kami", category: "entertainment",
+              skills: [["Religion", 17], ["Diplomacy", 19]] }
+};
+
 /* The second, non-preparation activity each PC gets every week. Stored as the
    label so states saved before this was more than a dropdown still read. */
 const SECOND_SLOT = ["—", "Research the Curse", "Craft", "Earn Income", "Retraining", "Other"];
@@ -389,7 +401,7 @@ const RP_MILESTONES = {
 
 /* ------------------------------------------------------------------- state */
 function blankWeek() {
-  return { entries: {}, locks: {}, pen: {}, eventDone: false, log: [] };
+  return { entries: {}, locks: {}, pen: {}, eventDone: false, log: [], feastPcs: {} };
 }
 function blankState(pcs) {
   return {
@@ -554,6 +566,16 @@ const PLAYER_OPS = {
     const e = (t.w.entries[pc] ??= {});
     if (e.result) return;
     e.rolled = DEGREES.includes(degree) ? degree : null;
+  },
+  feastPick(t, { pc, slot, act }) {
+    const f = t.feastSlots(pc);
+    f[slot] = { act: act || null, skill: act ? FEAST_ACTS[act].skills[0].join("|") : "", rolled: null };
+  },
+  feastSkill(t, { pc, slot, value }) {
+    t.feastSlots(pc)[slot].skill = value;
+  },
+  feastRolled(t, { pc, slot, degree }) {
+    t.feastSlots(pc)[slot].rolled = DEGREES.includes(degree) ? degree : null;
   }
 };
 
@@ -772,6 +794,51 @@ class Tracker {
     e.sec = { ...sec, applied: true };
     this.render();
     this.save();
+  }
+
+  /* ----- Week 10: Feast of the Kami ----- */
+
+  feastSlots(pcIdx) {
+    const w = this.w;
+    w.feastPcs = w.feastPcs ?? {};
+    return w.feastPcs[pcIdx] ??= [{}, {}, {}];
+  }
+
+  async rollFeast(pcIdx, slotIdx) {
+    const slot = this.feastSlots(pcIdx)[slotIdx];
+    if (!slot?.act || !slot.skill) return ui.notifications.warn("Pick a feast activity and a skill first.");
+    const [skill, dc] = slot.skill.split("|");
+    const pc = this.s.pcs[pcIdx];
+    const actor = pc?.actorId ? game.actors.get(pc.actorId) : null;
+    const st = actor?.skills?.[checkSlug(skill)];
+    if (st?.roll) {
+      try {
+        const r = await st.roll({ dc: { value: Number(dc) }, label: FEAST_ACTS[slot.act].label });
+        const d = r?.degreeOfSuccess ?? r?.options?.degreeOfSuccess;
+        if (Number.isInteger(d)) await this.apply("feastRolled", { pc: pcIdx, slot: slotIdx, degree: DEGREES[d] });
+        return;
+      } catch (err) {
+        console.warn("Fall Downtime Tracker — feast roll failed, posting an inline check instead.", err);
+      }
+    }
+    await ChatMessage.create({
+      content: `<p style="margin:0 0 4px"><b>${esc(pc.name)}</b> — ${FEAST_ACTS[slot.act].label}</p>${checkCode(skill, dc)}`,
+      speaker: actor ? ChatMessage.getSpeaker({ actor }) : { alias: "Willowshore" }
+    });
+  }
+
+  bankFeast(pcIdx, slotIdx) {
+    if (!this.editable) return;
+    const slot = this.feastSlots(pcIdx)[slotIdx];
+    if (!slot?.act || !slot.rolled || slot.applied) return;
+    const cat = FEAST_ACTS[slot.act].category;
+    const gain = slot.rolled === "cs" ? 2 : slot.rolled === "s" ? 1 : slot.rolled === "cf" ? -1 : 0;
+    this.s.feast = this.s.feast ?? { decoration: 0, banquet: 0, entertainment: 0 };
+    this.s.feast[cat] = Math.max(0, (this.s.feast[cat] ?? 0) + gain);
+    slot.applied = true;
+    const note = slot.rolled === "cs" ? " — one of the two points may go to any category" : "";
+    this.log(`Feast — ${this.s.pcs[pcIdx].name}, ${FEAST_ACTS[slot.act].label}: ${DEGREE_LABEL[slot.rolled]}${gain ? ` (${gain > 0 ? "+" : ""}${gain} ${cap(cat)})` : ""}${note}`);
+    this.afterChange();
   }
 
   activityAvailable(key, pcIdx) {
@@ -1458,6 +1525,7 @@ class SoGDowntimeApp extends BaseApp {
 
   pcCard(pc, i, ro) {
     const t = this.tracker;
+    if (t.s.week === 10) return this.feastCard(pc, i, ro);
     const entry = t.w.entries[i] ?? {};
     const opts = Object.entries(ACTIVITIES).map(([k, a]) => {
       const blocked = t.activityAvailable(k, i);
@@ -1535,6 +1603,64 @@ class SoGDowntimeApp extends BaseApp {
 
         ${this.secondBlock(i, ro)}
       </article>`;
+  }
+
+  /* Week 10 has no downtime: the whole card becomes the three Prepare-for-the-
+     Feast checks. Same chrome as pcCard, but the body is the feast block. */
+  feastCard(pc, i, ro) {
+    const t = this.tracker;
+    const anyRolled = t.feastSlots(i).some(s => s.rolled);
+    const sub = [pc.level ? `Level ${pc.level}` : "", pc.ancestry, pc.cls].filter(Boolean).join(" · ");
+    return `
+      <article class="card ${anyRolled ? "assigned" : ""}" style="--acc:var(${PC_ACCENTS[i % PC_ACCENTS.length]})">
+        <div class="card-head">
+          <img class="avatar" src="${pc.img || "icons/svg/mystery-man.svg"}" alt="" onerror="this.src='icons/svg/mystery-man.svg'">
+          <div class="who">
+            ${pc.actorId
+              ? `<button type="button" class="pcname link" data-act="sheet" data-id="${pc.actorId}" title="Open ${esc(pc.name)}'s character sheet">${esc(pc.name)}</button>`
+              : `<span class="pcname">${esc(pc.name)}</span>`}
+            ${sub ? `<span class="pcsub">${esc(sub)}</span>` : ""}
+          </div>
+          <span class="status ${anyRolled ? "set" : "idle"}"><i></i>${anyRolled ? "Preparing" : "Idle"}</span>
+        </div>
+        <div class="trackbar hope">Feast of the Kami</div>
+        ${this.feastBlock(i, ro)}
+      </article>`;
+  }
+
+  /* The three Prepare-for-the-Feast slots for one PC, shared by the GM and
+     player cards. Rolls propose; the GM banks them into the feast totals. */
+  feastBlock(i, ro) {
+    const t = this.tracker;
+    const slots = t.feastSlots(i);
+    const rows = slots.map((f, slot) => {
+      const actOpts = Object.entries(FEAST_ACTS).map(([k, a]) =>
+        `<option value="${k}" ${f.act === k ? "selected" : ""}>${a.label}</option>`).join("");
+      const act = FEAST_ACTS[f.act];
+      const skillOpts = act
+        ? act.skills.map(([n, dc]) => `<option value="${n}|${dc}" ${f.skill === `${n}|${dc}` ? "selected" : ""}>${n} — DC ${dc}</option>`).join("")
+        : `<option value="">—</option>`;
+      const badge = f.rolled
+        ? `<span class="secres ${f.applied ? "done" : "rolled"}">${DEGREE_LABEL[f.rolled]}${f.applied ? " · banked" : ""}</span>` : "";
+      const bank = t.editable && f.rolled && !f.applied
+        ? `<button type="button" class="bank" data-act="feast-bank" data-pc="${i}" data-slot="${slot}">Bank ${DEGREE_LABEL[f.rolled]} into ${cap(FEAST_ACTS[f.act].category)}</button>` : "";
+      return `
+        <div class="secrow">
+          <select data-act="feast-pick" data-pc="${i}" data-slot="${slot}" ${ro ? "disabled" : ""}>
+            <option value="">— choose —</option>${actOpts}
+          </select>
+          <select data-act="feast-skill" data-pc="${i}" data-slot="${slot}" ${ro || !act ? "disabled" : ""}>${skillOpts}</select>
+          <button type="button" class="rollbtn" data-act="feast-roll" data-pc="${i}" data-slot="${slot}"
+                  title="Roll this check" ${ro || !act ? "disabled" : ""}><i class="fa-solid fa-dice-d20"></i></button>
+          ${badge}
+        </div>
+        ${bank ? `<div class="secrow">${bank}</div>` : ""}`;
+    }).join("");
+    return `
+      <div class="feast-pc">
+        <div class="feast-pc-head">Prepare for the Feast — three checks this week, no downtime ${this.jbtn(JPAGE.feastPrep)}</div>
+        ${rows}
+      </div>`;
   }
 
   /* The second activity, made doable rather than just named. Shared by the GM
@@ -1708,6 +1834,8 @@ class SoGDowntimeApp extends BaseApp {
       else if (a === "pmy-roll") t.rollCheck(pc);
       else if (a === "sec-roll") t.rollSecond(pc);
       else if (a === "sec-bank") t.bankResearch(pc);
+      else if (a === "feast-roll") t.rollFeast(pc, Number(btn.dataset.slot));
+      else if (a === "feast-bank") t.bankFeast(pc, Number(btn.dataset.slot));
       else if (a === "opendoc") {
         const doc = await fromUuid(btn.dataset.uuid).catch(() => null);
         if (doc?.sheet) doc.sheet.render(true);
@@ -1753,6 +1881,8 @@ class SoGDowntimeApp extends BaseApp {
          than writing the setting directly. */
       if (a === "pmy-pick") return void t.apply("pick", { pc, key: el.value });
       if (a === "pmy-skill") return void t.apply("skill", { pc, value: el.value });
+      if (a === "feast-pick") return void t.apply("feastPick", { pc, slot: Number(el.dataset.slot), act: el.value });
+      if (a === "feast-skill") return void t.apply("feastSkill", { pc, slot: Number(el.dataset.slot), value: el.value });
       /* The second-activity controls are the same markup on both boards, so
          they route through the relay for everyone. */
       if (a === "second") return void t.apply("second", { pc, value: el.value });
@@ -1877,6 +2007,7 @@ class SoGDowntimeApp extends BaseApp {
      stay off this card — the pools above are the only numbers players see. */
   playerCard(pc, i) {
     const t = this.tracker;
+    if (t.s.week === 10) return this.playerFeastCard(pc, i);
     const e = t.w.entries[i] ?? {};
     const act = ACTIVITIES[e.activity];
     const locked = !!e.result;
@@ -1925,6 +2056,24 @@ class SoGDowntimeApp extends BaseApp {
         ${act?.hint ? `<p class="hint">${act.hint}</p>` : ""}
 
         ${this.secondBlock(i, false)}
+      </section>`;
+  }
+
+  /* Week 10 player card: the same three feast checks, minus the GM's bank
+     button (the roll is sent to the GM as a proposal). */
+  playerFeastCard(pc, i) {
+    const t = this.tracker;
+    const anyRolled = t.feastSlots(i).some(s => s.rolled);
+    return `
+      <section class="panel mycard">
+        <div class="my-head">
+          <img class="avatar" src="${pc.img || "icons/svg/mystery-man.svg"}" alt="" onerror="this.src='icons/svg/mystery-man.svg'">
+          <div class="who">
+            <span class="pcname">${esc(pc.name)}</span>
+            <span class="pcsub">${anyRolled ? "Feast rolls sent to the GM" : "Three checks to prepare for the feast"}</span>
+          </div>
+        </div>
+        ${this.feastBlock(i, false)}
       </section>`;
   }
 
@@ -2211,6 +2360,10 @@ class SoGDowntimeApp extends BaseApp {
       .sog .fc-note { font-size:.65rem; color:var(--muted); line-height:1.25; margin-bottom:.25rem; }
       .sog .fc-btns { display:flex; gap:.25rem; }
       .sog .fc-btns button { flex:1; border:1px solid var(--line); background:transparent; border-radius:3px; }
+      .sog .feast-pc { border-top:1px dashed var(--line); margin-top:.4rem; padding-top:.4rem; }
+      .sog .feast-pc-head { font-size:.68rem; text-transform:uppercase; letter-spacing:.06em;
+                            color:var(--muted); margin-bottom:.35rem; display:flex; align-items:center;
+                            justify-content:space-between; gap:.5rem; }
 
       .sog .setup-grid { display:grid; grid-template-columns:1fr 1fr; gap:.4rem .75rem; font-size:.8rem; }
       .sog .setup-grid label { display:block; font-size:.7rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
@@ -2289,7 +2442,12 @@ async function confirmReset() {
   if (globalThis.__sogDowntimeReq) Hooks.off("updateUser", globalThis.__sogDowntimeReq);
   globalThis.__sogDowntimeReq = Hooks.on("updateUser", async (user, changes) => {
     if (!game.user.isGM || !isPrimaryGM()) return;
-    const req = changes?.flags?.[REQ_SCOPE]?.[REQ_KEY];
+    /* `changes` is a partial diff: on a re-sent op, only the fields that
+       actually changed survive, so `op` and `data.pc` can be missing from it.
+       Use the diff only to know this update touched our flag, then read the
+       full current value straight off the User document. */
+    if (!changes?.flags?.[REQ_SCOPE]?.[REQ_KEY]) return;
+    const req = user.getFlag(REQ_SCOPE, REQ_KEY);
     if (!req || !PLAYER_OPS[req.op]) return;
     if (!ownsPC(user, tracker.s, req.data?.pc)) return;
     PLAYER_OPS[req.op](tracker, req.data);
