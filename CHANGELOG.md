@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-08-15 21:35
+
+### Fixed
+- Downtime Planner: the request button disappeared once the next period already existed — a
+  player couldn't ask for a new period after the GM had opened one and looked back. The button
+  is now always visible to a party member, and a request always names the next period that
+  doesn't exist yet (latest existing period + 1), so it never targets an already-open period
+
 ## 2026-08-15 21:26
 
 ### Added
@@ -8,7 +16,7 @@
   sender is named from the hook, not the payload), and the GM gets a banner listing who's
   asked with a one-click "Open period N", plus a chat notice the moment a request lands.
   Requests live in the world setting until the GM opens the period, and a player can withdraw
-  theirs. The button only appears while the next period doesn't exist yet
+  theirs. The button is always available to a party member
 
 ## Unreleased
 

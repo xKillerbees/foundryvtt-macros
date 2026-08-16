@@ -553,6 +553,15 @@ function blankState() {
     ui: {}
   };
 }
+
+/* The number of the next period that doesn't exist yet — what "request a new
+   period" asks the GM to open. Always the latest existing period plus one, so a
+   request never targets a period the GM has already opened, even while the GM
+   is looking back at an older one. */
+function nextPeriodNum(s) {
+  const nums = Object.keys(s.periods ?? {}).map(Number).filter(Number.isFinite);
+  return (nums.length ? Math.max(...nums) : 0) + 1;
+}
 /* A skill or lore select has to be *stored* as well as shown. Resolving it
    against the actor here — rather than letting the markup fall back to the
    first option — is what keeps a freshly added row rollable before anyone has
@@ -664,10 +673,11 @@ const OPS = {
   },
   /* A player asking the GM to open the next period. Requests are stored under
      the period number being asked for, so they survive until the GM actually
-     opens it — setPeriod clears them once it does. */
+     opens it — setPeriod clears them once it does. The target is always the
+     latest existing period plus one, so a request never names a period that
+     already exists. */
   requestPeriod(s, { by, name }) {
-    const target = s.period + 1;
-    if (s.periods[String(target)]) return;   // already open — nothing to request
+    const target = nextPeriodNum(s);
     const reqs = (s.requests ??= {});
     (reqs[String(target)] ??= {})[by] = name;
   },
@@ -1328,12 +1338,13 @@ class DowntimeApp extends BaseApp {
 
   /* Players can't touch the calendar, but they can ask the GM to open the next
      period. For the GM this is the banner naming who asked, with a one-click
-     open; for a player it's the request button and, once asked, a withdraw. */
+     open; for a player it's the request button and, once asked, a withdraw.
+     The button is always there for a party member — it asks for the next period
+     that doesn't exist yet, whatever the GM is currently looking at. */
   requestBar() {
     const P = this.planner;
-    const target = P.s.period + 1;
+    const target = nextPeriodNum(P.s);
     const reqs = P.s.requests?.[String(target)] ?? {};
-    const nextExists = !!P.s.periods[String(target)];
     const label = P.s.periods[String(target)]?.label ?? `Downtime ${target}`;
 
     if (P.isGM) {
@@ -1346,9 +1357,7 @@ class DowntimeApp extends BaseApp {
       </div>`;
     }
 
-    /* Only a party member asks, and only while the next period doesn't exist —
-       once it does, the GM has already opened it. */
-    if (nextExists || !myPCs(P.pcs).length) return "";
+    if (!myPCs(P.pcs).length) return "";
     const mine = reqs[game.user.id];
     if (mine) {
       return `<div class="reqbar">
@@ -1906,7 +1915,7 @@ if (AppV2) {
     await game.settings.set(SETTING_NS, SETTING_KEY, planner.state);
     if (req.op === "requestPeriod") {
       const name = req.data.name;
-      const target = planner.state.period + 1;
+      const target = nextPeriodNum(planner.state);
       const label = planner.state.periods[String(target)]?.label ?? `Downtime ${target}`;
       const D = PALETTES.parchment;
       ui.notifications.info(`${name} asks for a new downtime period.`);

@@ -186,11 +186,14 @@ function check(label, cond, detail) {
   check("opening the period clears its requests", !opened.requests?.["2"], JSON.stringify(opened.requests));
   check("the next period now exists", !!opened.periods["2"]);
 
-  // A request for a period that already exists is a no-op.
+  // Requesting while the GM looks back at an older period still targets the
+  // newest period + 1, never an already-open one.
   const back = foundry.utils.deepClone(opened);
   back.period = 1;
   OPS.requestPeriod(back, { by: "player", name: "Aiko" });
-  check("a request for an already-open period is a no-op", !back.requests?.["2"]?.["player"]);
+  check("request from an older period targets the newest + 1",
+    !back.requests?.["2"] && back.requests?.["3"]?.["player"] === "Aiko",
+    JSON.stringify(back.requests));
 
   console.log("\n" + (failures === 0 ? "ALL CHECKS PASSED" : failures + " CHECK(S) FAILED"));
   process.exit(failures === 0 ? 0 : 1);

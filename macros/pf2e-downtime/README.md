@@ -60,10 +60,11 @@ and what the party will be richer by at the end of it.
   level, the master and legendary ranks that level 9 and 17 items need, and anything uncommon or
   rare needing access before you can make one
 - A chat card for one character's plan or the whole party's
-- A **request the next period** button for players. The calendar is the GM's, so a player
-  who's done with this stretch asks for the next one instead of reaching for the ▶ — the GM
-  sees a banner naming who asked, a one-click open, and a chat notice, and the request
-  persists in the world setting until then (and can be withdrawn)
+- A **request the next period** button for players — always visible to a party member. The
+  calendar is the GM's, so a player who's done with this stretch asks for the next one instead
+  of reaching for the ▶; the request always names the next period that doesn't exist yet, and
+  the GM sees a banner naming who asked, a one-click open, and a chat notice. It persists in
+  the world setting until the period is opened (and can be withdrawn)
 
 ### The house rules
 
