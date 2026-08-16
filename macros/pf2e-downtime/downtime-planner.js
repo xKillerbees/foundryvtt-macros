@@ -606,8 +606,10 @@ function studyFor(s, actorId) {
 }
 
 const OPS = {
-  addRow(s, { actorId, act }) {
-    planFor(s, actorId).rows.push(blankRow(act, actorId));
+  addRow(s, { actorId, act, id }) {
+    const row = blankRow(act, actorId);
+    if (id != null) row.id = id;
+    planFor(s, actorId).rows.push(row);
   },
   setRow(s, { actorId, rowId, patch }) {
     const row = planFor(s, actorId).rows.find(r => r.id === rowId);
@@ -618,11 +620,11 @@ const OPS = {
   },
   /* Fills an existing Craft row from a dropped item, or starts one if the drop
      landed on the panel rather than on a row. */
-  setCraft(s, { actorId, rowId, item }) {
+  setCraft(s, { actorId, rowId, item, id }) {
     const plan = planFor(s, actorId);
     let row = rowId ? plan.rows.find(r => r.id === rowId) : null;
     if (row && row.act !== "craft") return;
-    if (!row) { row = blankRow("craft", actorId); plan.rows.push(row); }
+    if (!row) { row = blankRow("craft", actorId); if (id != null) row.id = id; plan.rows.push(row); }
     /* Setup is one day with the formula and two without, so dropping an item
        can change the floor under the day count. Move the days with it while
        they're still sitting on that floor, and never leave them below it. */
@@ -707,6 +709,14 @@ class Planner {
   /* One entry point for every change. The GM writes; a player relays. */
   async apply(op, data) {
     if (!OPS[op]) return;
+    /* A row id has to be minted exactly once, on the client that asked for the
+       change, and carried through the relay. The GM re-runs the same op on its
+       own state, and if it rolled a fresh id there every later edit keyed to
+       that id — skill, days, degree, the "done" checkbox — would never find the
+       row and would be dropped silently. */
+    if ((op === "addRow" || (op === "setCraft" && !data?.rowId)) && data?.id == null) {
+      data = { ...data, id: uid() };
+    }
     if (this.isGM) {
       OPS[op](this.s, data);
       await game.settings.set(SETTING_NS, SETTING_KEY, this.s);
@@ -1814,9 +1824,12 @@ if (AppV2) {
     const req = user.getFlag(REQ_SCOPE, REQ_KEY);
     if (!req || !OPS[req.op] || GM_ONLY.has(req.op)) return;
     if (req.data?.actorId && !ownsActor(user, req.data.actorId)) return;
-    const fresh = loadState();
-    OPS[req.op](fresh, req.data);
-    await game.settings.set(SETTING_NS, SETTING_KEY, fresh);
+    /* Apply to the live state rather than re-reading the setting: two relays
+       arriving back-to-back share one object, so the second sees the first's
+       change even before its settings write has landed (re-reading the setting
+       there reads a stale copy and drops the second op). */
+    OPS[req.op](planner.state, req.data);
+    await game.settings.set(SETTING_NS, SETTING_KEY, planner.state);
   });
 
   /* Re-registered rather than guarded: running the macro again builds a new

@@ -154,6 +154,11 @@ Shares the shape of the other consoles in this repo:
   put back.
 - Activities are data. Adding one is an entry in `ACTS` with its fields, its DC function, and its
   four outcome lines — the UI is generic over that.
+- **Row ids are minted once and relayed.** An op that creates a row (`addRow`, or a `setCraft` drop
+  onto the panel) generates its id on the client that asked for the change and carries it in the
+  op's data, and the GM's copy honours that id. Minting a fresh id inside the reducer instead would
+  leave player and GM holding different ids, so every later edit keyed to the row — skill, days,
+  degree, the `done` checkbox — would find nothing on the GM's side and be dropped silently.
 - A row's skill is resolved against the actor when the row is created, not left to the dropdown's
   first option. A rendered default that was never stored is a check that posts without a skill.
 - A dropped item is resolved on the client that dropped it, and only the plain facts read off the
