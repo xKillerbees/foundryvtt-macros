@@ -539,11 +539,12 @@ const myPCs = (pcs) => pcs.filter(p => ownsActor(game.user, p.actorId));
 /* ------------------------------------------------------------------- state */
 
 /* A period carries the moment it was opened, in both the real world and the
-   game's own calendar, for the historical record. The real-world stamp is a
-   plain wall-clock string; the in-game one reads SimpleCalendar when that
-   module is installed (the de-facto standard for PF2e games) and is simply
-   left out of worlds with no calendar module. Periods opened before this
-   feature shipped carry neither. */
+   game's own clock, for the historical record. The real-world stamp is a plain
+   wall-clock string; the in-game one reads SimpleCalendar when that module is
+   installed (the de-facto standard for PF2e games) and otherwise falls back to
+   Foundry's own world clock — the seconds the world time has advanced, rendered
+   "N days, N hours" by the core. A world with neither reads neither, and the
+   period shows a dash. Periods opened before this feature shipped carry none. */
 
 function fmtReal(ms) {
   const d = new Date(ms);
@@ -552,31 +553,50 @@ function fmtReal(ms) {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
-/* The game's current date, through SimpleCalendar's API where it's present. */
+/* The game's current in-game time. SimpleCalendar (the de-facto calendar on
+   PF2e tables) wins when it's installed; a world without it falls back to
+   Foundry's native world clock — `game.time.worldTime`, the seconds the world
+   time has advanced since the world's epoch, rendered "N days, N hours" by
+   `GameTime.getWorldTime`. A world with neither reads null, and the UI shows a
+   dash rather than inventing a date. */
 function worldDate() {
+  /* SimpleCalendar first: a real calendar date where one exists. */
   try {
     const api = globalThis.SimpleCalendar?.api;
-    if (!api) return null;
-    if (typeof api.currentDateTime === "function") {
-      const d = api.currentDateTime();
-      if (!d) return null;
-      /* v2 returns a DateTime with a ready-made display string. */
-      if (d.display?.date) {
-        const t = d.display.time && d.display.time !== "00:00:00" ? " " + d.display.time : "";
-        return d.display.date + t;
+    if (api) {
+      if (typeof api.currentDateTime === "function") {
+        const d = api.currentDateTime();
+        if (d) {
+          /* v2 returns a DateTime with a ready-made display string. */
+          if (d.display?.date) {
+            const t = d.display.time && d.display.time !== "00:00:00" ? " " + d.display.time : "";
+            return d.display.date + t;
+          }
+          /* ...and a numeric shape (year/month/day/hour/minute) as a fallback. */
+          if (d.year != null) {
+            const p = (x) => String(x).padStart(2, "0");
+            let s = `${d.year}-${p(d.month ?? 1)}-${p(d.day ?? 1)}`;
+            if (d.hour != null) s += ` ${p(d.hour)}:${p(d.minute ?? 0)}`;
+            return s;
+          }
+        }
+      } else if (typeof api.currentDateTimeDisplay === "function") {
+        const x = api.currentDateTimeDisplay();
+        if (x?.date) return x.date + (x.time && x.time !== "00:00:00" ? " " + x.time : "");
       }
-      /* ...and a numeric shape (year/month/day/hour/minute) as a fallback. */
-      if (d.year != null) {
-        const p = (x) => String(x).padStart(2, "0");
-        let s = `${d.year}-${p(d.month ?? 1)}-${p(d.day ?? 1)}`;
-        if (d.hour != null) s += ` ${p(d.hour)}:${p(d.minute ?? 0)}`;
-        return s;
-      }
-    } else if (typeof api.currentDateTimeDisplay === "function") {
-      const x = api.currentDateTimeDisplay();
-      if (x?.date) return x.date + (x.time && x.time !== "00:00:00" ? " " + x.time : "");
     }
-  } catch { /* no calendar module — fine */ }
+  } catch { /* SimpleCalendar present but throwing — fall through to the world clock */ }
+
+  /* No calendar module: read Foundry's native world clock. */
+  try {
+    const t = game?.time;
+    if (!t) return null;
+    const secs = Number(t.worldTime ?? t.getCurrentTick?.());
+    if (Number.isFinite(secs) && secs > 0 && typeof t.getWorldTime === "function") {
+      return t.getWorldTime(secs);
+    }
+  } catch { /* no usable world clock — fine */ }
+
   return null;
 }
 
@@ -1433,7 +1453,7 @@ class DowntimeApp extends BaseApp {
     }
     const bits = [];
     if (c.real) bits.push(`<span class="sr" title="Real-world clock">${esc(c.real)}</span>`);
-    if (c.world) bits.push(`<span class="sw" title="In-game calendar">${esc(c.world)}</span>`);
+    if (c.world) bits.push(`<span class="sw" title="In-game time">${esc(c.world)}</span>`);
     return `<span class="stamp" title="When this period was created">${compact ? "" : "Created "}${bits.join(" · ")}</span>`;
   }
 

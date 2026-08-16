@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-08-15 22:17
+
+### Changed
+- Downtime Planner: the in-game half of a period's creation stamp now falls back to Foundry's
+  native world clock when SimpleCalendar isn't installed, rather than showing a dash. A world
+  with SimpleCalendar still gets the calendar date; without it the stamp reads
+  `game.time.worldTime` rendered as "N days, N hours", and a world with neither shows a dash
+  rather than a made-up date
+
 ## 2026-08-15 21:52
 
 ### Added

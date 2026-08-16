@@ -210,7 +210,7 @@ function check(label, cond, detail) {
   check("stampPeriod adds a real-world stamp", !!s6.periods["1"].created?.real);
   check("stamp is a wall-clock string", /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(s6.periods["1"].created.real));
   check("stamp carries a numeric ts", Number.isFinite(s6.periods["1"].created.ts));
-  check("no calendar module -> no in-game date", s6.periods["1"].created.world === null);
+  check("no calendar and no world clock -> no in-game time", s6.periods["1"].created.world === null);
 
   const np = newPeriod(7);
   check("newPeriod stamps the period it creates", !!np.created && !!np.created.real && np.label === "Downtime 7");
@@ -226,7 +226,22 @@ function check(label, cond, detail) {
   check("deleting the last period re-creates a fresh period 1", !!s6.periods["1"] && s6.period === 1);
   check("re-created period 1 is stamped", !!s6.periods["1"].created);
   check("fmtReal renders a stable wall-clock string", /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(fmtReal(Date.now())));
-  check("worldDate is null with no calendar module", worldDate() === null);
+  /* worldDate precedence: SimpleCalendar > Foundry world clock > null. */
+  delete globalThis.SimpleCalendar;
+  globalThis.game.time = undefined;
+  check("worldDate is null with no calendar module and no world clock", worldDate() === null);
+
+  globalThis.game.time = { worldTime: 3 * 86400 + 4 * 3600, getWorldTime: (s) => `${Math.floor(s / 86400)} days, ${Math.floor((s % 86400) / 3600)} hours` };
+  check("worldDate falls back to the Foundry world clock", worldDate() === "3 days, 4 hours");
+  const sClock = {};
+  stampPeriod(sClock);
+  check("a period stamped with a world clock carries it", sClock.created?.world === "3 days, 4 hours");
+
+  globalThis.game.time = { worldTime: 0, getWorldTime: () => "0 days" };
+  check("an un-advanced world clock reads null", worldDate() === null);
+
+  globalThis.SimpleCalendar = { api: { currentDateTime: () => ({ display: { date: "Abadius 12, 4722 AR", time: "14:00" } }) } };
+  check("worldDate prefers SimpleCalendar when installed", worldDate() === "Abadius 12, 4722 AR 14:00");
 
   console.log("\n" + (failures === 0 ? "ALL CHECKS PASSED" : failures + " CHECK(S) FAILED"));
   process.exit(failures === 0 ? 0 : 1);
