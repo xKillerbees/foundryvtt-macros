@@ -755,5 +755,77 @@ globalThis.FIXTURES = {
       rp: { ch8: 8, ch9: 0 },
       xp: 300
     }
+  },
+
+  /* Who Leads Willowshore? — the champions' duel, mid-Trial: PC vs PC (Aiko
+     for Northridge, Daizen for Southbank), three rounds in, Southbank ahead. */
+  "duel": {
+    "world.sogWhoLeads": {
+      tab: "trial",
+      mode: "trial",
+      north: { kind: "pc", actorId: "pc1", name: "Aiko" },
+      south: { kind: "pc", actorId: "pc2", name: "Daizen" },
+      favorStart: { north: 2, south: 1 },
+      rounds: { r1: "n", r2: "s", r3: "S", r4: null, r5: null },
+      winner: "",
+      leadup: { courted: true, rallied: true }
+    },
+    "world.sogFallDowntime": {
+      pools: { hope: 8, food: 6, security: 5, restoration: 2 },
+      rep: { southbank: 1, northridge: 2 }
+    }
+  },
+
+  /* The same event thrown: Hu has conceded privately and the party stages the
+     fix. Four rounds sold, Suspicion at 4 (Whispers), Matsuki in on it. */
+  "duel-thrown": {
+    "world.sogWhoLeads": {
+      tab: "trial",
+      mode: "thrown",
+      north: { kind: "pc", actorId: "pc3", name: "Miyu" },
+      south: { kind: "pc", actorId: "pc4", name: "Tenzo" },
+      matsukiKnows: "in",
+      rounds: { r1: "k", r2: "b", r3: "c", r4: "k", r5: null },
+      winner: "north",
+      leadup: { rehearsed: true, defused: true }
+    },
+    "world.sogFallDowntime": {
+      pools: { hope: 8, food: 6, security: 5, restoration: 2 },
+      rep: { southbank: 1, northridge: 2 }
+    }
+  },
+
+  /* The landing (setup) tab in thrown mode: PC vs PC champions, the
+     knows-panel, and a couple of lead-up levers already toggled. */
+  "duel-setup": {
+    "world.sogWhoLeads": {
+      tab: "setup",
+      mode: "thrown",
+      north: { kind: "pc", actorId: "pc1", name: "Aiko" },
+      south: { kind: "pc", actorId: "pc2", name: "Daizen" },
+      matsukiKnows: "won",
+      favorStart: { north: 2, south: 1 },
+      leadup: { courted: true, rallied: true, rehearsed: true }
+    }
+  },
+
+  /* The verdict tab: Southbank carries the town, the rift healed, the party
+     levelled to 3. */
+  "duel-verdict": {
+    "world.sogWhoLeads": {
+      tab: "verdict",
+      mode: "trial",
+      north: { kind: "pc", actorId: "pc1", name: "Aiko" },
+      south: { kind: "pc", actorId: "pc2", name: "Daizen" },
+      favorStart: { north: 2, south: 1 },
+      rounds: { r1: "n", r2: "s", r3: "S", r4: "s", r5: "t" },
+      winner: "south",
+      beats: { rift: true },
+      leveled: true
+    },
+    "world.sogFallDowntime": {
+      pools: { hope: 8, food: 6, security: 5, restoration: 2 },
+      rep: { southbank: 1, northridge: 2 }
+    }
   }
 };

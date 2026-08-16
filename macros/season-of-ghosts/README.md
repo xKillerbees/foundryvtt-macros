@@ -12,6 +12,7 @@ Built for **PF2e** on Foundry **v11–v14**.
 | [`enlightened-path-console.js`](enlightened-path-console.js) | Act 2 Ch. 6 — the Wall of Ghosts and the Pilgrim's Path | Complete |
 | [`ruins-of-wisdom-console.js`](ruins-of-wisdom-console.js) | Act 2 Ch. 7 — the ruined Tan Sugi monastery | Complete |
 | [`no-breath-to-cry-console.js`](no-breath-to-cry-console.js) | Act 3 Ch. 8–10 — the whole of winter | Complete |
+| [`who-leads-willowshore-console.js`](who-leads-willowshore-console.js) | Act 1 Ch. 3 — the champions' duel for the town's leadership | Complete |
 | [`campaign-status-tracker.js`](campaign-status-tracker.js) | All four acts — a checklist for the whole AP | Complete |
 
 ## Install
@@ -178,6 +179,23 @@ The whole of Act 3 — winter — in one window: the clock and the three chapter
 The **Two Weavers rework** seeds in Chapter 9 — the exorcist's murmur about a woman in crimson
 silks, and Ren Mei Li's "owed a quarrel" warning — are carried as beats flagged *rework-only*, so
 the printed-book content stays distinguishable from the homebrew that pays off in Act 4.
+
+### Who Leads Willowshore?
+
+![The Trial of Champions, mid-bout, PC against PC](../../screenshots/season-of-ghosts/who-leads-willowshore-console.png)
+
+Old Matsuki publicly challenges Granny Hu for the town's leadership, settled by a duel of champions in seven days — the Chapter 3 set-piece and the Level 3 milestone, in one window.
+
+- **Champion selection** for both seats: any PC for Northridge or Southbank, with Capt. Zheng Peng and Yong Wu-Xiu as the NPC stand-ins when a seat is empty, plus a third-candidate option
+- **The seven-day lead-up**: starting-Favor steppers set from the week's scenes, with the reputation / influence / rally / rehearse / defuse levers as a tracked checklist
+- **The five-round Trial of Champions** on two live Favor tallies — the Address, the bout (best-of-3), the winter riddle, the People (double Favor), and the Verdict — each round's checks posted to chat as rollable inline checks
+- **The thrown-duel variant** from *The Worked Duel*: Hu has conceded privately and the party stages a face-saving fix, scored on a Suspicion track (0–3 Flawless / 4–6 Whispers / 7+ Exposed) with per-round sell deltas, a blowout toggle, and the money-shot finale
+- A **verdict tab** that declares the winner, applies the reversible write-through beats (heal the rift → Hope + Reputation, back the winner, or a bloodbath) to the Fall Downtime Tracker's pools, and marks the level-up to 3
+- Read-aloud for the challenge and the verdict posted to chat in-world; the cast (both elders, the stand-ins, Shinzo, and Heh's shadow) on the landing tab
+
+![The thrown duel, four rounds sold, Suspicion at Whispers](../../screenshots/season-of-ghosts/who-leads-willowshore-console-thrown.png)
+
+![The landing tab: champion selection and the lead-up](../../screenshots/season-of-ghosts/who-leads-willowshore-console-setup.png)
 
 ### Campaign Status Tracker
 

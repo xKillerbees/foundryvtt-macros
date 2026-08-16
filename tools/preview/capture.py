@@ -65,6 +65,15 @@ SHOTS = {
     "winter-clock": (
         "season-of-ghosts/no-breath-to-cry-console.js", "winter-clock",
         "season-of-ghosts/no-breath-to-cry-clock.png"),
+    "duel": (
+        "season-of-ghosts/who-leads-willowshore-console.js", "duel",
+        "season-of-ghosts/who-leads-willowshore-console.png"),
+    "duel-thrown": (
+        "season-of-ghosts/who-leads-willowshore-console.js", "duel-thrown",
+        "season-of-ghosts/who-leads-willowshore-console-thrown.png"),
+    "duel-setup": (
+        "season-of-ghosts/who-leads-willowshore-console.js", "duel-setup",
+        "season-of-ghosts/who-leads-willowshore-console-setup.png"),
     "campaign": (
         "season-of-ghosts/campaign-status-tracker.js", "campaign",
         "season-of-ghosts/campaign-status-tracker.png"),

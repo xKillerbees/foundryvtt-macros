@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-08-16 03:31
+
+### Added
+- Season of Ghosts: the **Who Leads Willowshore?** console — the Chapter 3 set-piece and the Level 3
+  milestone in one window. Champion selection for both seats (any PC, with Capt. Zheng Peng and
+  Yong Wu-Xiu as the NPC stand-ins, plus a third-candidate option), the seven-day lead-up
+  (starting-Favor steppers alongside the reputation / influence / rally / rehearse / defuse
+  checklist), and the five-round Trial of Champions on two live Favor tallies — the Address, the
+  best-of-3 bout, the winter riddle, the People at double Favor, and the Verdict — with each round's
+  checks posted to chat as rollable inline checks. The **thrown-duel** variant from "The Worked
+  Duel" swaps Favor for a Suspicion track (0–3 Flawless / 4–6 Whispers / 7+ Exposed) with per-round
+  sell deltas, a blowout toggle, and the money-shot finale. The verdict tab declares the winner,
+  applies reversible write-through beats (heal the rift → Hope + Reputation, back the winner, or a
+  bloodbath) to the Fall Downtime Tracker's pools, and marks the level-up to 3. Read-aloud for the
+  challenge and the verdict posts in-world; no GM-only chapter structure is ever posted to chat.
+
 ## 2026-08-16 02:37
 
 ### Added
