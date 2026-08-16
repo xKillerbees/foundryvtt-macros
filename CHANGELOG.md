@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-08-16 02:04
+
+### Changed
+- Fall Downtime Tracker: the "Next steps — Open the Wall of Ghosts" panel now carries the book's
+  player-facing ritual description (Consecrate ritual + Sangpotshi theory + Zoudou's notes) instead
+  of the "Chapter 6" note — players are no longer told about chapter structure. The ritual's timing
+  is now stated as a crescent or new moon (the second half of each month), and the GM's copy is
+  flagged as read-aloud text with the 120 XP award kept as a GM-only footnote.
+
 ## 2026-08-16 01:47
 
 ### Added

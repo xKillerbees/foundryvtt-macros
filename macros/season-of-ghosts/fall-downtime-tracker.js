@@ -1644,9 +1644,12 @@ class SoGDowntimeApp extends BaseApp {
       <section class="panel research done">
         <h3>Next steps — Open the Wall of Ghosts ${this.jbtn(JPAGE.research)}</h3>
         <div class="nextsteps">
-          <p>The party has researched the <b>Open the Wall of Ghosts</b> ritual and can now attempt to bring down the Wall of Ghosts at their leisure <b>(Through the Wall of Ghosts)</b>.</p>
-          <p>Everything the curse can teach within town has been learned — what remains lies beyond the wall, in the ruins of the <b>Tan Sugi monastery</b>. <b>Award 120 XP</b> for completing this research.</p>
-          <p>They may begin Chapter 6 during <b>any remaining week of fall</b>. Once they set out, they can't pursue downtime activities during any week they spend on Chapters 6–7 — expect those chapters to take about one to two weeks.</p>
+          <p class="read"><i class="fa-solid fa-book-open"></i> Read this to the players:</p>
+          <p>Your research into the nature of the so-called Willowshore Curse has revealed a possible method of opening a doorway through the eerie Wall of Ghosts found west of town.</p>
+          <p>By starting with a <b>Consecrate</b> ritual and then applying Sangpotshi theories of the cyclical nature of life and reincarnation, along with insights gleaned from Zoudou's notes, you've created a magical ritual that can quiet the angry spirits that haunt this misty barrier and allow other creatures to pass through into the regions beyond.</p>
+          <p>This ritual is unlikely to grant total protection from the ghosts or evil spirits within the wall itself, so once you open the wall, you and your allies might need to face additional dangers within before you can exit the other side.</p>
+          <p>In addition, the ritual must be performed during a <b>crescent or new moon</b> (a time that equates to the second half of each month).</p>
+          <p class="gmnote"><b>Award 120 XP</b> for completing this research.</p>
           <button type="button" class="markdone" data-act="researchdone" ${ro ? "disabled" : ""}>Reopen the research panel</button>
         </div>
       </section>`;
@@ -2119,8 +2122,10 @@ class SoGDowntimeApp extends BaseApp {
         <section class="panel research done">
           <h3>Next steps — Open the Wall of Ghosts</h3>
           <div class="nextsteps">
-            <p>The party has researched the <b>Open the Wall of Ghosts</b> ritual and can now attempt to bring down the Wall of Ghosts at their leisure.</p>
-            <p>More lies beyond the wall, in the ruins of the <b>Tan Sugi monastery</b>. Chapter 6 can begin during any remaining week of fall.</p>
+            <p>Your research into the nature of the so-called Willowshore Curse has revealed a possible method of opening a doorway through the eerie Wall of Ghosts found west of town.</p>
+            <p>By starting with a <b>Consecrate</b> ritual and then applying Sangpotshi theories of the cyclical nature of life and reincarnation, along with insights gleaned from Zoudou's notes, you've created a magical ritual that can quiet the angry spirits that haunt this misty barrier and allow other creatures to pass through into the regions beyond.</p>
+            <p>This ritual is unlikely to grant total protection from the ghosts or evil spirits within the wall itself, so once you open the wall, you and your allies might need to face additional dangers within before you can exit the other side.</p>
+            <p>In addition, the ritual must be performed during a <b>crescent or new moon</b> (a time that equates to the second half of each month).</p>
           </div>
         </section>` : `
         <section class="panel">
@@ -2528,6 +2533,10 @@ class SoGDowntimeApp extends BaseApp {
       .sog .yami-banner .yb-btn:hover:not(:disabled) { background:var(--moss); color:var(--paper); }
       .sog .yami-banner .yb-btn small { display:block; font-size:.62rem; opacity:.85; }
       .sog .nextsteps p { font-size:.8rem; line-height:1.4; margin:.15rem 0 .4rem; }
+      .sog .nextsteps p.read { font-size:.68rem; text-transform:uppercase; letter-spacing:.06em;
+             color:var(--muted); margin:.1rem 0 .3rem; }
+      .sog .nextsteps p.gmnote { font-size:.78rem; color:var(--moss); margin-top:.5rem;
+             padding-top:.4rem; border-top:1px solid var(--line); }
       .sog .panel.research.done { border-color:var(--plum); }
       .sog .markdone { margin-top:.45rem; font-size:.75rem; padding:.3rem .5rem;
              border:1px solid var(--plum); color:var(--plum); border-radius:3px; background:transparent; }
