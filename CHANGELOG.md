@@ -1,15 +1,18 @@
 # Changelog
 
-## 2026-08-17 00:23
+## 2026-08-17 00:42
 
 ### Fixed
-- No Breath to Cry console: the Chapter 10 Terror **Thresholds** table highlighted its
-  reached rows (Terror level at or below the current total) with a black-based tint
-  (`rgba(0,0,0,.05)`, the shared `--stripe`), which greyed the active rows out and made
-  them read darker and muddier than the rest of the table. Active rows now use a warm
-  plum highlight (`--plumSoft`, added to both the parchment and dark palettes) so the
-  rows in effect read as *highlighted* rather than dimmed, and the bold plum Terror
-  number stays fully legible.
+- No Breath to Cry console: every table — the Winter-clock **Unexpected Troubles**
+  table, the research **Mode** table, and Chapter 10's Terror **Thresholds** and
+  **menu** — rendered as an unreadable dark band in Foundry. The PF2e system styles
+  tables inside application windows (a dark-tinted `thead` plus its own row striping,
+  chosen for its dark theme), and the console's bare class selectors (`.nbt .table
+  th/td`) lost to it: header labels sat on a near-black bar and body rows got a grey
+  zebra stripe. The table rules are now prefixed with the window id
+  (`#nbt-console .nbt .table …`) and explicitly reset `background`/`border` on the
+  table, `thead`, `tbody`, `tr`, `th`, and `td`, so the parchment card shows through
+  and the muted headers / dark-ink body read as intended.
 
 ## 2026-08-16 21:56
 
