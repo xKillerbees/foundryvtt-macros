@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-08-17 13:32
+
+### Added
+- **Who Leads Willowshore? — a spoiler-free player board.** Players given OBSERVER permission on
+  the macro now get a read-only board instead of the GM console: the two champions (plus any third
+  candidate), a five-round stepper marking which rounds are decided, and the live Favor tallies
+  once the Trial is underway, ending in the announced verdict. It re-renders on every GM update
+  through the existing world-setting sync hook, so the board moves as the GM records the duel with
+  nothing to re-post. Everything the crowd can't see stays off it — the thrown duel's Suspicion
+  track, sell notes, and fix, the cast's GM-only cards, the beats, and the level flag — and the
+  verdict is withheld in thrown mode until all five rounds are done, so the fix's target is never
+  revealed early. A `duel-player` preview fixture (plus a `duel-player-thrown` regression fixture)
+  and a README screenshot were added.
+
+### Fixed
+- Who Leads Willowshore?: **Post the standing** no longer leaks the Suspicion track into public
+  chat during a thrown duel — the standing now posts only the champions when the fight is fixed.
+
 ## 2026-08-17 01:09
 
 ### Added

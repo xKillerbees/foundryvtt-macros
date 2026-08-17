@@ -416,9 +416,11 @@ class WhoLeads {
   }
   async postStatus() {
     const s = this.s, f = this.favor;
+    // The Suspicion track is GM-only — a thrown duel has no public standing to
+    // post, so in thrown mode only the champions are shared.
     const modeLine = s.mode === "trial"
       ? `<p style="margin:0 0 4px"><b>Favor</b> Northridge ${f.north} · Southbank ${f.south}</p>`
-      : `<p style="margin:0 0 4px"><b>Suspicion</b> ${this.suspicion} — ${this.band.label}</p>`;
+      : "";
     return this.postCard("Who Leads Willowshore?", "The standing",
       `<p style="margin:0 0 4px"><b>Champions</b> ${esc(s.north.name)} (Northridge) · ${esc(s.south.name)} (Southbank)</p>${modeLine}`, "gold");
   }
@@ -474,6 +476,7 @@ class WLRApp extends BaseApp {
 
   /* -------------------------------------------------------------- markup */
   markup() {
+    if (!game.user.isGM) return this.playerMarkup();
     const t = this.t, s = t.s, ro = !t.editable;
     return `${this.styles()}
       <div class="wlw">
@@ -488,6 +491,98 @@ class WLRApp extends BaseApp {
         ${s.tab === "setup" ? this.setupTab(ro) : ""}
         ${s.tab === "trial" ? this.trialTab(ro) : ""}
         ${s.tab === "verdict" ? this.verdictTab(ro) : ""}
+      </div>`;
+  }
+
+  /* --------------------------------------------- non-spoiler player view
+     The board players open on their own clients. It shows only what the crowd
+     sees — the champions, the five public rounds, the Trial's Favor tallies,
+     and the announced verdict. Every GM-only thread (the thrown fix, the
+     Suspicion track, who-knows-what, the cast's secrets, beats, level) stays
+     out. Auto-syncs via the updateSetting hook: every GM save re-renders. */
+  playerMarkup() {
+    const t = this.t, s = t.s, f = t.favor;
+    const isTrial = s.mode === "trial";
+    const decided = ROUNDS.filter(r => s.rounds[r.key] != null);
+    const next = ROUNDS.find(r => s.rounds[r.key] == null);
+    const finished = ROUNDS.every(r => s.rounds[r.key] != null);
+    const before = decided.length === 0;
+    // The verdict is only public once the five rounds are done — in thrown mode
+    // `winner` is set at setup time (it mirrors the fix), so gating on
+    // `finished` keeps that premature outcome off the player board.
+    const showVerdict = !!s.winner && (finished || s.winner === "gm");
+
+    const status = showVerdict ? "The people have spoken"
+      : before ? "Seven days hence"
+      : next ? `Round ${next.num} of V — ${next.name}`
+      : "The trial is underway";
+
+    const winnerName = s.winner === "north" ? ELDERS.north.name
+      : s.winner === "south" ? ELDERS.south.name
+      : s.winner === "third" ? (s.third.name || "A champion") : "";
+
+    const roundMark = (r) => {
+      const code = s.rounds[r.key];
+      const done = code != null;
+      const isNext = !showVerdict && !done && next?.key === r.key;
+      const win = done && isTrial
+        ? (code === "t" ? "Tie" : code[0].toLowerCase() === "n" ? "Northridge" : "Southbank")
+        : "";
+      return `
+        <div class="step ${done ? "done" : ""} ${isNext ? "next" : ""}" style="--st:var(--${TONES.includes(r.tone) ? r.tone : "muted"})">
+          <span class="snum">${r.num}</span>
+          <span class="sname">${esc(r.name)}</span>
+          <span class="swin">${done ? (isTrial ? esc(win) : "done") : (isNext ? "up next" : "")}</span>
+        </div>`;
+    };
+
+    const total = Math.max(1, f.north + f.south);
+    const pct = (n) => Math.round(n / total * 100);
+
+    const verdict = showVerdict ? `
+      <section class="panel verdict" style="--tone:var(--plum)">
+        <h3>The People's Verdict</h3>
+        <p class="vline">${s.winner === "gm"
+          ? "The elders step aside, and Willowshore names a new leader to carry it through the coming season."
+          : s.winner === "third"
+            ? `${esc(s.third.name || "A champion")} steps forward to take up Willowshore's leadership.`
+            : `${esc(winnerName)} is acclaimed Willowshore's new leader.`}</p>
+      </section>` : "";
+
+    return `${this.styles()}
+      <div class="wlw player">
+        <header class="ptop">
+          <div class="ptitle"><i class="fa-solid fa-crown"></i> The Champions' Duel</div>
+          <div class="pstatus">${status}</div>
+        </header>
+
+        <section class="panel" style="--tone:var(--gold)">
+          <h3>The Champions</h3>
+          <div class="champs ${s.third.on ? "three" : ""}">
+            ${this.champBadge("north")}${this.champBadge("south")}
+            ${s.third.on ? `<div class="champ third"><i class="fa-solid fa-user"></i><span class="cname">${esc(s.third.name || "A third candidate")}</span><small>third candidate</small></div>` : ""}
+          </div>
+        </section>
+
+        <section class="panel" style="--tone:var(--ember)">
+          <h3>The Trial <small>five rounds</small></h3>
+          <div class="stepper">${ROUNDS.map(r => roundMark(r)).join("")}</div>
+          ${isTrial ? `
+            <div class="tally">
+              <div class="tbar"><div class="tf n" style="width:${pct(f.north)}%"></div><div class="tf s" style="width:${pct(f.south)}%"></div></div>
+              <div class="tlabels"><span class="n"><b>${f.north}</b> Northridge</span><span class="s"><b>${f.south}</b> Southbank</span></div>
+            </div>` : ""}
+        </section>
+
+        ${verdict}
+
+        ${before ? `
+        <section class="panel" style="--tone:var(--moss)">
+          <h3>The Challenge</h3>
+          <p class="boxed">${READALOUD.opening}</p>
+        </section>` : ""}
+
+        <p class="hint" style="text-align:center">The duel updates as your GM records it.</p>
       </div>`;
   }
 
@@ -856,8 +951,32 @@ class WLRApp extends BaseApp {
       .wlw .log { margin:.2rem 0 0; padding-left:1.1rem; font-size:.76rem; line-height:1.5; color:var(--muted); }
       .wlw .log li { margin-bottom:.15rem; }
 
+      /* player view */
+      .wlw .ptop { display:flex; flex-direction:column; gap:.15rem; border:1px solid var(--line);
+                   border-radius:4px; background:var(--card); padding:.5rem .6rem; margin-bottom:.5rem; }
+      .wlw .ptitle { font-size:1.05rem; font-weight:700; display:flex; align-items:center; gap:.5rem; }
+      .wlw .ptitle i { color:var(--gold); }
+      .wlw .pstatus { font-size:.78rem; color:var(--muted); }
+      .wlw .champs.three { grid-template-columns:repeat(3,1fr); }
+      .wlw .champ.third i { color:var(--gold); }
+      .wlw .stepper { display:flex; gap:.3rem; margin:.3rem 0 .5rem; }
+      .wlw .step { flex:1; display:flex; flex-direction:column; align-items:center; gap:.15rem;
+                   border:1px solid var(--line); border-radius:4px; padding:.35rem .1rem;
+                   background:var(--stripe); text-align:center; }
+      .wlw .step .snum { font-size:.7rem; color:var(--paper); background:var(--muted);
+                         border-radius:3px; padding:0 5px; letter-spacing:.06em; }
+      .wlw .step .sname { font-size:.66rem; line-height:1.15; font-weight:600; }
+      .wlw .step .swin { font-size:.6rem; color:var(--muted); min-height:.75rem; }
+      .wlw .step.done { border-color:var(--st, var(--moss)); background:var(--card); }
+      .wlw .step.done .snum { background:var(--st, var(--moss)); }
+      .wlw .step.done .swin { color:var(--st, var(--moss)); font-weight:700; }
+      .wlw .step.next { border-color:var(--gold); border-top:3px solid var(--gold); background:var(--card); }
+      .wlw .step.next .swin { color:var(--gold); font-weight:700; text-transform:uppercase; letter-spacing:.05em; }
+      .wlw .verdict { border-left:3px solid var(--plum); }
+      .wlw .vline { font-size:.9rem; line-height:1.5; margin:.2rem 0 .4rem; }
+
       @media (max-width:800px) {
-        .wlw .champgrid, .wlw .champs, .wlw .winrow { grid-template-columns:1fr; }
+        .wlw .champgrid, .wlw .champs, .wlw .champs.three, .wlw .winrow { grid-template-columns:1fr; }
         .wlw .tabs { flex-wrap:wrap; }
       }
     </style>`;

@@ -826,6 +826,50 @@ globalThis.FIXTURES = {
     }
   },
 
+  /* The player-facing board, mid-Trial: PC vs PC champions (Aiko for
+     Northridge, Daizen for Southbank) plus a third candidate (Miyu), three
+     rounds in, Southbank ahead. Rendered as a player via __player. */
+  "duel-player": {
+    __player: "pc1",
+    "world.sogWhoLeads": {
+      tab: "trial",
+      mode: "trial",
+      north: { kind: "pc", actorId: "pc1", name: "Aiko" },
+      south: { kind: "pc", actorId: "pc2", name: "Daizen" },
+      third: { on: true, kind: "pc", actorId: "pc3", name: "Miyu" },
+      favorStart: { north: 2, south: 1 },
+      rounds: { r1: "n", r2: "s", r3: "S", r4: null, r5: null },
+      winner: "",
+      leadup: { courted: true, rallied: true }
+    },
+    "world.sogFallDowntime": {
+      pools: { hope: 8, food: 6, security: 5, restoration: 2 },
+      rep: { southbank: 1, northridge: 2 }
+    }
+  },
+
+  /* The player board in thrown mode: the fix and the Suspicion track are
+     invisible to players — they see only the champions and the round progress
+     (four sold, no score). Regression guard for the thrown-mode non-leak. */
+  "duel-player-thrown": {
+    __player: "pc1",
+    "world.sogWhoLeads": {
+      tab: "trial",
+      mode: "thrown",
+      north: { kind: "pc", actorId: "pc3", name: "Miyu" },
+      south: { kind: "pc", actorId: "pc4", name: "Tenzo" },
+      thrownWinner: "north",
+      knows: "in",
+      rounds: { r1: "k", r2: "b", r3: "c", r4: "k", r5: null },
+      winner: "north",
+      leadup: { rehearsed: true, defused: true }
+    },
+    "world.sogFallDowntime": {
+      pools: { hope: 8, food: 6, security: 5, restoration: 2 },
+      rep: { southbank: 1, northridge: 2 }
+    }
+  },
+
   /* The same event thrown: Hu has conceded privately and the party stages the
      fix. Four rounds sold, Suspicion at 4 (Whispers), Matsuki in on it. */
   "duel-thrown": {
