@@ -84,9 +84,10 @@ and the whole Karahai fortress.
 
 A checklist for the whole Adventure Path. All thirteen chapters, the decisions and items that
 outlive them, and a Threads view that separates a required prerequisite the table has walked
-past from the far more common case — a choice the party simply didn't take. Reads the four
-chapter consoles for a live rollup, down to the titles each PC won at the First Long Night.
-Every chapter, and every item that names an area, links straight into the module's journals.
+past from the far more common case — a choice the party simply didn't take. Reads the chapter
+consoles for a live rollup, down to the titles each PC won at the First Long Night, and shares
+its lantern / ringleader / leader / shrine toggles with those consoles — set a value from
+either place. Every chapter, and every item that names an area, links into the module's journals.
 
 ![The campaign tab, on Act 2 Chapter 5](screenshots/season-of-ghosts/campaign-status-tracker.png)
 

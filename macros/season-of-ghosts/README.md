@@ -253,7 +253,10 @@ produced them.
   in a finished chapter is the shape the campaign took, not a warning
 - A live rollup strip read from the chapter consoles' saved state — the Act 1 lantern and
   ringleader toggles, the named leader, the downtime pools and week, the shrine enlightenments,
-  and the statues purified — so the campaign view doesn't need re-typing
+  and the statues purified — so the campaign view doesn't need re-typing. The boolean elements
+  (lantern, ringleaders, leader, shrines) are **toggle buttons** that share one value with the
+  console that owns them: tick the lantern here or in the Summer console and it's the same
+  setting, so you can skip Act 1 yet still light the lantern from the tracker
 - The party panel reads the **First Long Night** console too: the titles and keepsakes each PC
   won at the games, so *Iron-Gut* and the gourd flask are still on the table's mind in Act 4.
   Clicking a name opens that character's sheet

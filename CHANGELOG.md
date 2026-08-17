@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-08-16 21:56
+
+### Changed
+- Campaign Status Tracker: the decisions that mirror a chapter console — the Eternal Lantern, the
+  three ringleaders (Gray Butcher, Mo Douqiu, and Gurglegut, who rides on the lantern), the named
+  leader, and the three shrine lights — are no longer a private second copy. They read and write
+  the console's own setting field (`world.sogSummer`, `world.sogWhoLeads`,
+  `world.sogEnlightenedPath`), so ticking a box here is the same toggle the Summer / Who Leads
+  Willowshore / Enlightened Path console shows, and vice versa. Skip Act 1 entirely and you can
+  still mark the lantern lit from the tracker; the Summer console agrees when it's next run.
+- The **Live from the chapter consoles** rollup strip's boolean elements are now toggle buttons
+  instead of read-only text — click Lantern / Gray Butcher / Mo Douqiu / Leader / the three
+  shrines to flip the shared value straight from the campaign view. The numeric values (Hope,
+  Food, Security, Teahouse, Research, Week, Statues) stay read-only; the consoles own those.
+- A one-time migration pushes any ticks the tracker already held into the matching console
+  setting, so existing progress isn't lost when those items switch to the shared value.
+- Console writes are read-merge-write, so a console open in another window sees a complete state
+  rather than a partial one; a never-run console is seeded minimally and its own boot fills in
+  the rest.
+
 ## 2026-08-16 09:52
 
 ### Added

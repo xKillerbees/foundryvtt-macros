@@ -7,7 +7,10 @@
    A checklist for the whole Adventure Path. Each chapter carries the decisions
    and items that outlive it; anything with a downstream payoff also appears on
    the Threads tab, which turns red once the party reaches the chapter that
-   needs it. Reads the four chapter consoles' saved state for a live rollup.
+   needs it. Reads the chapter consoles' saved state for a live rollup, and
+   shares a handful of toggles with them — the lantern, the ringleaders, the
+   named leader, and the shrine lights — as ONE value, settable from here or
+   from that chapter's own console.
 
    Starts at Chapter 1 with nothing ticked. Click a chapter's status button to
    move the table forward; everything else keys off wherever it says you are.
@@ -18,7 +21,9 @@ const CS_KEY = "sogCampaign";
 const CS_ID = `${CS_NS}.${CS_KEY}`;
 const MAX_PCS = 4;
 
-/* The chapter consoles, read for the rollup strip. Never written to. */
+/* The chapter consoles. Read for the rollup strip; the shared toggles in
+   BRIDGE below also write back to these, so a value set here is the same one
+   the individual console shows. */
 const CONSOLES = {
   summer: "world.sogSummer",
   duel: "world.sogWhoLeads",
@@ -27,6 +32,59 @@ const CONSOLES = {
   path: "world.sogEnlightenedPath",
   ruins: "world.sogRuinsOfWisdom"
 };
+
+/* --------------------------------------------------------- shared toggles
+   Some checklist items are the SAME value the individual chapter console
+   stores — the lantern, the ringleaders, the named leader, the three shrine
+   lights. Rather than keep a second copy here, the tracker reads and writes
+   the console's own setting field, so ticking a box here is the same toggle
+   the console shows, and vice versa. That is what lets you skip Act 1 (never
+   run the Summer console) yet still mark the lantern as lit from here.
+
+   Keyed by the tracker's own flag id (`"<chapter>.<itemKey>"`, see flagId).
+   `setting` is a key into CONSOLES; `get`/`set` read/write that console's
+   state object; `chip` is how the rollup strip renders the toggleable element. */
+const BRIDGE = {
+  "1.lantern": { setting: "summer",
+    get: s => !!s.lantern,
+    set: (s, v) => { s.lantern = v; if (!s.ringleaders) s.ringleaders = {}; s.ringleaders.gurglegut = v; },
+    chip: { label: "Lantern", on: "lit", off: "dark", tone: "gold" } },
+
+  "2.butcher": { setting: "summer",
+    get: s => !!s.ringleaders?.graybutcher,
+    set: (s, v) => { if (!s.ringleaders) s.ringleaders = {}; s.ringleaders.graybutcher = v; },
+    chip: { label: "Gray Butcher", on: "dead", off: "alive", tone: "rust" } },
+
+  "2.douqiu": { setting: "summer",
+    get: s => !!s.ringleaders?.modouqiu,
+    set: (s, v) => { if (!s.ringleaders) s.ringleaders = {}; s.ringleaders.modouqiu = v; },
+    chip: { label: "Mo Douqiu", on: "dead", off: "alive", tone: "rust" } },
+
+  /* `winner` is "north"|"south"|"third"|"gm" — "gm" is the stand-in when a
+     leader was named by fiat rather than by the duel, which is exactly the
+     "skipped this chapter" case. */
+  "3.duel": { setting: "duel",
+    get: s => !!s.winner,
+    set: (s, v) => { s.winner = v ? "gm" : ""; },
+    chip: { label: "Leader", on: "named", off: "unnamed", tone: "plum" } },
+
+  "6.bridge": { setting: "path",
+    get: s => !!(s.shrines?.d1?.cleared && s.shrines?.d1?.slept),
+    set: (s, v) => { if (!s.shrines) s.shrines = {}; if (!s.shrines.d1) s.shrines.d1 = {}; s.shrines.d1.cleared = v; s.shrines.d1.slept = v; },
+    chip: { label: "Bridge Shrine", on: "lit", off: "dark", tone: "gold" } },
+
+  "6.garden": { setting: "path",
+    get: s => !!(s.shrines?.d2?.incense && s.shrines?.d2?.slept),
+    set: (s, v) => { if (!s.shrines) s.shrines = {}; if (!s.shrines.d2) s.shrines.d2 = {}; s.shrines.d2.incense = v; s.shrines.d2.slept = v; },
+    chip: { label: "Garden Shrine", on: "lit", off: "dark", tone: "gold" } },
+
+  "6.mountain": { setting: "path",
+    get: s => !!(s.shrines?.d3?.iogaka && s.shrines?.d3?.bathe && s.shrines?.d3?.slept),
+    set: (s, v) => { if (!s.shrines) s.shrines = {}; if (!s.shrines.d3) s.shrines.d3 = {}; s.shrines.d3.iogaka = v; s.shrines.d3.bathe = v; s.shrines.d3.slept = v; },
+    chip: { label: "Mountain Shrine", on: "lit", off: "dark", tone: "gold" } }
+};
+
+const bridgeFor = (n, key) => BRIDGE[`${n}.${key}`] ?? null;
 
 /* ------------------------------------------------------------- the journals
    The Season of Ghosts Foundry module ships the adventure as journal entries
@@ -1301,12 +1359,18 @@ class Campaign {
 
   /* ----- flags ----- */
   flagId(n, key) { return `${n}.${key}`; }
-  flag(n, key) { return !!this.s.flags[this.flagId(n, key)]; }
+  flag(n, key) {
+    const b = bridgeFor(n, key);
+    if (b) return b.get(this.consoleState(b.setting) ?? {});
+    return !!this.s.flags[this.flagId(n, key)];
+  }
   toggleFlag(n, key) {
+    const b = bridgeFor(n, key);
+    const item = chapter(n)?.items.find(i => i.key === key);
+    if (b) { this.toggleConsole(b, item?.label ?? key); return; }
     const id = this.flagId(n, key);
     const on = !!this.s.flags[id];
     if (on) delete this.s.flags[id]; else this.s.flags[id] = true;
-    const item = chapter(n)?.items.find(i => i.key === key);
     this.log(`Ch ${n} — ${item?.label ?? key}: ${on ? "cleared" : "done"}.`);
     this.touch();
   }
@@ -1454,19 +1518,41 @@ class Campaign {
   /* ----- the chapter consoles ----- */
   consoleState(which) { return game.settings.get("world", CONSOLES[which].split(".")[1]); }
 
+  /* Toggle a console-backed value from this tracker. Reads the console's own
+     setting, flips the field, and writes the whole object back — so a console
+     open in another window sees a complete state, never a partial one. When the
+     setting is still null the console has never been run (and can't be open),
+     so a minimal seed is safe: that console's boot merges blankState over it. */
+  async toggleConsole(b, label) {
+    const ckey = CONSOLES[b.setting].split(".")[1];
+    const st = game.settings.get("world", ckey) ?? {};
+    const on = !b.get(st);
+    b.set(st, on);
+    if (this.editable) await game.settings.set("world", ckey, st);
+    this.log(`${b.chip.label} — ${on ? b.chip.on : b.chip.off}.`);
+    this.touch();
+  }
+  toggleConsoleByKey(id) {
+    const b = BRIDGE[id];
+    if (!b) return;
+    this.toggleConsole(b, b.chip.label);
+  }
+
   get rollup() {
-    const summer = this.consoleState("summer");
-    const duel = this.consoleState("duel");
     const dt = this.consoleState("downtime");
     const ruins = this.consoleState("ruins");
-    const path = this.consoleState("path");
     const out = [];
-    if (summer) {
-      const down = Object.values(summer.ringleaders ?? {}).filter(Boolean).length;
-      out.push({ label: "Lantern", value: summer.lantern ? "lit" : "dark", tone: "gold" });
-      out.push({ label: "Ringleaders", value: `${down} of 3`, tone: "rust" });
+
+    /* The toggleable elements — always shown, so a chapter you skipped (say,
+       Act 1's Summer console) can still be marked here. Each reads and writes
+       the same setting field the individual console uses. */
+    for (const [id, b] of Object.entries(BRIDGE)) {
+      const on = b.get(this.consoleState(b.setting) ?? {});
+      out.push({ key: id, label: b.chip.label, value: on ? b.chip.on : b.chip.off,
+        tone: b.chip.tone, on, toggle: true });
     }
-    if (duel?.winner) out.push({ label: "Leader", value: "named", tone: "plum" });
+
+    /* The numeric/derived values — read-only; the consoles manage these. */
     if (dt?.pools) {
       out.push({ label: "Hope", value: dt.pools.hope, tone: "ember" });
       out.push({ label: "Food", value: `${dt.pools.food}/12`, tone: "moss" });
@@ -1475,11 +1561,6 @@ class Campaign {
       const rp = Object.values(dt.research ?? {}).reduce((a, b) => a + b, 0);
       out.push({ label: "Research", value: `${rp}/10 RP`, tone: "plum" });
       out.push({ label: "Week", value: `${dt.week} of 12`, tone: "gold" });
-    }
-    if (path?.shrines) {
-      const conds = { d1: ["cleared", "slept"], d2: ["incense", "slept"], d3: ["iogaka", "bathe", "slept"] };
-      const lit = Object.entries(conds).filter(([d, keys]) => keys.every(k => path.shrines[d]?.[k])).length;
-      out.push({ label: "Shrines", value: `${lit} of 3`, tone: "gold" });
     }
     if (ruins?.order) out.push({ label: "Statues", value: `${ruins.order.length} of 4`, tone: "plum" });
     return out;
@@ -1739,18 +1820,18 @@ class CSApp extends BaseApp {
     const t = this.t, c = t.current, roll = t.rollup;
     const od = t.overdue;
     return `
-      ${roll.length ? `
       <section class="panel" style="--tone:var(--gold)">
         <h3>Live from the chapter consoles</h3>
         <div class="rollup">
-          ${roll.map(r => `<div class="meter" style="--tone:var(--${r.tone})">
-            <span>${r.label}</span><b>${r.value}</b></div>`).join("")}
+          ${roll.map(r => r.toggle ? `
+            <button type="button" class="meter ${r.on ? "on" : ""}" style="--tone:var(--${r.tone})"
+              data-act="console" data-k="${r.key}" ${ro ? "disabled" : ""}
+              title="Shared with the ${r.label} toggle in its own chapter console">
+              <span>${r.label}</span><b>${r.value}</b></button>` : `
+            <div class="meter" style="--tone:var(--${r.tone})">
+              <span>${r.label}</span><b>${r.value}</b></div>`).join("")}
         </div>
-      </section>` : `
-      <section class="panel">
-        <h3>Live from the chapter consoles</h3>
-        <p class="hint">Nothing to read yet. Run the Summer console, Who Leads Willowshore, the Fall Downtime Tracker, the Enlightened Path, or the Ruins of Wisdom console once and their state appears here.</p>
-      </section>`}
+      </section>
 
       ${od.length ? `
       <section class="panel" style="--tone:var(--rust)">
@@ -1916,12 +1997,13 @@ class CSApp extends BaseApp {
             const st = t.itemState(c.n, i);
             const on = st === "ok";
             const target = targetFor(c.n, i);
+            const shared = bridgeFor(c.n, i.key);
             /* The link sits outside the <label>, or clicking it would also
                toggle the checkbox the label wraps. */
             return `
               <div class="itemrow">
                 <label class="check ${on ? "on" : ""} ${st === "overdue" ? "overdue" : ""} ${st === "skipped" ? "skipped" : ""}">
-                  <input type="checkbox" data-act="flag" data-n="${c.n}" data-k="${i.key}" ${on ? "checked" : ""} ${ro ? "disabled" : ""}>
+                  <input type="checkbox" data-act="flag" data-n="${c.n}" data-k="${i.key}" ${on ? "checked" : ""} ${ro ? "disabled" : ""}${shared ? ` title="Shared with the ${shared.chip.label} toggle in its chapter console"` : ""}>
                   <span class="lbl">${i.label}
                     ${i.hard ? `<span class="pip hard" title="A later chapter depends on this">required</span>` : ""}
                     ${i.danger ? `<span class="pip danger" title="Permanent or costly consequence">consequence</span>` : ""}
@@ -2158,6 +2240,7 @@ class CSApp extends BaseApp {
       else if (a === "rolltable") t.rollTable(btn.dataset.k, btn.dataset.die);
       else if (a === "postrecap") t.postRecap();
       else if (a === "reset") t.reset();
+      else if (a === "console") t.toggleConsoleByKey(btn.dataset.k);
     });
     root.addEventListener("change", (ev) => {
       const el = ev.target.closest("[data-act]");
@@ -2251,6 +2334,11 @@ class CSApp extends BaseApp {
       .cst .meter { border-top:2px solid var(--tone); padding:.25rem .6rem .1rem 0; min-width:78px; }
       .cst .meter span { display:block; font-size:.58rem; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); }
       .cst .meter b { font-size:1rem; color:var(--tone); line-height:1.2; }
+      .cst .rollup button.meter { appearance:none; background:none; color:inherit; text-align:left;
+        cursor:pointer; font:inherit; border-left:0; border-right:0; border-bottom:0; }
+      .cst .rollup button.meter:hover { background:var(--hover); border-radius:2px; }
+      .cst .rollup button.meter.on { background:var(--stripe); }
+      .cst .rollup button.meter:disabled { cursor:default; opacity:.6; }
 
       .cst .alarmrow { font-size:.79rem; line-height:1.45; margin:.25rem 0; }
       .cst .alarmrow em { color:var(--muted); font-size:.74rem; }
@@ -2434,14 +2522,36 @@ if (AppV2) {
     state = foundry.utils.mergeObject(blankState(detectPCs()), state, { inplace: false });
     state.pcs = refreshPCs(state.pcs);
   }
+  /* Migrate any checklist ticks the tracker already held into the console
+     settings those items now mirror, so pre-existing ticks aren't lost when the
+     bridged items switch to reading the console's value. */
+  if (game.user.isGM) {
+    let changed = false;
+    for (const id of Object.keys(BRIDGE)) {
+      if (!state.flags?.[id]) continue;
+      const b = BRIDGE[id];
+      const ckey = CONSOLES[b.setting].split(".")[1];
+      const st = game.settings.get("world", ckey) ?? {};
+      if (!b.get(st)) { b.set(st, true); await game.settings.set("world", ckey, st); }
+      delete state.flags[id];
+      changed = true;
+    }
+    if (changed) await game.settings.set(CS_NS, CS_KEY, state);
+  }
+
   const campaign = new Campaign(state);
   const app = new CSApp(campaign);
 
   if (!globalThis.__cstHook) {
+    const consoleIds = new Set(Object.values(CONSOLES));
     globalThis.__cstHook = Hooks.on("updateSetting", (setting, changes, opts, userId) => {
-      if (setting.key !== CS_ID || userId === game.user.id) return;
-      const fresh = typeof setting.value === "string" ? JSON.parse(setting.value) : setting.value;
-      if (fresh) { campaign.state = fresh; campaign.render(); }
+      if (userId === game.user.id) return;
+      if (setting.key === CS_ID) {
+        const fresh = typeof setting.value === "string" ? JSON.parse(setting.value) : setting.value;
+        if (fresh) { campaign.state = fresh; campaign.render(); }
+      } else if (consoleIds.has(setting.key)) {
+        campaign.render();
+      }
     });
   }
 
