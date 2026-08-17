@@ -913,5 +913,53 @@ globalThis.FIXTURES = {
       pools: { hope: 8, food: 6, security: 5, restoration: 2 },
       rep: { southbank: 1, northridge: 2 }
     }
+  },
+
+  /* The multi-part boss console, mid-fight: Menare the Great Worm at 412 HP,
+     the head and wings both broken, one phase already running (Cornered Beast),
+     the head-break phase armed, and a back-pocket phase waiting in reserve. */
+  "boss": {
+    "world.multipartBoss": {
+      v: 1,
+      tab: "fight",
+      actorId: "boss1",
+      actorName: "Menare the Great Worm",
+      bodyMaxHp: 575,
+      bodyHp: 412,
+      syncToken: true,
+      stats: { level: 23, ac: 50, fort: 40, ref: 38, will: 42, defenses: "" },
+      round: 2,
+      parts: [
+        { id: "p_head", name: "Head", maxHp: 230, hp: 0, broken: true,
+          abilities: "frightful presence · jaws · horns · breath weapon · arcane spells",
+          brokenEffect: "loses frightful presence, jaws, horns, breath weapon, and spellcasting",
+          acNote: "AC +2, Reflex +4 — a smaller target", saveNote: "",
+          resistNote: "physical 10", weakNote: "" },
+        { id: "p_wings", name: "Wings", maxHp: 170, hp: 0, broken: true,
+          abilities: "flight",
+          brokenEffect: "falls if flying",
+          acNote: "", saveNote: "", resistNote: "", weakNote: "cold 5" }
+      ],
+      phases: [
+        { id: "ph_cornered", name: "Cornered Beast", triggerType: "part-broken", triggerPartId: "p_wings",
+          triggerHp: 0, triggerRound: 0, backpocket: false,
+          effects: "Falls if flying. Becomes quickened 1 — the extra action only to Stride or make melee Strikes.",
+          active: true, skipped: false, armed: false },
+        { id: "ph_fury", name: "Worm's Fury", triggerType: "part-broken", triggerPartId: "p_head",
+          triggerHp: 0, triggerRound: 0, backpocket: false,
+          effects: "Loses spellcasting, frightful presence, jaws, horns and breath weapon. Free Stride + two claw Strikes against whoever broke it; +2 status to claw and tail attack and damage; adamantine-scales reaction (resistance 15 against one damaging effect, main body only); stunned 1 for two turns.",
+          active: false, skipped: false, armed: false },
+        { id: "ph_stand", name: "Righteous Stand", triggerType: "hp-below", triggerPartId: null,
+          triggerHp: 250, triggerRound: 0, backpocket: true,
+          effects: "Free action to ignite in Draconic Radiance; +1 status to AC and all saves. Creatures perceiving him through vision who later target him with a melee attack must succeed a DC 45 Will save or be blinded 1 minute.",
+          active: false, skipped: false, armed: false }
+      ],
+      log: [
+        { t: 1755462900000, text: "Trigger met — phase \"Worm's Fury\" armed" },
+        { t: 1755462600000, text: "\"Head\" broken" },
+        { t: 1755462300000, text: "Phase began — \"Cornered Beast\"" },
+        { t: 1755461700000, text: "\"Wings\" broken" }
+      ]
+    }
   }
 };

@@ -159,7 +159,34 @@ const TAG_ALONGS = [
   { name: "(Quick Send To Chat)", cls: "", ancestry: "", level: 1, bg: "#3a3a3a", fg: "#efe6d8" }
 ].map((s, i) => new StubActor(s, ACTORS.length + i));
 
-const ALL_ACTORS = [...ACTORS, ...TAG_ALONGS];
+/* A boss NPC for the multi-part boss console. It carries a PF2e-shaped
+   hp / ac / saves / defenses block (the paths the console reads), an `update`
+   that records the mirrored token-HP write, and `type: "npc"` so the console's
+   actor picker — which lists non-character actors — finds it. */
+const BOSS_NPC = {
+  id: "boss1",
+  uuid: "Actor.boss1",
+  name: "Menare the Great Worm",
+  type: "npc",
+  hasPlayerOwner: false,
+  img: portrait("MW", "#5d1f1f", "#efe6d8"),
+  prototypeToken: { texture: { src: "" } },
+  system: {
+    details: { level: { value: 23 } },
+    attributes: {
+      hp: { value: 412, max: 575, temp: 0 },
+      ac: { value: 50 },
+      damageResistances: [{ type: "physical", value: 10 }],
+      damageWeaknesses: [{ type: "cold", value: 25 }],
+      damageImmunities: [{ type: "fire" }, { type: "paralyzed" }, { type: "sleep" }]
+    },
+    saves: { fortitude: { value: 40 }, reflex: { value: 38 }, will: { value: 42 } }
+  },
+  update(data) { console.log("[actor.update]", this.name, data); return Promise.resolve(this); },
+  sheet: { render: () => console.log("[sheet]", this.name) }
+};
+
+const ALL_ACTORS = [...ACTORS, ...TAG_ALONGS, BOSS_NPC];
 
 /* Only the four real PCs, exactly as a curated party actor would hold them. */
 const partyActor = { id: "party", name: "Party", type: "party", members: ACTORS };

@@ -8,12 +8,14 @@ manifest, no install step. Open a macro file, copy it, paste it into Foundry, ru
 | [Season of Ghosts](macros/season-of-ghosts) | PF2e | v11 – v14 | 6 |
 | [Pathfinder Beginner Box](macros/beginner-box) | PF2e | v11 – v14 | 2 |
 | [PF2e Downtime](macros/pf2e-downtime) | PF2e | v11 – v14 | 1 |
+| [PF2e Multi-Part Boss](macros/pf2e-multipart-boss) | PF2e | v11 – v14 | 1 |
 | [Mark of the Mantis](macros/mark-of-the-mantis) | PF2e | v11 – v14 | 1 |
 | [Battle for Nova Rush](macros/battle-for-nova-rush) | SF2e | v11 – v14 | 1 |
 
 Most of these are GM consoles for a particular adventure. [PF2e
-Downtime](macros/pf2e-downtime) is neither — it's system-wide, and it's meant to be handed to
-the players.
+Downtime](macros/pf2e-downtime) and [PF2e Multi-Part Boss](macros/pf2e-multipart-boss)
+are neither — they're system-wide tools for any PF2e table. Downtime is meant to be
+handed to the players; Multi-Part Boss is a GM tool.
 
 ## Installing a macro
 
@@ -155,6 +157,28 @@ benefit lent to Earn Income. Since it competes with Earn Income for the same day
 prices what those weeks cost in gold forgone — the rule's actual price, made visible.
 **Crafting at 75%** with a formula and a background reason recalculates the balance owed.
 Turning a rule back off un-applies its maths rather than leaving stale numbers behind.
+
+## PF2e Multi-Part Boss
+
+A GM tool for any PF2e table, not tied to an adventure. Details in the
+[collection README](macros/pf2e-multipart-boss).
+
+### [Multi-Part Boss Console](macros/pf2e-multipart-boss/multipart-boss-console.js)
+
+Turns a single boss actor into a multi-part opponent — a main body with its own HP pool
+plus targetable parts (head, wings, claws, a power core) that each own the abilities
+they power. Break a part and those abilities go away; break the right part and a phase
+fires. The rules follow a homebrew adaptation of Fabula Ultima's multi-part-opponent and
+phase concepts to PF2e, after How It's Played Labs.
+
+![The multi-part boss console, mid-fight](screenshots/pf2e-multipart-boss/multipart-boss-console.png)
+
+The boss links to a real actor: its AC, saves, and resistances are read live as a
+reference, and its token HP bar mirrors the main body's pool so the combat tracker stays
+honest. Parts, phases, and the fight's HP live in the console. The damage form applies a
+part hit to both pools — split one roll into the part's and the body's net damage so
+differing resistances stay honest. Phases arm on a part breaking, a HP threshold, or a
+round count, and a back-pocket phase can be held back if the fight is already hard enough.
 
 ## Mark of the Mantis
 

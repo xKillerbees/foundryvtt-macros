@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-08-17 01:09
+
+### Added
+- **PF2e Multi-Part Boss** — a new collection with `multipart-boss-console.js`, a
+  GM combat console that turns a single boss actor into a multi-part opponent with
+  breakable parts and phases. It links to a real enemy actor (reading its AC, saves,
+  and resistances live as a reference and mirroring the main body's HP to the token
+  bar), tracks a main-body pool plus any number of part pools, and runs the
+  double-application damage rule (a part hit lands on both the part and the main body,
+  each net value adjustable for that location's resistance/weakness). Phases arm on a
+  part breaking, the body falling below a HP threshold, or a round count, and can be
+  marked back-pocket to hold in reserve; a broken part stays broken until explicitly
+  un-broken. The rules are a homebrew adaptation of Fabula Ultima's multi-part and
+  phase rules to PF2e, after How It's Played Labs. State persists in a hidden world
+  setting; the preview stub gained a boss NPC actor and a `boss` fixture, and a
+  screenshot was added.
+
 ## 2026-08-17 00:42
 
 ### Fixed

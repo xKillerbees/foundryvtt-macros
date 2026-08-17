@@ -107,6 +107,9 @@ SHOTS = {
     "coins": (
         "beginner-box/abadar-coin-puzzle.js", "coins",
         "beginner-box/abadar-coin-puzzle.png"),
+    "boss": (
+        "pf2e-multipart-boss/multipart-boss-console.js", "boss",
+        "pf2e-multipart-boss/multipart-boss-console.png"),
     "otari-floor1": (
         "beginner-box/menace-under-otari-console.js", "otari-floor1",
         "beginner-box/menace-under-otari-floor1.png"),
