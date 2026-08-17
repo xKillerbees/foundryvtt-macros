@@ -24,13 +24,13 @@ const PALETTES = {
   parchment: {
     paper: "#efe6d8", card: "#fbf7f0", ink: "#241c18", line: "#b9a687", muted: "#6d6052",
     stripe: "rgba(0,0,0,.05)", hover: "rgba(0,0,0,.07)", field: "#fffdf8",
-    rust: "#95381f", ember: "#a45c14", moss: "#4b5a34", slate: "#3d4c59", plum: "#5d3654", gold: "#8a6a12",
+    rust: "#95381f", ember: "#a45c14", moss: "#4b5a34", slate: "#3d4c59", plum: "#5d3654", gold: "#8a6a12", plumSoft: "rgba(93,54,84,.10)",
     ice: "#5b7f9e", snow: "#8fa6b5"
   },
   dark: {
     paper: "#1f1d1b", card: "#2a2724", ink: "#ece5da", line: "#544d44", muted: "#a4988a",
     stripe: "rgba(255,255,255,.04)", hover: "rgba(255,255,255,.08)", field: "#171513",
-    rust: "#d4664a", ember: "#e0a052", moss: "#96b06a", slate: "#7fa0bb", plum: "#b98ab0", gold: "#d9b74f",
+    rust: "#d4664a", ember: "#e0a052", moss: "#96b06a", slate: "#7fa0bb", plum: "#b98ab0", gold: "#d9b74f", plumSoft: "rgba(185,138,176,.16)",
     ice: "#7fa0bb", snow: "#aac0cf"
   }
 };
@@ -2061,7 +2061,7 @@ class WNRApp extends BaseApp {
       #nbt-console .window-content > * { background:transparent; }
       .nbt { --ink:${p.ink}; --paper:${p.paper}; --card:${p.card}; --line:${p.line}; --rust:${p.rust};
             --ember:${p.ember}; --moss:${p.moss}; --slate:${p.slate}; --plum:${p.plum}; --gold:${p.gold};
-            --ice:${p.ice}; --snow:${p.snow}; --muted:${p.muted}; --stripe:${p.stripe}; --hover:${p.hover};
+            --ice:${p.ice}; --snow:${p.snow}; --muted:${p.muted}; --stripe:${p.stripe}; --hover:${p.hover}; --plumSoft:${p.plumSoft};
             font-family:"Signika","Roboto",sans-serif; color:var(--ink); background:var(--paper); }
       .nbt * { box-sizing:border-box; }
       .nbt button { font-family:inherit; cursor:pointer; color:var(--ink); background:transparent;
@@ -2197,7 +2197,7 @@ class WNRApp extends BaseApp {
       .nbt .table th { text-align:left; font-size:.62rem; text-transform:uppercase; letter-spacing:.07em;
                        color:var(--muted); border-bottom:1px solid var(--line); padding:.2rem .35rem; }
       .nbt .table td { border-bottom:1px solid var(--stripe); padding:.25rem .35rem; vertical-align:top; line-height:1.4; }
-      .nbt .table.terror tr.on td { background:var(--stripe); }
+      .nbt .table.terror tr.on td { background:var(--plumSoft); }
       .nbt .table.terror tr.on td:first-child { font-weight:700; color:var(--plum); }
 
       .nbt .panel.rev { opacity:.55; }

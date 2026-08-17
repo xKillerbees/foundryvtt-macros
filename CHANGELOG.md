@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-08-17 00:23
+
+### Fixed
+- No Breath to Cry console: the Chapter 10 Terror **Thresholds** table highlighted its
+  reached rows (Terror level at or below the current total) with a black-based tint
+  (`rgba(0,0,0,.05)`, the shared `--stripe`), which greyed the active rows out and made
+  them read darker and muddier than the rest of the table. Active rows now use a warm
+  plum highlight (`--plumSoft`, added to both the parchment and dark palettes) so the
+  rows in effect read as *highlighted* rather than dimmed, and the bold plum Terror
+  number stays fully legible.
+
 ## 2026-08-16 21:56
 
 ### Changed
