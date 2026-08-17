@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-08-17 14:02
+
+### Added
+- **Who Leads Willowshore? — a crowd-whispers meter and champion self-rolling on the player
+  board.** In the thrown duel the player board now carries the Suspicion track reskinned as the
+  crowd's growing doubt: a single bar that fills (tinted by band — moss/gold/rust) as the sell
+  wobbles, captioned in the crowd's voice ("The crowd is convinced — a clean, hard-fought contest"
+  → "Whispers ripple through the crowd — something about the fight doesn't sit right" → "The crowd
+  has seen through it — the bout reads false"), with no Suspicion number or band label — the fix
+  and sell notes stay off the board. And a champion whose character is assigned to a seat can now
+  roll the Trial's fixed-DC rounds straight from the board: the upcoming round (III's DC 20 Society,
+  IV's DC 18 Society / Medicine) shows a Roll button that rolls that character's statistic with the
+  DC and posts the degree to chat, falling back to the posted inline checks; the opposed,
+  no-fixed-DC rounds (I, II, V) remain with the GM. A `duel-player-thrown` screenshot was added.
+
 ## 2026-08-17 13:47
 
 ### Changed

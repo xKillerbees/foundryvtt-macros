@@ -352,6 +352,31 @@ class WhoLeads {
     this.touch();
   }
 
+  /* ----- player rolling ----- */
+  mySeat() {
+    const me = game.user.character?.id;
+    if (!me) return null;
+    if (this.s.north.kind === "pc" && this.s.north.actorId === me) return { side: "north", name: this.s.north.name, actorId: me };
+    if (this.s.south.kind === "pc" && this.s.south.actorId === me) return { side: "south", name: this.s.south.name, actorId: me };
+    return null;
+  }
+  async rollRound(key, skill, dc) {
+    const r = ROUNDS.find(x => x.key === key);
+    const seat = this.mySeat();
+    if (!seat) return ui.notifications.warn("You aren't assigned as a champion.");
+    const actor = seat.actorId ? game.actors.get(seat.actorId) : null;
+    const st = actor?.skills?.[checkSlug(skill)];
+    if (st?.roll) {
+      try {
+        await st.roll({ dc: { value: Number(dc) }, label: `${r.num}. ${r.name} — ${skill}` });
+        return;
+      } catch (err) {
+        console.warn("Who Leads Willowshore? — statistic roll failed; posting an inline check instead.", err);
+      }
+    }
+    return this.postRound(key);
+  }
+
   /* ----- resolution ----- */
   setWinner(w) {
     this.s.winner = (this.s.winner === w) ? "" : w;
@@ -495,11 +520,14 @@ class WLRApp extends BaseApp {
   }
 
   /* --------------------------------------------- non-spoiler player view
-     The board players open on their own clients. It shows only what the crowd
-     sees — the champions, the five public rounds, the Trial's Favor tallies,
-     and the announced verdict. Every GM-only thread (the thrown fix, the
-     Suspicion track, who-knows-what, the cast's secrets, beats, level) stays
-     out. Auto-syncs via the updateSetting hook: every GM save re-renders. */
+     The board players open on their own clients. It shows the duel the way
+     the crowd sees it — the champions, the five rounds, a crowd meter in the
+     Trial and a crowd-whispers meter in the thrown duel (both reskinned, so
+     no mechanical Favor/Suspicion number appears), and the announced verdict.
+     The assigned champion can roll their round checks straight from the board.
+     Every GM-only thread (the thrown fix, who-knows-what, the cast's secrets,
+     beats, level) stays out. Auto-syncs via the updateSetting hook: every
+     GM save re-renders. */
   playerMarkup() {
     const t = this.t, s = t.s, f = t.favor;
     const isTrial = s.mode === "trial";
@@ -539,6 +567,15 @@ class WLRApp extends BaseApp {
         : a >= 3 ? `The crowd sways toward ${side}.`
         : `The crowd edges toward ${side}.`;
     };
+    // Thrown mode: the Suspicion track, reskinned as the crowd's growing
+    // doubt. No number, no band label — the square's read on the bout.
+    const whisperPct = () => Math.max(0, Math.min(100, t.suspicion / 10 * 100));
+    const whispersLean = () => {
+      const sus = t.suspicion;
+      return sus <= 3 ? "The crowd is convinced — a clean, hard-fought contest."
+        : sus <= 6 ? "Whispers ripple through the crowd — something about the fight doesn't sit right."
+        : "The crowd has seen through it — the bout reads false.";
+    };
 
     const roundMark = (r) => {
       const code = s.rounds[r.key];
@@ -567,6 +604,28 @@ class WLRApp extends BaseApp {
             : `${esc(winnerName)} is acclaimed Willowshore's new leader.`}</p>
       </section>` : "";
 
+    // The assigned champion can roll the upcoming round's fixed-DC checks
+    // straight from the board. Opposed / no-fixed-DC rounds (I, II, V) stay
+    // with the GM, matching what postRound already posts.
+    const me = t.mySeat();
+    const parseCheck = (c) => { const m = /^DC\s+(\d+)\s+(.+)$/.exec(String(c).trim()); return m ? { dc: Number(m[1]), skill: m[2] } : null; };
+    const rollCard = (() => {
+      if (!isTrial || !me || !next || finished) return "";
+      const checks = (next.checks ?? []).map(parseCheck).filter(Boolean);
+      if (!checks.length) return "";
+      const faction = me.side === "north" ? ELDERS.north.faction : ELDERS.south.faction;
+      return `
+      <div class="rollcard">
+        <div class="rc-head">Round ${next.num} — ${esc(next.name)} <small>you fight for ${faction}</small></div>
+        <p class="rc-skills">${esc(next.skills)}</p>
+        <div class="rc-btns">${checks.map(c =>
+          `<button type="button" class="rollbtn" data-act="roll" data-k="${next.key}" data-skill="${esc(c.skill)}" data-dc="${c.dc}">
+             <i class="fa-solid fa-dice-d20"></i> Roll ${esc(c.skill)} <b>DC ${c.dc}</b></button>`).join("")}
+        </div>
+        <p class="rc-note">${esc(next.dcText)}</p>
+      </div>`;
+    })();
+
     return `${this.styles()}
       <div class="wlw player">
         <header class="ptop">
@@ -590,7 +649,12 @@ class WLRApp extends BaseApp {
               <div class="cbar"><div class="cf n" style="width:${pct(f.north)}%"></div><div class="cf s" style="width:${pct(f.south)}%"></div></div>
               <div class="cends"><span class="n"><i class="fa-solid ${ELDERS.north.icon}"></i> Northridge</span><span class="s"><i class="fa-solid ${ELDERS.south.icon}"></i> Southbank</span></div>
               <p class="clean">${crowdLean()}</p>
-            </div>` : ""}
+            </div>` : `
+            <div class="crowdmeter">
+              <div class="cbar"><div class="cf" style="width:${whisperPct()}%; background:var(--${t.band.tone})"></div></div>
+              <p class="clean">${whispersLean()}</p>
+            </div>`}
+          ${rollCard}
         </section>
 
         ${verdict}
@@ -812,6 +876,7 @@ class WLRApp extends BaseApp {
       else if (a === "fixwinner") t.setThrownWinner(btn.dataset.w);
       else if (a === "fav") t.setFavorStart(btn.dataset.side, Number(btn.dataset.d));
       else if (a === "round") t.setRound(btn.dataset.k, btn.dataset.code);
+      else if (a === "roll") t.rollRound(btn.dataset.k, btn.dataset.skill, Number(btn.dataset.dc));
       else if (a === "winner") t.setWinner(btn.dataset.w);
       else if (a === "postopening") t.postOpening();
       else if (a === "postround") t.postRound(btn.dataset.k);
@@ -1001,6 +1066,16 @@ class WLRApp extends BaseApp {
       .wlw .cends .s { color:var(--moss); }
       .wlw .cends i { margin-right:.2rem; }
       .wlw .clean { font-size:.78rem; line-height:1.45; margin:.25rem 0 0; font-style:italic; color:var(--muted); }
+      .wlw .rollcard { border:1px solid var(--line); border-left:3px solid var(--gold); border-radius:4px;
+                        background:var(--card); padding:.5rem .6rem; margin:.5rem 0 .2rem; }
+      .wlw .rc-head { font-size:.82rem; font-weight:700; display:flex; align-items:baseline; gap:.4rem; flex-wrap:wrap; }
+      .wlw .rc-head small { font-size:.68rem; font-weight:400; color:var(--muted); }
+      .wlw .rc-skills { font-size:.78rem; line-height:1.4; color:var(--muted); margin:.25rem 0 .4rem; }
+      .wlw .rc-btns { display:flex; gap:.35rem; flex-wrap:wrap; }
+      .wlw .rollbtn { padding:.32rem .65rem; font-size:.8rem; font-weight:600; border-color:var(--gold); color:var(--gold); background:transparent; }
+      .wlw .rollbtn:hover:not(:disabled) { background:var(--gold); color:var(--paper); }
+      .wlw .rollbtn b { font-weight:700; }
+      .wlw .rc-note { font-size:.74rem; line-height:1.4; color:var(--muted); font-style:italic; margin:.3rem 0 0; }
       .wlw .verdict { border-left:3px solid var(--plum); }
       .wlw .vline { font-size:.9rem; line-height:1.5; margin:.2rem 0 .4rem; }
 

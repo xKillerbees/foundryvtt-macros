@@ -83,6 +83,9 @@ SHOTS = {
     "duel-player": (
         "season-of-ghosts/who-leads-willowshore-console.js", "duel-player",
         "season-of-ghosts/who-leads-willowshore-console-player.png"),
+    "duel-player-thrown": (
+        "season-of-ghosts/who-leads-willowshore-console.js", "duel-player-thrown",
+        "season-of-ghosts/who-leads-willowshore-console-player-thrown.png"),
     "campaign": (
         "season-of-ghosts/campaign-status-tracker.js", "campaign",
         "season-of-ghosts/campaign-status-tracker.png"),

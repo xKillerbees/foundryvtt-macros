@@ -231,8 +231,10 @@ Old Matsuki publicly challenges Granny Hu for the town's leadership, settled by 
 - Read-aloud for the challenge and the verdict posted to chat in-world; the cast (both elders, the stand-ins, Shinzo, and Heh's shadow) on the landing tab
 - A **spoiler-free player board**: grant OBSERVER permission and players track the champions and
   the five rounds the way the crowd sees them — a live crowd meter and each round's reaction
-  (who the square cheers, who it roars for) instead of the mechanical Favor score — and in the
-  thrown duel the Suspicion track, the sell notes, and the fix stay hidden
+  (who the square cheers, who it roars for) instead of the mechanical Favor score, a
+  crowd-whispers meter in the thrown duel, and Roll buttons so the assigned champion can roll the
+  fixed-DC rounds from the board — while the fix, the sell notes, and the raw Suspicion number
+  stay hidden
 
 ![The thrown duel, four rounds sold, Suspicion at Whispers](../../screenshots/season-of-ghosts/who-leads-willowshore-console-thrown.png)
 
@@ -245,17 +247,24 @@ Old Matsuki publicly challenges Granny Hu for the town's leadership, settled by 
 Give the macro OBSERVER permission and every player can open a spoiler-free board that tracks the
 duel the way the crowd sees it: the two champions (and any third candidate), a five-round stepper
 whose settled rounds read in the square's own voice — "the crowd cheers Northridge", "the crowd
-roars for Southbank", "the crowd applauds both" — and, once the Trial is underway, a crowd meter
-whose bar leans with the town and whose caption says how hard ("The crowd edges toward …" up to
-"The crowd roars for …") rather than the raw Favor score. It re-renders on every GM update through
-the same world-setting hook that keeps two GM windows in sync, so the board moves as the GM
-records it, with nothing to re-post.
+roars for Southbank", "the crowd applauds both" — and a crowd meter whose bar leans with the town
+and whose caption says how hard ("The crowd edges toward …" up to "The crowd roars for …") rather
+than the raw Favor score. It re-renders on every GM update through the same world-setting hook that
+keeps two GM windows in sync, so the board moves as the GM records it, with nothing to re-post.
 
-What the crowd can't see stays off the board. In the thrown duel the board still marks the round
-progress (each settled round reads "settled" with no score), but there is no Suspicion number, no
-sell notes, no fix, and no verdict until all five rounds are done — the secret the party is trying
-to keep never appears in a player's window. The GM's cast cards, the beats, and the level-up flag
-are GM-only too.
+A champion whose character is assigned to a seat can also roll the Trial's fixed-DC rounds straight
+from the board: on the upcoming round (III's DC 20 Society, IV's DC 18 Society / Medicine) a Roll
+button rolls that character's statistic with the DC and posts the degree to chat — no relay, no GM
+round-trip. The opposed, no-fixed-DC rounds (I, II, V) stay with the GM, as before.
+
+In the thrown duel the board keeps the fix secret but lets the party read the room: the round
+stepper marks each settled round "settled", and a crowd-whispers meter fills as the sell wobbles,
+its caption reading in the crowd's voice ("The crowd is convinced — a clean, hard-fought contest"
+→ "Whispers ripple through the crowd…" → "The crowd has seen through it — the bout reads false"),
+with no Suspicion number, no band, no sell notes, and no verdict until all five rounds are done.
+The GM's cast cards, the beats, and the level-up flag are GM-only too.
+
+![The thrown player board: settled rounds and the crowd-whispers meter, no fix leaked](../../screenshots/season-of-ghosts/who-leads-willowshore-console-player-thrown.png)
 
 ### Campaign Status Tracker
 
