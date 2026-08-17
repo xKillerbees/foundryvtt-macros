@@ -229,9 +229,10 @@ Old Matsuki publicly challenges Granny Hu for the town's leadership, settled by 
 - **The thrown-duel variant** from *The Worked Duel*: the conceding elder and the fix's winner are both selectable, so the "does the winner know?" panel and every round's sell text flip to match; scored on a Suspicion track (0–3 Flawless / 4–6 Whispers / 7+ Exposed) with per-round sell deltas, a blowout toggle, and the money-shot finale
 - A **verdict tab** that declares the winner, applies the reversible write-through beats (heal the rift → Hope + Reputation, back the winner, or a bloodbath) to the Fall Downtime Tracker's pools, and marks the level-up to 3
 - Read-aloud for the challenge and the verdict posted to chat in-world; the cast (both elders, the stand-ins, Shinzo, and Heh's shadow) on the landing tab
-- A **spoiler-free player board**: grant OBSERVER permission and players track the champions, the
-  five rounds, and the live Favor tallies as the GM records them — and in the thrown duel the
-  Suspicion track, the sell notes, and the fix stay hidden
+- A **spoiler-free player board**: grant OBSERVER permission and players track the champions and
+  the five rounds the way the crowd sees them — a live crowd meter and each round's reaction
+  (who the square cheers, who it roars for) instead of the mechanical Favor score — and in the
+  thrown duel the Suspicion track, the sell notes, and the fix stay hidden
 
 ![The thrown duel, four rounds sold, Suspicion at Whispers](../../screenshots/season-of-ghosts/who-leads-willowshore-console-thrown.png)
 
@@ -239,18 +240,22 @@ Old Matsuki publicly challenges Granny Hu for the town's leadership, settled by 
 
 #### The player board
 
-![The player board, mid-trial: the champions, the five rounds, and the live Favor tallies](../../screenshots/season-of-ghosts/who-leads-willowshore-console-player.png)
+![The player board, mid-trial: the champions, the five rounds in the crowd's voice, and the crowd meter](../../screenshots/season-of-ghosts/who-leads-willowshore-console-player.png)
 
 Give the macro OBSERVER permission and every player can open a spoiler-free board that tracks the
 duel the way the crowd sees it: the two champions (and any third candidate), a five-round stepper
-marking which rounds are decided, and — once the Trial is underway — the live Favor tallies. It
-re-renders on every GM update through the same world-setting hook that keeps two GM windows in
-sync, so the board moves as the GM records it, with nothing to re-post.
+whose settled rounds read in the square's own voice — "the crowd cheers Northridge", "the crowd
+roars for Southbank", "the crowd applauds both" — and, once the Trial is underway, a crowd meter
+whose bar leans with the town and whose caption says how hard ("The crowd edges toward …" up to
+"The crowd roars for …") rather than the raw Favor score. It re-renders on every GM update through
+the same world-setting hook that keeps two GM windows in sync, so the board moves as the GM
+records it, with nothing to re-post.
 
 What the crowd can't see stays off the board. In the thrown duel the board still marks the round
-progress, but there is no Suspicion number, no sell notes, no fix, and no verdict until all five
-rounds are done — the secret the party is trying to keep never appears in a player's window. The
-GM's cast cards, the beats, and the level-up flag are GM-only too.
+progress (each settled round reads "settled" with no score), but there is no Suspicion number, no
+sell notes, no fix, and no verdict until all five rounds are done — the secret the party is trying
+to keep never appears in a player's window. The GM's cast cards, the beats, and the level-up flag
+are GM-only too.
 
 ### Campaign Status Tracker
 

@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-08-17 13:47
+
+### Changed
+- **Who Leads Willowshore? — the player board now reads the crowd, not the score.** The player
+  view's mechanical Favor tally (raw `Northridge N · Southbank M` numbers) is gone, reskinned as
+  a **crowd meter**: the same two-tone bar now leans with the town, ends labelled by faction, and
+  a caption that says how hard the crowd is pulling ("The crowd is split down the middle", "…edges
+  toward …", "…sways toward …", "…roars for …"). Each settled round of the five-round stepper now
+  reads in the square's own voice too — "the crowd cheers Northridge", "the crowd roars for
+  Southbank", "the crowd applauds both" — styled as a filled chip instead of a plain text label,
+  and it updates as the GM records the round through the existing sync hook. In the thrown duel
+  each settled round reads a neutral "settled" and the crowd meter stays hidden, so nothing scores
+  the fix. The raw Favor numbers remain only on the GM console.
+
 ## 2026-08-17 13:32
 
 ### Added

@@ -521,18 +521,36 @@ class WLRApp extends BaseApp {
       : s.winner === "south" ? ELDERS.south.name
       : s.winner === "third" ? (s.third.name || "A champion") : "";
 
+    // The crowd's read on a decided round, in the square's own voice — the
+    // player board shows reaction, not the mechanical score.
+    const crowdReact = (code) => ({
+      "n": "the crowd cheers Northridge",
+      "N": "the crowd roars for Northridge",
+      "s": "the crowd cheers Southbank",
+      "S": "the crowd roars for Southbank",
+      "t": "the crowd applauds both"
+    }[code] ?? "");
+    const crowdLean = () => {
+      const m = f.north - f.south;
+      if (m === 0) return "The crowd is split down the middle — Willowshore cannot yet choose.";
+      const side = m > 0 ? "Northridge" : "Southbank";
+      const a = Math.abs(m);
+      return a >= 6 ? `The crowd roars for ${side}.`
+        : a >= 3 ? `The crowd sways toward ${side}.`
+        : `The crowd edges toward ${side}.`;
+    };
+
     const roundMark = (r) => {
       const code = s.rounds[r.key];
       const done = code != null;
       const isNext = !showVerdict && !done && next?.key === r.key;
-      const win = done && isTrial
-        ? (code === "t" ? "Tie" : code[0].toLowerCase() === "n" ? "Northridge" : "Southbank")
-        : "";
+      const react = done ? (isTrial ? crowdReact(code) : "settled")
+        : (isNext ? "up next" : "");
       return `
         <div class="step ${done ? "done" : ""} ${isNext ? "next" : ""}" style="--st:var(--${TONES.includes(r.tone) ? r.tone : "muted"})">
           <span class="snum">${r.num}</span>
           <span class="sname">${esc(r.name)}</span>
-          <span class="swin">${done ? (isTrial ? esc(win) : "done") : (isNext ? "up next" : "")}</span>
+          <span class="swin">${esc(react)}</span>
         </div>`;
     };
 
@@ -568,9 +586,10 @@ class WLRApp extends BaseApp {
           <h3>The Trial <small>five rounds</small></h3>
           <div class="stepper">${ROUNDS.map(r => roundMark(r)).join("")}</div>
           ${isTrial ? `
-            <div class="tally">
-              <div class="tbar"><div class="tf n" style="width:${pct(f.north)}%"></div><div class="tf s" style="width:${pct(f.south)}%"></div></div>
-              <div class="tlabels"><span class="n"><b>${f.north}</b> Northridge</span><span class="s"><b>${f.south}</b> Southbank</span></div>
+            <div class="crowdmeter">
+              <div class="cbar"><div class="cf n" style="width:${pct(f.north)}%"></div><div class="cf s" style="width:${pct(f.south)}%"></div></div>
+              <div class="cends"><span class="n"><i class="fa-solid ${ELDERS.north.icon}"></i> Northridge</span><span class="s"><i class="fa-solid ${ELDERS.south.icon}"></i> Southbank</span></div>
+              <p class="clean">${crowdLean()}</p>
             </div>` : ""}
         </section>
 
@@ -962,16 +981,26 @@ class WLRApp extends BaseApp {
       .wlw .stepper { display:flex; gap:.3rem; margin:.3rem 0 .5rem; }
       .wlw .step { flex:1; display:flex; flex-direction:column; align-items:center; gap:.15rem;
                    border:1px solid var(--line); border-radius:4px; padding:.35rem .1rem;
-                   background:var(--stripe); text-align:center; }
+                   background:var(--card); text-align:center; cursor:default; }
       .wlw .step .snum { font-size:.7rem; color:var(--paper); background:var(--muted);
                          border-radius:3px; padding:0 5px; letter-spacing:.06em; }
       .wlw .step .sname { font-size:.66rem; line-height:1.15; font-weight:600; }
-      .wlw .step .swin { font-size:.6rem; color:var(--muted); min-height:.75rem; }
-      .wlw .step.done { border-color:var(--st, var(--moss)); background:var(--card); }
-      .wlw .step.done .snum { background:var(--st, var(--moss)); }
-      .wlw .step.done .swin { color:var(--st, var(--moss)); font-weight:700; }
+      .wlw .step .swin { font-size:.64rem; line-height:1.3; color:var(--muted); min-height:.8rem; }
+      .wlw .step.done { background:var(--st, var(--moss)); border-color:var(--st, var(--moss)); color:var(--paper); }
+      .wlw .step.done .snum { background:rgba(255,255,255,.28); color:var(--paper); }
+      .wlw .step.done .sname { color:var(--paper); }
+      .wlw .step.done .swin { color:var(--paper); opacity:.9; font-weight:600; }
       .wlw .step.next { border-color:var(--gold); border-top:3px solid var(--gold); background:var(--card); }
       .wlw .step.next .swin { color:var(--gold); font-weight:700; text-transform:uppercase; letter-spacing:.05em; }
+      .wlw .crowdmeter { margin:.4rem 0 .15rem; }
+      .wlw .cbar { display:flex; height:14px; border-radius:7px; overflow:hidden; border:1px solid var(--line); background:var(--stripe); }
+      .wlw .cf.n { background:var(--ember); }
+      .wlw .cf.s { background:var(--moss); }
+      .wlw .cends { display:flex; justify-content:space-between; margin-top:.2rem; font-size:.72rem; }
+      .wlw .cends .n { color:var(--ember); }
+      .wlw .cends .s { color:var(--moss); }
+      .wlw .cends i { margin-right:.2rem; }
+      .wlw .clean { font-size:.78rem; line-height:1.45; margin:.25rem 0 0; font-style:italic; color:var(--muted); }
       .wlw .verdict { border-left:3px solid var(--plum); }
       .wlw .vline { font-size:.9rem; line-height:1.5; margin:.2rem 0 .4rem; }
 
