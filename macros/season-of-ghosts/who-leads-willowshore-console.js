@@ -612,22 +612,23 @@ class WLRApp extends BaseApp {
       </section>` : "";
 
     // The assigned champion can roll the upcoming round straight from the
-    // board, in either mode. Trial: III/IV have a fixed DC printed in the
-    // book; I and II are opposed with a short skill menu (Round II's
-    // "Attack" option stays on the character sheet — a strike needs a
-    // weapon picked, not a button); V has no roll at all *unless* Favor is
-    // tied, when the book calls for one final opposed Diplomacy to break
-    // it. Thrown: only the thrower's seat has anything to roll — every
-    // round's sell is Deception/Performance DC 18 (the tally panel's own
-    // "Hu's champion sells each round with Deception/Performance (DC 18)"
-    // note); the winner's champion just plays it straight and gets no card.
+    // board — both seats, in either mode. The "honest" card (III/IV's
+    // printed DC; I/II's opposed skill menu, Round II's "Attack" option
+    // staying on the character sheet since a strike needs a weapon picked;
+    // V's tie-break Diplomacy when Favor is tied) is what Trial mode always
+    // shows. In a thrown duel that same honest card goes to the *winner's*
+    // champion (round V excluded — the book gives V entirely to the sell),
+    // since their side isn't selling anything and still plays the round for
+    // real; the *thrower's* champion instead gets every round's sell —
+    // Deception/Performance DC 18, the tally panel's own DC — through V's
+    // money shot.
     const me = t.mySeat();
     const parseCheck = (c) => { const m = /^DC\s+(\d+)\s+(.+)$/.exec(String(c).trim()); return m ? { dc: Number(m[1]), skill: m[2] } : null; };
     const rollCard = (() => {
       if (!me || !next || finished) return "";
       const faction = me.side === "north" ? ELDERS.north.faction : ELDERS.south.faction;
-      if (!isTrial) {
-        if (me.side !== t.throwerSide) return "";
+      const selling = !isTrial && me.side === t.throwerSide;
+      if (selling) {
         return `
         <div class="rollcard">
           <div class="rc-head">Round ${next.num} — ${esc(next.name)} <small>you fight for ${faction}</small></div>
@@ -641,7 +642,10 @@ class WLRApp extends BaseApp {
           <p class="rc-note">${next.key === "r5" ? "The money shot — bonus if Suspicion is low, penalty if high." : "A clean sell keeps Suspicion down; a botch pushes it up."}</p>
         </div>`;
       }
-      const tieBreak = next.key === "r5" && f.north === f.south;
+      // The thrown duel's non-thrower champion plays every round straight
+      // except V, which the book gives entirely to the thrower's sell.
+      if (!isTrial && next.key === "r5") return "";
+      const tieBreak = isTrial && next.key === "r5" && f.north === f.south;
       const options = (next.checks ?? []).map(parseCheck).filter(Boolean).length
         ? next.checks.map(parseCheck).filter(Boolean)
         : tieBreak ? [{ skill: "Diplomacy", dc: null }]

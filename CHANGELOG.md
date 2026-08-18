@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-08-18 15:51
+
+### Fixed
+- **Who Leads Willowshore? — the thrown duel's winner-side champion had no roll of their own.**
+  The previous fix gave only the *thrower's* champion a roll card in the thrown duel; the other
+  seat (the elder who's actually winning) got nothing at all, so a table with PCs on both sides
+  still had one player unable to roll. The winner's champion now gets the same honest round card
+  Trial mode uses (III/IV's printed DC, I/II's skill menu) for Rounds I–IV; Round V stays
+  thrower-only, since the book gives the money shot entirely to the sell.
+
 ## 2026-08-18 15:32
 
 ### Fixed
