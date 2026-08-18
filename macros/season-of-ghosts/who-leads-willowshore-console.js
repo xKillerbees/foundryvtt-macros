@@ -612,22 +612,41 @@ class WLRApp extends BaseApp {
       </section>` : "";
 
     // The assigned champion can roll the upcoming round straight from the
-    // board. Rounds III/IV have a fixed DC printed in the book; I and II are
-    // opposed with a short skill menu (Round II's "Attack" option stays on
-    // the character sheet — a strike needs a weapon picked, not a button);
-    // Round V has no roll at all *unless* Favor is tied, when the book calls
-    // for one final opposed Diplomacy to break it.
+    // board, in either mode. Trial: III/IV have a fixed DC printed in the
+    // book; I and II are opposed with a short skill menu (Round II's
+    // "Attack" option stays on the character sheet — a strike needs a
+    // weapon picked, not a button); V has no roll at all *unless* Favor is
+    // tied, when the book calls for one final opposed Diplomacy to break
+    // it. Thrown: only the thrower's seat has anything to roll — every
+    // round's sell is Deception/Performance DC 18 (the tally panel's own
+    // "Hu's champion sells each round with Deception/Performance (DC 18)"
+    // note); the winner's champion just plays it straight and gets no card.
     const me = t.mySeat();
     const parseCheck = (c) => { const m = /^DC\s+(\d+)\s+(.+)$/.exec(String(c).trim()); return m ? { dc: Number(m[1]), skill: m[2] } : null; };
     const rollCard = (() => {
-      if (!isTrial || !me || !next || finished) return "";
+      if (!me || !next || finished) return "";
+      const faction = me.side === "north" ? ELDERS.north.faction : ELDERS.south.faction;
+      if (!isTrial) {
+        if (me.side !== t.throwerSide) return "";
+        return `
+        <div class="rollcard">
+          <div class="rc-head">Round ${next.num} — ${esc(next.name)} <small>you fight for ${faction}</small></div>
+          <p class="rc-skills">Sell it — Deception or Performance</p>
+          <div class="rc-btns">
+            <button type="button" class="rollbtn" data-act="roll" data-k="${next.key}" data-skill="Deception" data-dc="18">
+              <i class="fa-solid fa-dice-d20"></i> Roll Deception <b>DC 18</b></button>
+            <button type="button" class="rollbtn" data-act="roll" data-k="${next.key}" data-skill="Performance" data-dc="18">
+              <i class="fa-solid fa-dice-d20"></i> Roll Performance <b>DC 18</b></button>
+          </div>
+          <p class="rc-note">${next.key === "r5" ? "The money shot — bonus if Suspicion is low, penalty if high." : "A clean sell keeps Suspicion down; a botch pushes it up."}</p>
+        </div>`;
+      }
       const tieBreak = next.key === "r5" && f.north === f.south;
       const options = (next.checks ?? []).map(parseCheck).filter(Boolean).length
         ? next.checks.map(parseCheck).filter(Boolean)
         : tieBreak ? [{ skill: "Diplomacy", dc: null }]
         : (next.rollSkills ?? []).map(skill => ({ skill, dc: null }));
       if (!options.length) return "";
-      const faction = me.side === "north" ? ELDERS.north.faction : ELDERS.south.faction;
       return `
       <div class="rollcard">
         <div class="rc-head">Round ${next.num} — ${esc(next.name)} <small>you fight for ${faction}</small></div>

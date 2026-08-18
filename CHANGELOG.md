@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-08-18 15:32
+
+### Fixed
+- **Who Leads Willowshore? — champion self-rolling now works in the thrown duel, not just the
+  Trial.** The Roll card was gated on trial mode only, so a champion seated for a thrown duel
+  never saw a roll option on any round, even mid-Trial with a fixed DC on the books. In thrown
+  mode the board now gives the *thrower's* champion (and only them — the winner's champion is
+  playing it straight) a Deception/Performance DC 18 "sell it" roll on whichever round is next,
+  matching the tally panel's existing DC note. Round V's card adds a line about the money-shot's
+  Suspicion-based bonus/penalty.
+
 ## 2026-08-18 15:19
 
 ### Changed

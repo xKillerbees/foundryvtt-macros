@@ -261,6 +261,11 @@ option stays on the character sheet, since a strike needs a weapon picked) — a
 with no DC for the GM to read against the other champion's total. V has no roll of its own, but if
 Favor is tied going into it the board offers the book's tie-break: one opposed Diplomacy.
 
+In the thrown duel the same board gives the *thrower's* seat a Deception/Performance DC 18 roll on
+whichever round is next — the sell — while the winner's seat gets no card, since that champion is
+just playing the round straight. Round V's card notes the money shot's Suspicion-based bonus or
+penalty.
+
 In the thrown duel the board keeps the fix secret but lets the party read the room: the round
 stepper marks each settled round "settled", and a crowd-whispers meter fills as the sell wobbles,
 its caption reading in the crowd's voice ("The crowd is convinced — a clean, hard-fought contest"
