@@ -817,6 +817,7 @@ globalThis.FIXTURES = {
       south: { kind: "pc", actorId: "pc2", name: "Daizen" },
       favorStart: { north: 2, south: 1 },
       rounds: { r1: "n", r2: "s", r3: "S", r4: null, r5: null },
+      crowd: { r1: "cn", r2: "cN", r3: "bs", r4: null, r5: null },
       winner: "",
       leadup: { courted: true, rallied: true }
     },
@@ -839,6 +840,7 @@ globalThis.FIXTURES = {
       third: { on: true, kind: "pc", actorId: "pc3", name: "Miyu" },
       favorStart: { north: 2, south: 1 },
       rounds: { r1: "n", r2: "s", r3: "S", r4: null, r5: null },
+      crowd: { r1: "cn", r2: "cN", r3: "bs", r4: null, r5: null },
       winner: "",
       leadup: { courted: true, rallied: true }
     },
@@ -861,6 +863,7 @@ globalThis.FIXTURES = {
       thrownWinner: "north",
       knows: "in",
       rounds: { r1: "k", r2: "b", r3: "c", r4: "k", r5: null },
+      crowd: { r1: "q1", r2: "qx", r3: "q1", r4: null, r5: null },
       winner: "north",
       leadup: { rehearsed: true, defused: true }
     },
@@ -881,6 +884,7 @@ globalThis.FIXTURES = {
       thrownWinner: "north",
       knows: "in",
       rounds: { r1: "k", r2: "b", r3: "c", r4: "k", r5: null },
+      crowd: { r1: "q1", r2: "qx", r3: "q1", r4: null, r5: null },
       winner: "north",
       leadup: { rehearsed: true, defused: true }
     },

@@ -226,6 +226,7 @@ Old Matsuki publicly challenges Granny Hu for the town's leadership, settled by 
 - **Champion selection** for both seats: any PC for Northridge or Southbank, with Capt. Zheng Peng and Yong Wu-Xiu as the NPC stand-ins when a seat is empty, plus a third-candidate option
 - **The seven-day lead-up**: starting-Favor steppers set from the week's scenes, with the reputation / influence / rally / rehearse / defuse levers as a tracked checklist
 - **The five-round Trial of Champions** on two live Favor tallies — the Address, the bout (best-of-3), the winter riddle, the People (double Favor), and the Verdict — each round's checks posted to chat as rollable inline checks
+- **Working the crowd**, so the un-seated PCs aren't spectators for five rounds: every round carries a second block naming what the rest of the party can do in the square that round and the three skills it takes, on its own DC 18 button row — ±1 Favor, ±2 on a critical, to whichever side they worked (a critical failure hands the moment to the other one), or −2 to +1 Suspicion in the thrown duel, where it is the only thing the party can do to buy back a bad sell
 - **The thrown-duel variant** from *The Worked Duel*: the conceding elder and the fix's winner are both selectable, so the "does the winner know?" panel and every round's sell text flip to match; scored on a Suspicion track (0–3 Flawless / 4–6 Whispers / 7+ Exposed) with per-round sell deltas, a blowout toggle, and the money-shot finale
 - A **verdict tab** that declares the winner, applies the reversible write-through beats (heal the rift → Hope + Reputation, back the winner, or a bloodbath) to the Fall Downtime Tracker's pools, and marks the level-up to 3
 - Read-aloud for the challenge and the verdict posted to chat in-world; the cast (both elders, the stand-ins, Shinzo, and Heh's shadow) on the landing tab
@@ -279,6 +280,14 @@ Deception/Performance DC 18 roll on whichever round is next — the sell — thr
 shot. The winner's seat, playing the round for real, gets the same honest card Trial mode uses
 (III's DC 20 Society, IV's DC 18 Society/Medicine, I and II's skill menu) for Rounds I–IV; Round V
 has no card for that seat, since the book gives the money shot entirely to the sell.
+
+A player whose character is *not* in a seat gets a card of their own — the crowd work — rather than
+the blank board they used to get, and a "your part" that explains the job: one roll each round,
+DC 18, from the three skills that round offers, with what landing and missing does said in the
+crowd's terms rather than in Favor. In the thrown duel that card and those steps stay deliberately
+neutral — crowd management, not cover — because an un-seated PC may not be in on the fix; the
+pointed version of each round's crowd work, and the note on why it matters most in Rounds II and
+IV, lives on the GM console only.
 
 In the thrown duel the board keeps the fix secret but lets the party read the room: the round
 stepper marks each settled round "settled", and a crowd-whispers meter fills as the sell wobbles,

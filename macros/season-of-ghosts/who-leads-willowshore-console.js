@@ -86,6 +86,15 @@ const READALOUD = {
   crowd: "Give the crowd a voice — a roar, a gasp, a heckler (\"Songs won't man the walls!\"), a held breath before the bout — and visibly shift bodies toward whichever side is winning Favor. NPCs the party has helped should be in the crowd cheering. Let it breathe: this is a relationship and worldbuilding episode as much as a contest."
 };
 
+/* Working the crowd. The set-piece seats at most two PCs — three with a third
+   candidate — which leaves the rest of the table with nothing to roll for five
+   rounds, in the one scene where the whole town is present. Every un-seated PC
+   gets a job in the square with the same shape as a round: one action, one
+   roll, one recorded result. Invented rather than printed: the source asks only
+   that the crowd be given a voice, so the deltas are deliberately half a
+   champion's and Round IV's doubling does not apply to them. */
+const CROWD_DC = 18;
+
 /* How a round actually runs. The two source documents give the round skills in
    one place and the scoring in another, which reads as two unrelated systems —
    especially in a thrown duel, where the round's own skill and the sell are
@@ -98,12 +107,14 @@ const HOWTO_GM = {
     ["Both champions roll.", "The round's listed skill, once each. A stand-in rolls about +9 in their strong field, +5 otherwise."],
     ["Compare.", "Higher degree of success takes the round; on the same degree, higher total. Close enough to call it even is a tie."],
     ["Record it below.", "Winner +2 Favor, +3 on a critical success, or +1 each on a tie — Round IV doubles all three. One button per round; clicking the lit one clears it."],
+    ["Everyone not in the ring works the crowd.", `One roll each per round from the round's own crowd list, DC ${CROWD_DC}: critical success +2 Favor to the side they worked, success +1, failure nothing, critical failure −1. Recorded on the round's second button row — Round IV's doubling does not apply to it.`],
     ["Round V.", "A closing word, not a contest. Roll only to break a tie in Favor: one opposed Diplomacy before the crowd."]
   ],
   thrown: [
     ["{W} plays the round straight.", "The round's listed skill, rolled for real — {WE}'s side is not selling anything and does not roll to sell."],
     ["{T} plays the part, then sells it.", "Describe the argument, the bout, the plan — then roll one Deception or Performance vs DC 18. That sell is the only roll that scores; {T} does not roll the round's own skill to try to win."],
     ["Record the sell below.", "Critical success −1 Gorgeous · success +0 Clean · failure +1 Shaky · critical failure +2 Botched. One button per round."],
+    ["Everyone not in the ring works the crowd.", `One roll each per round from the round's own crowd list, DC ${CROWD_DC}: critical success −2 Suspicion, success −1, failure nothing, critical failure +1. Recorded on the round's second button row — it is the only thing the rest of the party can do to buy back a bad sell.`],
     ["Blowout is a GM call, not a roll.", "If the round reads false because {W} looked too good rather than because the sell wobbled, record +1 Blowout in place of the sell's own result."],
     ["Round V.", "The money shot — {T}'s last sell, with a bonus if Suspicion is low so far and a penalty if it's high."]
   ]
@@ -119,6 +130,12 @@ const HOWTO_PLAYER = {
       "<b>Play the round out in character</b> — each round asks something different, and the card below says what this one asks of you. Then roll the skill on that card, once. That is your whole mechanical part of the round.",
       "<b>III and IV are against a set DC</b>, printed on the button. <b>I and II are opposed</b> — you roll, the other champion rolls, and the better result takes the round, so no DC is shown.",
       "<b>Round V is a closing word</b>, not a contest. You only roll if the town is dead split going into it."
+    ],
+    helping: [
+      "<b>You aren't in the ring — you're in the square,</b> and the square is what decides this. Every round, while the champions do their part, there is something you can do among the people watching: the card below says what this one offers.",
+      `<b>Then roll once</b>, from that card, against DC ${CROWD_DC}. One roll each round, per person — you don't need to wait your turn, and you don't have to work the same side as anyone else.`,
+      "<b>It moves the town a little.</b> Land it and the crowd shifts your way; land it beautifully and it shifts further. Miss badly and you have handed the moment to the other side.",
+      "<b>Round IV is the one to be careful with.</b> The town is watching who is being useful and who is being seen, and it can tell the difference."
     ]
   },
   thrown: {
@@ -133,6 +150,14 @@ const HOWTO_PLAYER = {
     straight: [
       "<b>You play every round straight</b> — do what the card below says the round asks, then roll the skill on it as though the outcome were still in doubt. III and IV are against a set DC; I and II are opposed, so no DC is shown.",
       "<b>Round V has no roll for you.</b> The finale belongs to the other champion."
+    ],
+    /* The un-seated player may not be in on the fix, so this stays neutral —
+       crowd management, not cover. The GM console carries the pointed version. */
+    helping: [
+      "<b>You aren't in the ring — you're in the square,</b> and the square is what this comes down to. Every round, while the champions do their part, there is something you can do among the people watching: the card below says what this one offers.",
+      `<b>Then roll once</b>, from that card, against DC ${CROWD_DC}. One roll each round, per person.`,
+      "<b>You are working the mood, not the bout.</b> Land it and the square stays with the contest and takes it at face value. Miss badly and you draw attention to exactly the thing you were steering people away from.",
+      "<b>It is the only lever the rest of the party has.</b> Nothing you roll wins a round — but a room kept calm is worth as much to your champion as anything they do out there."
     ]
   }
 };
@@ -160,7 +185,11 @@ const ROUNDS = [
     crowd: "Faction banners roar; waverers lean toward the better speaker.",
     player: "Stand up before the whole town and make the case for your elder — why they should be the one to lead Willowshore through the winter.",
     thrown: "{T} argues {LE}'s case half-heartedly and loses with grace — the first sell. Deception or Performance (DC 18) to make the concession read as a close, principled loss.",
-    checks: [], rollSkills: ["Diplomacy", "Performance", "Deception"]
+    checks: [], rollSkills: ["Diplomacy", "Performance", "Deception"],
+    work: "Move along the edge of the crowd while your champion speaks. Put the case again to the waverers at the back your champion can't see from the platform, lead the cheer on the right beat, or find out who is actually undecided and stand next to them.",
+    workThrown: "Stand where the doubters are and give them something else to chew on — the speech itself, the weather, the price of rice. A crowd arguing about the words is not asking anything about the contest.",
+    workGM: "Cover for the first sell. Whatever {T} fumbles here, the crowd-worker's job is to have already given the square a different thing to notice.",
+    workSkills: ["Diplomacy", "Performance", "Society"]
   },
   {
     key: "r2", num: "II", name: "The Trial of Arms", sub: "the bout", tone: "rust", icon: "fa-hand-fist",
@@ -172,7 +201,11 @@ const ROUNDS = [
     thrown: "{T} must fight hard and lose. Deception/Performance DC 18 to sell a valiant near-miss; a clumsy dive reads off. If {T} starts genuinely winning, they have to lose even harder to get back on script.",
     // Attack rolls stay on the character sheet (strikes need a weapon picked) —
     // Athletics/Acrobatics are the two skill options the bout actually offers.
-    checks: [], rollSkills: ["Athletics", "Acrobatics"]
+    checks: [], rollSkills: ["Athletics", "Acrobatics"],
+    work: "Call the bout for the people at the back who can't see it, face down the heckler working the crowd against your side, or be first over to the fallen champion with a healer's hands — mercy in front of the whole town is worth as much as the bout.",
+    workThrown: "The loudest round, and the closest-watched. Give the back rows something to look at that isn't footwork — call the bout, tend the bruises, start an argument worth turning around for.",
+    workGM: "The round where a dive is most likely to show. A landed crowd roll here is what keeps a clumsy fall from becoming the story people tell afterwards.",
+    workSkills: ["Medicine", "Intimidation", "Performance"]
   },
   {
     key: "r3", num: "III", name: "The Trial of Wisdom", sub: "lead us through winter", tone: "slate", icon: "fa-brain",
@@ -182,7 +215,11 @@ const ROUNDS = [
     crowd: "Merchants and farmers swayed; the practical-minded lean to the better plan.",
     player: "The town puts its real problem to you: the harvest will fall short and no trade is coming. Say how Willowshore eats till spring.",
     thrown: "{T} offers a solid-but-plain plan and lets {W}'s \"vision\" outshine it — sell the shrug, not the failure.",
-    checks: ["DC 20 Society"]
+    checks: ["DC 20 Society"],
+    work: "Feed your champion the real numbers — granary counts, what the docks can still land, who has a cellar they haven't mentioned — and get the people who would know nodding along before your champion has finished saying it.",
+    workThrown: "Agree with the plain plan, out loud, where people can hear you. A modest idea backed by a real voice reads as modesty, not as a champion who never meant to win.",
+    workGM: "Patches this round's own risk directly: it makes {T}'s shrug read as humility rather than as someone throwing it.",
+    workSkills: ["Society", "Survival", "Diplomacy"]
   },
   {
     key: "r4", num: "IV", name: "The Trial of the People", sub: "the heart · double favor", tone: "moss", icon: "fa-hand-holding-heart",
@@ -193,7 +230,11 @@ const ROUNDS = [
     player: "Someone steps out of the crowd needing help — right there, in front of everyone. Help them. The town is watching whether you mean it or you are performing.",
     thrown: "The easiest round to sell — {T} helps warmly, then defers the credit. But overdoing humility reads as defeatism (+Suspicion).",
     checks: ["DC 18 Society", "DC 18 Medicine"],
-    double: true
+    double: true,
+    work: "Help beside your champion, not in front of them — take the second patient, calm the second neighbour, hold the crowd back so there is air. The town is watching who is being useful and who is being seen.",
+    workThrown: "Help beside your champion, not in front of them — take the second patient, calm the second neighbour, hold the crowd back so there is air. This is the round it is easiest to overplay.",
+    workGM: "Easy to help, easy to overdo. A friend working visibly hard to make the losing champion look kind is what the square remembers afterwards — a critical failure here earns its full +1.",
+    workSkills: ["Medicine", "Diplomacy", "Religion"]
   },
   {
     key: "r5", num: "V", name: "The People's Verdict", sub: "the finale", tone: "plum", icon: "fa-scale-balanced",
@@ -203,7 +244,11 @@ const ROUNDS = [
     crowd: "The whole square holds its breath for the tally.",
     player: "One last word to the town, and then it makes up its mind.",
     thrown: "THE MONEY SHOT. {W} lands the \"deciding\" blow; {T} sells the dramatic, valiant fall — one last Deception/Performance, bonus if Suspicion is low, penalty if high. {LE} steps forward, clasps {WE}'s hand, and concedes to cheers.",
-    checks: []
+    checks: [],
+    work: "Bring your blocs to the front for the tally, and get the closing cheer started from somewhere that isn't your own faction's banner — a town that hears its own two halves cheering together decides differently.",
+    workThrown: "When it is over, be the first voice to call it a good clean fight. The second and third voices will be someone else's, and that is what the town will remember hearing.",
+    workGM: "The last chance to move the needle before the tally, and the roll most likely to be forgotten because everyone is watching the money shot.",
+    workSkills: ["Diplomacy", "Performance", "Society"]
   }
 ];
 
@@ -236,7 +281,8 @@ function blankState(pcs) {
     favorStart: { north: 0, south: 0 },  // starting Favor set from the lead-up
     leadup: { courted: false, conceded: false, rallied: false, rehearsed: false, defused: false },
     rounds: { r1: null, r2: null, r3: null, r4: null, r5: null },
-    winner: "",                          // "" | "north" | "south" | "third" | "gm"
+    crowd: { r1: null, r2: null, r3: null, r4: null, r5: null },   // working the crowd, one per round
+    winner: "",                        // "" | "north" | "south" | "third" | "gm"
     beats: { rift: false, backed: false, blood: false },
     leveled: false,
     log: []
@@ -384,17 +430,45 @@ class WhoLeads {
       default: return 0;
     }
   }
+  /* Crowd work is half a champion's swing and sits outside Round IV's
+     doubling — it is a nudge from the square, not a round won. */
+  crowdTrialDelta(code) {
+    switch (code) {
+      case "cn": return { north: 1, south: 0 };
+      case "cN": return { north: 2, south: 0 };
+      case "cs": return { north: 0, south: 1 };
+      case "cS": return { north: 0, south: 2 };
+      case "bn": return { north: -1, south: 0 };
+      case "bs": return { north: 0, south: -1 };
+      default: return { north: 0, south: 0 };
+    }
+  }
+  crowdThrownDelta(code) {
+    switch (code) {
+      case "q2": return -2;
+      case "q1": return -1;
+      case "q0": return 0;
+      case "qx": return 1;
+      default: return 0;
+    }
+  }
   get favor() {
     let n = this.s.favorStart.north ?? 0, s2 = this.s.favorStart.south ?? 0;
     for (const r of ROUNDS) {
       const d = this.trialDelta(this.s.rounds[r.key]);
       const mult = r.double ? 2 : 1;
       n += d.north * mult; s2 += d.south * mult;
+      const c = this.crowdTrialDelta(this.s.crowd?.[r.key]);
+      n += c.north; s2 += c.south;
     }
-    return { north: n, south: s2 };
+    // A backfire can only cost a side what it has; the bar and the player
+    // board both read a negative tally as nonsense.
+    return { north: Math.max(0, n), south: Math.max(0, s2) };
   }
   get suspicion() {
-    return ROUNDS.reduce((acc, r) => acc + this.thrownDelta(this.s.rounds[r.key]), 0);
+    const sold = ROUNDS.reduce((acc, r) => acc + this.thrownDelta(this.s.rounds[r.key]), 0);
+    const worked = ROUNDS.reduce((acc, r) => acc + this.crowdThrownDelta(this.s.crowd?.[r.key]), 0);
+    return Math.max(0, sold + worked);
   }
   get band() {
     const s = this.suspicion;
@@ -409,6 +483,14 @@ class WhoLeads {
     this.log(`${r.num}. ${r.name}: ${this.s.rounds[key] ? code : "cleared"}.`);
     this.touch();
   }
+  setCrowd(key, code) {
+    this.s.crowd = this.s.crowd ?? { r1: null, r2: null, r3: null, r4: null, r5: null };
+    const cur = this.s.crowd[key];
+    this.s.crowd[key] = (cur === code) ? null : code;
+    const r = ROUNDS.find(x => x.key === key);
+    this.log(`${r.num}. ${r.name} — crowd: ${this.s.crowd[key] ? code : "cleared"}.`);
+    this.touch();
+  }
 
   /* ----- player rolling ----- */
   mySeat() {
@@ -418,18 +500,15 @@ class WhoLeads {
     if (this.s.south.kind === "pc" && this.s.south.actorId === me) return { side: "south", name: this.s.south.name, actorId: me };
     return null;
   }
-  async rollRound(key, skill, dc) {
-    const r = ROUNDS.find(x => x.key === key);
-    const seat = this.mySeat();
-    if (!seat) return ui.notifications.warn("You aren't assigned as a champion.");
-    const actor = seat.actorId ? game.actors.get(seat.actorId) : null;
+  async rollAs(actor, key, skill, dc, label) {
     const st = actor?.skills?.[checkSlug(skill)];
     if (st?.roll) {
       try {
-        // Fixed-DC rounds (III, IV) pass a dc; the opposed rounds (I, II, and
-        // V's tie-break) don't — the GM reads the total against the other
-        // champion's roll, same as if it'd been rolled at the table.
-        const opts = { label: `${r.num}. ${r.name} — ${skill}` };
+        // Fixed-DC rounds (III, IV) and every crowd roll pass a dc; the opposed
+        // rounds (I, II, and V's tie-break) don't — the GM reads the total
+        // against the other champion's roll, same as if it'd been rolled at the
+        // table.
+        const opts = { label };
         if (dc != null && !Number.isNaN(dc)) opts.dc = { value: Number(dc) };
         await st.roll(opts);
         return;
@@ -438,6 +517,21 @@ class WhoLeads {
       }
     }
     return this.postRound(key);
+  }
+  async rollRound(key, skill, dc) {
+    const r = ROUNDS.find(x => x.key === key);
+    const seat = this.mySeat();
+    if (!seat) return ui.notifications.warn("You aren't assigned as a champion.");
+    const actor = seat.actorId ? game.actors.get(seat.actorId) : null;
+    return this.rollAs(actor, key, skill, dc, `${r.num}. ${r.name} — ${skill}`);
+  }
+  /* The un-seated PCs roll off their own assigned character rather than a
+     champion seat — that's the whole point of the crowd work. */
+  async rollCrowd(key, skill, dc) {
+    const r = ROUNDS.find(x => x.key === key);
+    const actor = game.user.character;
+    if (!actor) return ui.notifications.warn("No character is assigned to you.");
+    return this.rollAs(actor, key, skill, dc, `${r.num}. ${r.name} — working the crowd (${skill})`);
   }
 
   /* ----- resolution ----- */
@@ -497,9 +591,15 @@ class WhoLeads {
   async postRound(key) {
     const r = ROUNDS.find(x => x.key === key);
     const checks = (r.checks ?? []).map(c => linkify(c)).join(" · ");
+    const work = this.s.mode === "trial" ? r.work : this.fillThrown(r.workThrown);
+    const workChecks = (r.workSkills ?? []).map(sk => checkCode(sk, CROWD_DC)).join(" · ");
     const body = `<p style="margin:0 0 4px"><b>${r.num}. ${r.name}</b> — ${r.skills}</p>` +
       (checks ? `<p style="margin:0 0 4px">${checks}</p>` : "") +
-      (r.dcText ? `<p style="margin:0"><i>${r.dcText}</i></p>` : "");
+      (r.dcText ? `<p style="margin:0"><i>${r.dcText}</i></p>` : "") +
+      (work ? `<hr style="border:none;border-top:1px solid #b9a687;margin:6px 0">
+        <p style="margin:0 0 4px"><b>Working the crowd</b> — everyone not in the ring, one roll each</p>
+        <p style="margin:0 0 4px">${work}</p>
+        <p style="margin:0">${workChecks}</p>` : "");
     return this.postCard("Trial of Champions", `${r.num}. ${r.name}`, body, r.tone);
   }
   async postStatus() {
@@ -679,11 +779,30 @@ class WLRApp extends BaseApp {
     // Deception/Performance DC 18, the tally panel's own DC — through V's
     // money shot.
     const me = t.mySeat();
+    const myChar = game.user.character;
     const myFaction = me ? (me.side === "north" ? ELDERS.north.faction : ELDERS.south.faction) : "";
     const selling = !!me && !isTrial && me.side === t.throwerSide;
     const parseCheck = (c) => { const m = /^DC\s+(\d+)\s+(.+)$/.exec(String(c).trim()); return m ? { dc: Number(m[1]), skill: m[2] } : null; };
     const rollCard = (() => {
-      if (!me || !next || finished) return "";
+      if (!next || finished) return "";
+      // Everyone whose character isn't in a champion seat works the crowd —
+      // the same card in both modes, off their own assigned actor.
+      if (!me) {
+        if (!myChar) return "";
+        return `
+        <div class="rollcard crowdcard">
+          <div class="rc-head">Round ${next.num} — ${esc(next.name)} <small>you're in the square, not the ring</small></div>
+          <p class="rc-what">${esc(isTrial ? next.work : next.workThrown)}</p>
+          <p class="rc-skills">Play that out, then roll <b>once</b> — ${esc(next.workSkills.join(", "))}.</p>
+          <div class="rc-btns">${next.workSkills.map(sk =>
+            `<button type="button" class="rollbtn" data-act="rollcrowd" data-k="${next.key}" data-skill="${esc(sk)}" data-dc="${CROWD_DC}">
+               <i class="fa-solid fa-dice-d20"></i> Roll ${esc(sk)} <b>DC ${CROWD_DC}</b></button>`).join("")}
+          </div>
+          <p class="rc-note">${isTrial
+            ? "Land it and the town shifts a little your way; miss badly and you hand the moment to the other side."
+            : "Land it and the square keeps its mind on the contest; miss badly and you draw the very eyes you meant to turn."}</p>
+        </div>`;
+      }
       const faction = myFaction;
       if (selling) {
         return `
@@ -725,17 +844,20 @@ class WLRApp extends BaseApp {
     // Prepended to the board: how the duel is actually run, in the crowd's
     // voice, with the seated champion's own procedure spelled out underneath —
     // which roll they make each round, and when. Drops away once it's decided.
-    const mySteps = !me ? null
-      : isTrial ? HOWTO_PLAYER.trial.seat
-      : selling ? HOWTO_PLAYER.thrown.sell
-      : HOWTO_PLAYER.thrown.straight;
+    const mySteps = me
+      ? (isTrial ? HOWTO_PLAYER.trial.seat
+        : selling ? HOWTO_PLAYER.thrown.sell
+        : HOWTO_PLAYER.thrown.straight)
+      : myChar ? (isTrial ? HOWTO_PLAYER.trial.helping : HOWTO_PLAYER.thrown.helping)
+      : null;
+    const myLabel = me ? `${me.name} · ${myFaction}` : myChar ? `${myChar.name} · in the crowd` : "";
     const howto = showVerdict ? "" : `
       <section class="panel howto" style="--tone:var(--ice)">
         <h3>How it runs <small>five rounds</small></h3>
         <p class="text">${isTrial ? HOWTO_PLAYER.trial.crowd : HOWTO_PLAYER.thrown.crowd}</p>
         ${mySteps ? `
         <div class="yourpart">
-          <div class="subhead"><i class="fa-solid fa-dice-d20"></i> Your part <span>${esc(me.name)} · ${esc(myFaction)}</span></div>
+          <div class="subhead"><i class="fa-solid fa-dice-d20"></i> Your part <span>${esc(myLabel)}</span></div>
           <ol class="howsteps">${mySteps.map(x => `<li>${x}</li>`).join("")}</ol>
         </div>` : ""}
       </section>`;
@@ -922,8 +1044,8 @@ class WLRApp extends BaseApp {
               <p class="note">${sus <= 3 ? "A convincing, hard-fought contest — nobody smells the fix." : sus <= 6 ? "A rumor of a fix starts to circulate." : "Exposed: worse than an honest concession. Hu looks a caught schemer, Matsuki's win is tainted, and the party is implicated."}</p>
             </div>`}
         <p class="hint">${s.mode === "trial"
-          ? "Round IV (the People) is worth double Favor — its buttons already show the doubled values."
-          : `Suspicion is the whole score here: the winner is already settled, so nothing ${esc(ELDERS[t.thrownWinnerSide].name)}'s champion rolls changes it. Only how well ${esc(t.s[t.throwerSide].name)} sells the loss does.`}</p>
+          ? `Round IV (the People) is worth double Favor — its buttons already show the doubled values. Each round's second button row is the crowd work the un-seated PCs do; it is not doubled, and it can run negative on a critical failure, though neither tally drops below zero.`
+          : `Suspicion is the whole score here: the winner is already settled, so nothing ${esc(ELDERS[t.thrownWinnerSide].name)}'s champion rolls changes it. Only how well ${esc(t.s[t.throwerSide].name)} sells the loss does — and how well the rest of the party works the crowd, on each round's second button row.`}</p>
       </section>`;
 
     return howto + tally + ROUNDS.map(r => this.roundPanel(r, ro)).join("");
@@ -938,6 +1060,12 @@ class WLRApp extends BaseApp {
          ["s", `South ${r.double ? "+4" : "+2"}`], ["S", `South ${r.double ? "+6" : "+3"} crit`],
          ["t", `Tie ${r.double ? "+2" : "+1"} each`]]
       : [["g", "−1 Gorgeous"], ["c", "+0 Clean"], ["k", "+1 Shaky"], ["b", "+2 Botched"], ["w", "+1 Blowout"]];
+    const cwCur = s.crowd?.[r.key];
+    const cwVals = s.mode === "trial"
+      ? [["cn", "North +1"], ["cN", "North +2 crit"], ["cs", "South +1"], ["cS", "South +2 crit"],
+         ["bn", "North −1 backfire"], ["bs", "South −1 backfire"]]
+      : [["q2", "−2 Turned the room"], ["q1", "−1 Quieted"], ["q0", "+0 Nothing"], ["qx", "+1 Drew eyes"]];
+    const cwText = s.mode === "trial" ? r.work : t.fillThrown(r.workThrown);
     return `
       <section class="panel round" style="--tone:var(--${TONES.includes(r.tone) ? r.tone : "muted"})">
         <h3><span class="eid">${r.num}</span> ${r.name} ${r.double ? `<span class="tag warn">double</span>` : ""}
@@ -949,6 +1077,15 @@ class WLRApp extends BaseApp {
         <p class="crowd">Crowd: ${r.crowd}</p>
         <div class="rbtnrow">
           ${vals.map(([code, label]) => `<button type="button" class="rbtn ${cur === code ? "on" : ""}" data-act="round" data-k="${r.key}" data-code="${code}" ${ro ? "disabled" : ""}>${label}</button>`).join("")}
+        </div>
+        <div class="crowdwork">
+          <div class="subhead"><i class="fa-solid fa-users"></i> Working the crowd <span>everyone not in the ring · one roll each</span></div>
+          <p class="cwtext">${cwText}</p>
+          ${s.mode === "thrown" && r.workGM ? `<p class="note">${t.fillThrown(r.workGM)}</p>` : ""}
+          <p class="req"><b>${r.workSkills.join(", ")}</b> — DC ${CROWD_DC}</p>
+          <div class="rbtnrow">
+            ${cwVals.map(([code, label]) => `<button type="button" class="rbtn cw ${cwCur === code ? "on" : ""}" data-act="crowd" data-k="${r.key}" data-code="${code}" ${ro ? "disabled" : ""}>${label}</button>`).join("")}
+          </div>
         </div>
       </section>`;
   }
@@ -1002,7 +1139,9 @@ class WLRApp extends BaseApp {
       else if (a === "fixwinner") t.setThrownWinner(btn.dataset.w);
       else if (a === "fav") t.setFavorStart(btn.dataset.side, Number(btn.dataset.d));
       else if (a === "round") t.setRound(btn.dataset.k, btn.dataset.code);
+      else if (a === "crowd") t.setCrowd(btn.dataset.k, btn.dataset.code);
       else if (a === "roll") t.rollRound(btn.dataset.k, btn.dataset.skill, btn.dataset.dc ? Number(btn.dataset.dc) : null);
+      else if (a === "rollcrowd") t.rollCrowd(btn.dataset.k, btn.dataset.skill, btn.dataset.dc ? Number(btn.dataset.dc) : null);
       else if (a === "winner") t.setWinner(btn.dataset.w);
       else if (a === "postopening") t.postOpening();
       else if (a === "postround") t.postRound(btn.dataset.k);
@@ -1164,6 +1303,20 @@ class WLRApp extends BaseApp {
       .wlw .rbtn { padding:.28rem .6rem; font-size:.76rem; }
       .wlw .rbtn.on { background:var(--tone, var(--ice)); border-color:var(--tone, var(--ice)); color:var(--paper); font-weight:600; }
 
+      .wlw .crowdwork { border:1px solid var(--line); border-radius:4px; padding:.4rem .5rem;
+                       margin-top:.55rem; background:var(--stripe); }
+      .wlw .crowdwork .subhead { display:flex; align-items:center; gap:.4rem; font-size:.7rem;
+                                text-transform:uppercase; letter-spacing:.08em; font-weight:700;
+                                color:var(--ice); margin-bottom:.25rem; }
+      .wlw .crowdwork .subhead span { margin-left:auto; font-weight:600; color:var(--muted);
+                                     text-transform:none; letter-spacing:0; }
+      .wlw .crowdwork .cwtext { font-size:.79rem; line-height:1.45; margin:.1rem 0 .3rem; }
+      .wlw .crowdwork .req { font-size:.76rem; }
+      .wlw .crowdwork .req b { color:var(--ice); }
+      .wlw .crowdwork .note { margin:.1rem 0 .3rem; }
+      .wlw .rbtn.cw { font-size:.73rem; padding:.24rem .5rem; }
+      .wlw .rbtn.cw.on { background:var(--ice); border-color:var(--ice); color:var(--paper); }
+
       .wlw .winrow { display:grid; grid-template-columns:1fr 1fr; gap:.4rem; }
       .wlw .wbtn { flex-direction:column; align-items:flex-start; gap:.15rem; padding:.4rem .55rem; font-size:.8rem;
                   border-top:3px solid var(--tt, var(--line)); border-radius:3px; text-align:left; white-space:normal; }
@@ -1214,6 +1367,9 @@ class WLRApp extends BaseApp {
       .wlw .rc-btns { display:flex; gap:.35rem; flex-wrap:wrap; }
       .wlw .rollbtn { padding:.32rem .65rem; font-size:.8rem; font-weight:600; border-color:var(--gold); color:var(--gold); background:transparent; }
       .wlw .rollbtn:hover:not(:disabled) { background:var(--gold); color:var(--paper); }
+      .wlw .rollcard.crowdcard { border-left-color:var(--ice); }
+      .wlw .crowdcard .rollbtn { border-color:var(--ice); color:var(--ice); }
+      .wlw .crowdcard .rollbtn:hover:not(:disabled) { background:var(--ice); color:var(--paper); }
       .wlw .rollbtn b { font-weight:700; }
       .wlw .rc-note { font-size:.74rem; line-height:1.4; color:var(--muted); font-style:italic; margin:.3rem 0 0; }
       .wlw .verdict { border-left:3px solid var(--plum); }

@@ -1,5 +1,37 @@
 # Changelog
 
+## 2026-08-18 17:59
+
+### Added
+- **Who Leads Willowshore? — working the crowd, so the PCs who aren't champions have something
+  to do.** The set-piece seats two champions, three with a third candidate, and it is the one
+  scene in the chapter where the entire town is present — but everyone else at the table had no
+  roll to make for five rounds and watched two players duel. Every round now carries a second
+  block, on both boards, naming what the rest of the party can do in the square that round and
+  the three skills it takes: putting the case again to the waverers at the back during the
+  Address, calling the bout for the people who can't see it or being first to the fallen
+  champion with a healer's hands, feeding the granary numbers to a champion mid-answer, taking
+  the second patient in the Trial of the People, getting the closing cheer started from
+  somewhere that isn't your own faction's banner. One roll each per round against DC 18, on its
+  own button row: in the Trial, a success is +1 Favor to the side they worked and a critical +2,
+  with a critical failure costing that side 1 — half a champion's swing, and outside Round IV's
+  doubling, because it is a nudge from the square rather than a round won. In the thrown duel it
+  runs −2 to +1 on the Suspicion track, which makes it the only lever the party has to buy back
+  a bad sell. Neither tally can be driven below zero. The deltas and the crowd actions are
+  invented rather than printed — the source asks only that the crowd be given a voice — and the
+  code says so where they are defined.
+- **Who Leads Willowshore? — the player board finally has something on it for an un-seated PC.**
+  A player whose character held no champion seat previously got the board with no card and no
+  "your part" at all, which read as "you are a spectator". They now get the crowd work: the
+  round's action in second person, three Roll buttons at DC 18 that roll off their own assigned
+  character rather than a champion seat, and a four-step "your part" saying what landing and
+  missing does — in the crowd's terms, with no Favor number and no Suspicion number, the same
+  way the champions' steps are written. In the thrown duel that card and those steps stay
+  deliberately neutral, crowd management rather than cover, because an un-seated PC may not be
+  in on the fix; the pointed version of each round's crowd work — why it matters most in Round
+  II, where a dive is most likely to show, and in Round IV, where a friend working too visibly
+  hard is what the square remembers — appears on the GM console only.
+
 ## 2026-08-18 17:26
 
 ### Fixed
