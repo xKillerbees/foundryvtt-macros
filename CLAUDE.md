@@ -34,6 +34,14 @@ preferences; several were adopted after fixing real bugs.
    and journal pages.
 6. **Don't duplicate statblocks.** Reference the compendium. Encounter level and a name are
    enough.
+7. **Player-run macros relay every change through the GM.** Players can't write world
+   settings. In `macros/pf2e-downtime/downtime-planner.js` each change is an op in the `OPS`
+   reducer: the GM's client runs it directly, a player's client relays it through a flag on
+   their own User document and the GM re-runs it there. So a new mutation means a new `OPS`
+   entry, a decision about whether it belongs in `GM_ONLY`, and — for anything that creates a
+   row — an id minted on the requesting client and carried through the relay. A click handler
+   that mutates state outside `planner.apply()` works for the GM and silently no-ops for
+   players.
 
 ## Testing
 
@@ -51,6 +59,10 @@ There is no test runner in the repo. Changes are verified by:
 ```bash
 python3 tools/preview/capture.py
 ```
+
+`capture.py` is not deterministic — the same shot re-run differs by a few bytes, so a full run
+leaves every PNG modified. Keep only the ones you actually changed and `git checkout --` the
+rest. A byte diff alone is never evidence that a screenshot's *content* changed.
 
 If a macro starts calling part of the Foundry API that `tools/preview/foundry-stub.js` doesn't
 cover, extend the stub rather than special-casing the macro.
