@@ -67,6 +67,16 @@ rest. A byte diff alone is never evidence that a screenshot's *content* changed.
 If a macro starts calling part of the Foundry API that `tools/preview/foundry-stub.js` doesn't
 cover, extend the stub rather than special-casing the macro.
 
+## Committing
+
+**Every commit updates `CHANGELOG.md`, in the same commit.** Newest entry first, under a
+`## YYYY-MM-DD HH:MM` heading, then `### Added` / `### Changed` / `### Fixed`. Each bullet
+opens with a bold sentence naming the macro and what changed, then prose explaining what was
+wrong or missing before — the entries are written to be read months later by someone who has
+forgotten the session, not as a diff summary.
+
+Work lands as one commit straight on `main`. No branches, no conventional-commit prefixes.
+
 ## Adventure content
 
 DCs, rewards, and encounter text come from the published adventure. When adding content,

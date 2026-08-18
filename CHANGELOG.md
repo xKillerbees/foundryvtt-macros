@@ -2,6 +2,10 @@
 
 ## 2026-08-18 17:04
 
+### Changed
+- **`CLAUDE.md` now states the changelog rule.** Every commit updates `CHANGELOG.md` in the same
+  commit — it was the established practice but was written down nowhere, so it got skipped.
+
 ### Added
 - **Who Leads Willowshore? — a "how a round runs" panel on both boards.** The round skills and
   the scoring came from different parts of the source and read as two unrelated systems: the GM
