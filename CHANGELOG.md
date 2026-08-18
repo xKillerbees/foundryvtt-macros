@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-08-18 15:19
+
+### Changed
+- **Who Leads Willowshore? — champion self-rolling now covers all five rounds, not just III and
+  IV.** The player board's Roll buttons previously only appeared on the Trial's two fixed-DC
+  rounds; the opposed rounds (I, II) and the tie-break line in V were GM-only, so a champion
+  assigned to those steps had nothing to click. Round I now offers Diplomacy / Performance /
+  Deception; Round II offers Athletics / Acrobatics (the "Attack" option stays on the character
+  sheet — a strike needs a weapon picked, not a button); Round V offers a Diplomacy roll only when
+  Favor is tied going into it, matching the book's tie-break rule. None of these carry a DC — the
+  roll posts to chat and the GM reads the total, same as the fixed-DC rounds already did.
+
 ## 2026-08-17 14:02
 
 ### Added

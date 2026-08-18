@@ -108,7 +108,7 @@ const ROUNDS = [
     text: "Each champion makes the case for their elder before the whole town. Higher degree of success, then higher total, takes the round.",
     crowd: "Faction banners roar; waverers lean toward the better speaker.",
     thrown: "{T} argues {LE}'s case half-heartedly and loses with grace — the first sell. Deception or Performance (DC 18) to make the concession read as a close, principled loss.",
-    checks: []
+    checks: [], rollSkills: ["Diplomacy", "Performance", "Deception"]
   },
   {
     key: "r2", num: "II", name: "The Trial of Arms", sub: "the bout", tone: "rust", icon: "fa-hand-fist",
@@ -117,7 +117,9 @@ const ROUNDS = [
     text: "A formal champion's bout to first yield or disarm — non-lethal by the Trial. (Or swap in a formal blood-duel, GM Core pp. 202–203.)",
     crowd: "The loudest round. First blood, if any, flips waverers against the one who drew it.",
     thrown: "{T} must fight hard and lose. Deception/Performance DC 18 to sell a valiant near-miss; a clumsy dive reads off. If {T} starts genuinely winning, they have to lose even harder to get back on script.",
-    checks: []
+    // Attack rolls stay on the character sheet (strikes need a weapon picked) —
+    // Athletics/Acrobatics are the two skill options the bout actually offers.
+    checks: [], rollSkills: ["Athletics", "Acrobatics"]
   },
   {
     key: "r3", num: "III", name: "The Trial of Wisdom", sub: "lead us through winter", tone: "slate", icon: "fa-brain",
@@ -368,7 +370,12 @@ class WhoLeads {
     const st = actor?.skills?.[checkSlug(skill)];
     if (st?.roll) {
       try {
-        await st.roll({ dc: { value: Number(dc) }, label: `${r.num}. ${r.name} — ${skill}` });
+        // Fixed-DC rounds (III, IV) pass a dc; the opposed rounds (I, II, and
+        // V's tie-break) don't — the GM reads the total against the other
+        // champion's roll, same as if it'd been rolled at the table.
+        const opts = { label: `${r.num}. ${r.name} — ${skill}` };
+        if (dc != null && !Number.isNaN(dc)) opts.dc = { value: Number(dc) };
+        await st.roll(opts);
         return;
       } catch (err) {
         console.warn("Who Leads Willowshore? — statistic roll failed; posting an inline check instead.", err);
@@ -604,23 +611,30 @@ class WLRApp extends BaseApp {
             : `${esc(winnerName)} is acclaimed Willowshore's new leader.`}</p>
       </section>` : "";
 
-    // The assigned champion can roll the upcoming round's fixed-DC checks
-    // straight from the board. Opposed / no-fixed-DC rounds (I, II, V) stay
-    // with the GM, matching what postRound already posts.
+    // The assigned champion can roll the upcoming round straight from the
+    // board. Rounds III/IV have a fixed DC printed in the book; I and II are
+    // opposed with a short skill menu (Round II's "Attack" option stays on
+    // the character sheet — a strike needs a weapon picked, not a button);
+    // Round V has no roll at all *unless* Favor is tied, when the book calls
+    // for one final opposed Diplomacy to break it.
     const me = t.mySeat();
     const parseCheck = (c) => { const m = /^DC\s+(\d+)\s+(.+)$/.exec(String(c).trim()); return m ? { dc: Number(m[1]), skill: m[2] } : null; };
     const rollCard = (() => {
       if (!isTrial || !me || !next || finished) return "";
-      const checks = (next.checks ?? []).map(parseCheck).filter(Boolean);
-      if (!checks.length) return "";
+      const tieBreak = next.key === "r5" && f.north === f.south;
+      const options = (next.checks ?? []).map(parseCheck).filter(Boolean).length
+        ? next.checks.map(parseCheck).filter(Boolean)
+        : tieBreak ? [{ skill: "Diplomacy", dc: null }]
+        : (next.rollSkills ?? []).map(skill => ({ skill, dc: null }));
+      if (!options.length) return "";
       const faction = me.side === "north" ? ELDERS.north.faction : ELDERS.south.faction;
       return `
       <div class="rollcard">
         <div class="rc-head">Round ${next.num} — ${esc(next.name)} <small>you fight for ${faction}</small></div>
-        <p class="rc-skills">${esc(next.skills)}</p>
-        <div class="rc-btns">${checks.map(c =>
-          `<button type="button" class="rollbtn" data-act="roll" data-k="${next.key}" data-skill="${esc(c.skill)}" data-dc="${c.dc}">
-             <i class="fa-solid fa-dice-d20"></i> Roll ${esc(c.skill)} <b>DC ${c.dc}</b></button>`).join("")}
+        <p class="rc-skills">${esc(tieBreak ? "Favor is tied — one final opposed Diplomacy breaks it" : next.skills)}</p>
+        <div class="rc-btns">${options.map(c =>
+          `<button type="button" class="rollbtn" data-act="roll" data-k="${next.key}" data-skill="${esc(c.skill)}" ${c.dc != null ? `data-dc="${c.dc}"` : ""}>
+             <i class="fa-solid fa-dice-d20"></i> Roll ${esc(c.skill)}${c.dc != null ? ` <b>DC ${c.dc}</b>` : ""}</button>`).join("")}
         </div>
         <p class="rc-note">${esc(next.dcText)}</p>
       </div>`;
@@ -876,7 +890,7 @@ class WLRApp extends BaseApp {
       else if (a === "fixwinner") t.setThrownWinner(btn.dataset.w);
       else if (a === "fav") t.setFavorStart(btn.dataset.side, Number(btn.dataset.d));
       else if (a === "round") t.setRound(btn.dataset.k, btn.dataset.code);
-      else if (a === "roll") t.rollRound(btn.dataset.k, btn.dataset.skill, Number(btn.dataset.dc));
+      else if (a === "roll") t.rollRound(btn.dataset.k, btn.dataset.skill, btn.dataset.dc ? Number(btn.dataset.dc) : null);
       else if (a === "winner") t.setWinner(btn.dataset.w);
       else if (a === "postopening") t.postOpening();
       else if (a === "postround") t.postRound(btn.dataset.k);

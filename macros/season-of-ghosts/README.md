@@ -232,8 +232,8 @@ Old Matsuki publicly challenges Granny Hu for the town's leadership, settled by 
 - A **spoiler-free player board**: grant OBSERVER permission and players track the champions and
   the five rounds the way the crowd sees them — a live crowd meter and each round's reaction
   (who the square cheers, who it roars for) instead of the mechanical Favor score, a
-  crowd-whispers meter in the thrown duel, and Roll buttons so the assigned champion can roll the
-  fixed-DC rounds from the board — while the fix, the sell notes, and the raw Suspicion number
+  crowd-whispers meter in the thrown duel, and Roll buttons so the assigned champion can roll
+  every round from the board — while the fix, the sell notes, and the raw Suspicion number
   stay hidden
 
 ![The thrown duel, four rounds sold, Suspicion at Whispers](../../screenshots/season-of-ghosts/who-leads-willowshore-console-thrown.png)
@@ -252,10 +252,14 @@ and whose caption says how hard ("The crowd edges toward …" up to "The crowd r
 than the raw Favor score. It re-renders on every GM update through the same world-setting hook that
 keeps two GM windows in sync, so the board moves as the GM records it, with nothing to re-post.
 
-A champion whose character is assigned to a seat can also roll the Trial's fixed-DC rounds straight
-from the board: on the upcoming round (III's DC 20 Society, IV's DC 18 Society / Medicine) a Roll
-button rolls that character's statistic with the DC and posts the degree to chat — no relay, no GM
-round-trip. The opposed, no-fixed-DC rounds (I, II, V) stay with the GM, as before.
+A champion whose character is assigned to a seat can also roll the upcoming round straight from the
+board — no relay, no GM round-trip. III and IV have a printed DC (III's DC 20 Society, IV's DC 18
+Society / Medicine); the Roll button rolls that character's statistic with the DC and posts the
+degree to chat. I and II are opposed with no fixed DC, so the board offers the round's skill menu
+instead — I's Diplomacy / Performance / Deception, II's Athletics / Acrobatics (II's "Attack"
+option stays on the character sheet, since a strike needs a weapon picked) — and the roll posts
+with no DC for the GM to read against the other champion's total. V has no roll of its own, but if
+Favor is tied going into it the board offers the book's tie-break: one opposed Diplomacy.
 
 In the thrown duel the board keeps the fix secret but lets the party read the room: the round
 stepper marks each settled round "settled", and a crowd-whispers meter fills as the sell wobbles,
