@@ -229,6 +229,11 @@ Old Matsuki publicly challenges Granny Hu for the town's leadership, settled by 
 - **The thrown-duel variant** from *The Worked Duel*: the conceding elder and the fix's winner are both selectable, so the "does the winner know?" panel and every round's sell text flip to match; scored on a Suspicion track (0–3 Flawless / 4–6 Whispers / 7+ Exposed) with per-round sell deltas, a blowout toggle, and the money-shot finale
 - A **verdict tab** that declares the winner, applies the reversible write-through beats (heal the rift → Hope + Reputation, back the winner, or a bloodbath) to the Fall Downtime Tracker's pools, and marks the level-up to 3
 - Read-aloud for the challenge and the verdict posted to chat in-world; the cast (both elders, the stand-ins, Shinzo, and Heh's shadow) on the landing tab
+- A **"how a round runs" panel** at the top of both boards, because the round skills and the
+  scoring come from different parts of the source and read as unrelated systems: the GM's
+  version spells out who rolls what and how each result maps to a Favor or Suspicion delta;
+  the player's version says the same thing in the crowd's voice, with the seated champion's
+  own procedure — which roll they make, and when — underneath
 - A **spoiler-free player board**: grant OBSERVER permission and players track the champions and
   the five rounds the way the crowd sees them — a live crowd meter and each round's reaction
   (who the square cheers, who it roars for) instead of the mechanical Favor score, a
@@ -245,7 +250,15 @@ Old Matsuki publicly challenges Granny Hu for the town's leadership, settled by 
 ![The player board, mid-trial: the champions, the five rounds in the crowd's voice, and the crowd meter](../../screenshots/season-of-ghosts/who-leads-willowshore-console-player.png)
 
 Give the macro OBSERVER permission and every player can open a spoiler-free board that tracks the
-duel the way the crowd sees it: the two champions (and any third candidate), a five-round stepper
+duel the way the crowd sees it. It opens on **how it runs** — the five-round loop in the crowd's
+voice, and, for a player whose character holds one of the seats, a numbered "your part" telling
+them exactly which roll they make each round and when. In the Trial that's one roll of the round's
+own skill (set DC in III and IV, opposed in I and II, none in V unless the town is split). In a
+thrown duel the two seats get different instructions: the thrower is told to play the round out and
+then roll *once* to sell the loss, and that the sell — not the round's own skill — is the roll that
+counts, which is the thing the round-by-round text alone never makes clear; the other seat is told
+to play every round straight and that Round V isn't theirs. No Favor number, no Suspicion number,
+no band label appears in any of it. Below that sit the two champions (and any third candidate), a five-round stepper
 whose settled rounds read in the square's own voice — "the crowd cheers Northridge", "the crowd
 roars for Southbank", "the crowd applauds both" — and a crowd meter whose bar leans with the town
 and whose caption says how hard ("The crowd edges toward …" up to "The crowd roars for …") rather

@@ -86,6 +86,56 @@ const READALOUD = {
   crowd: "Give the crowd a voice — a roar, a gasp, a heckler (\"Songs won't man the walls!\"), a held breath before the bout — and visibly shift bodies toward whichever side is winning Favor. NPCs the party has helped should be in the crowd cheering. Let it breathe: this is a relationship and worldbuilding episode as much as a contest."
 };
 
+/* How a round actually runs. The two source documents give the round skills in
+   one place and the scoring in another, which reads as two unrelated systems —
+   especially in a thrown duel, where the round's own skill and the sell are
+   different rolls made by different champions. These spell the loop out once,
+   in the GM console and again (spoiler-free, seat-specific) on the player board.
+   The degree-of-success → Suspicion mapping is the natural reading of the
+   Worked Duel's five named deltas, not printed as a table in the document. */
+const HOWTO_GM = {
+  trial: [
+    ["Both champions roll.", "The round's listed skill, once each. A stand-in rolls about +9 in their strong field, +5 otherwise."],
+    ["Compare.", "Higher degree of success takes the round; on the same degree, higher total. Close enough to call it even is a tie."],
+    ["Record it below.", "Winner +2 Favor, +3 on a critical success, or +1 each on a tie — Round IV doubles all three. One button per round; clicking the lit one clears it."],
+    ["Round V.", "A closing word, not a contest. Roll only to break a tie in Favor: one opposed Diplomacy before the crowd."]
+  ],
+  thrown: [
+    ["{W} plays the round straight.", "The round's listed skill, rolled for real — {WE}'s side is not selling anything and does not roll to sell."],
+    ["{T} plays the part, then sells it.", "Describe the argument, the bout, the plan — then roll one Deception or Performance vs DC 18. That sell is the only roll that scores; {T} does not roll the round's own skill to try to win."],
+    ["Record the sell below.", "Critical success −1 Gorgeous · success +0 Clean · failure +1 Shaky · critical failure +2 Botched. One button per round."],
+    ["Blowout is a GM call, not a roll.", "If the round reads false because {W} looked too good rather than because the sell wobbled, record +1 Blowout in place of the sell's own result."],
+    ["Round V.", "The money shot — {T}'s last sell, with a bonus if Suspicion is low so far and a penalty if it's high."]
+  ]
+};
+
+/* The same loop in the crowd's voice, for the player board. No Favor number,
+   no Suspicion number, no band label — and the thrown duel's fix stays out of
+   the shared paragraph, since every player sees it. */
+const HOWTO_PLAYER = {
+  trial: {
+    crowd: "Five rounds decide it. In each, both champions face the same test — a speech, a bout, a plan for the winter, a moment of real need — and the town judges who did better. The crowd's favor swings a little each round, and whoever holds most of it after the fifth is acclaimed. The fourth round, the People, moves the crowd twice as far as any other.",
+    seat: [
+      "<b>One roll per round.</b> When your champion takes their turn at the test, roll the skill on the card below — that is your whole mechanical part of the round.",
+      "<b>III and IV are against a set DC</b>, printed on the button. <b>I and II are opposed</b> — you roll, the other champion rolls, and the better result takes the round, so no DC is shown.",
+      "<b>Round V is a closing word</b>, not a contest. You only roll if the town is dead split going into it."
+    ]
+  },
+  thrown: {
+    crowd: "Five rounds decide it. In each, both champions face the same test — a speech, a bout, a plan for the winter, a moment of real need — and the square makes up its mind, about the champions and about the contest itself. The meter below is the town's read on the bout, not a score.",
+    sell: [
+      "<b>Play the round as written</b> — argue, fight, offer your plan. Then roll <b>once</b>, from the card below, to make the loss look real: Deception or Performance against DC 18.",
+      "<b>That sell is the roll that counts.</b> Rolling the round's own skill to try to win is not your job this duel — in every round, the sell is what you roll.",
+      "<b>Beat the DC and the crowd buys it.</b> Miss and people start to talk; miss badly and they talk twice as loud. A critical success — a beautiful, agonizing near-miss — buys back doubt you have already earned.",
+      "<b>Round V is the fall itself</b>: one last sell, easier if the crowd has believed you so far, harder if it hasn't."
+    ],
+    straight: [
+      "<b>You play every round straight</b> — roll the skill on your card as though the outcome were still in doubt. III and IV are against a set DC; I and II are opposed, so no DC is shown.",
+      "<b>Round V has no roll for you.</b> The finale belongs to the other champion."
+    ]
+  }
+};
+
 const LEADUP = [
   { key: "courted", label: "Courted your elder to the Influence midpoint", effect: "+1 Favor to your side" },
   { key: "conceded", label: "7 Influence with the rival elder", effect: "they concede & step aside — end it without a duel" },
@@ -623,23 +673,24 @@ class WLRApp extends BaseApp {
     // Deception/Performance DC 18, the tally panel's own DC — through V's
     // money shot.
     const me = t.mySeat();
+    const myFaction = me ? (me.side === "north" ? ELDERS.north.faction : ELDERS.south.faction) : "";
+    const selling = !!me && !isTrial && me.side === t.throwerSide;
     const parseCheck = (c) => { const m = /^DC\s+(\d+)\s+(.+)$/.exec(String(c).trim()); return m ? { dc: Number(m[1]), skill: m[2] } : null; };
     const rollCard = (() => {
       if (!me || !next || finished) return "";
-      const faction = me.side === "north" ? ELDERS.north.faction : ELDERS.south.faction;
-      const selling = !isTrial && me.side === t.throwerSide;
+      const faction = myFaction;
       if (selling) {
         return `
         <div class="rollcard">
           <div class="rc-head">Round ${next.num} — ${esc(next.name)} <small>you fight for ${faction}</small></div>
-          <p class="rc-skills">Sell it — Deception or Performance</p>
+          <p class="rc-skills">Play the round as written, then roll <b>once</b> to sell the loss — Deception or Performance.</p>
           <div class="rc-btns">
             <button type="button" class="rollbtn" data-act="roll" data-k="${next.key}" data-skill="Deception" data-dc="18">
               <i class="fa-solid fa-dice-d20"></i> Roll Deception <b>DC 18</b></button>
             <button type="button" class="rollbtn" data-act="roll" data-k="${next.key}" data-skill="Performance" data-dc="18">
               <i class="fa-solid fa-dice-d20"></i> Roll Performance <b>DC 18</b></button>
           </div>
-          <p class="rc-note">${next.key === "r5" ? "The money shot — bonus if Suspicion is low, penalty if high." : "A clean sell keeps Suspicion down; a botch pushes it up."}</p>
+          <p class="rc-note">${next.key === "r5" ? "The fall itself — easier if the crowd has believed you so far, harder if it hasn't." : "Beat the DC and the crowd buys it; miss and people start to talk."}</p>
         </div>`;
       }
       // The thrown duel's non-thrower champion plays every round straight
@@ -663,12 +714,32 @@ class WLRApp extends BaseApp {
       </div>`;
     })();
 
+    // Prepended to the board: how the duel is actually run, in the crowd's
+    // voice, with the seated champion's own procedure spelled out underneath —
+    // which roll they make each round, and when. Drops away once it's decided.
+    const mySteps = !me ? null
+      : isTrial ? HOWTO_PLAYER.trial.seat
+      : selling ? HOWTO_PLAYER.thrown.sell
+      : HOWTO_PLAYER.thrown.straight;
+    const howto = showVerdict ? "" : `
+      <section class="panel howto" style="--tone:var(--ice)">
+        <h3>How it runs <small>five rounds</small></h3>
+        <p class="text">${isTrial ? HOWTO_PLAYER.trial.crowd : HOWTO_PLAYER.thrown.crowd}</p>
+        ${mySteps ? `
+        <div class="yourpart">
+          <div class="subhead"><i class="fa-solid fa-dice-d20"></i> Your part <span>${esc(me.name)} · ${esc(myFaction)}</span></div>
+          <ol class="howsteps">${mySteps.map(x => `<li>${x}</li>`).join("")}</ol>
+        </div>` : ""}
+      </section>`;
+
     return `${this.styles()}
       <div class="wlw player">
         <header class="ptop">
           <div class="ptitle"><i class="fa-solid fa-crown"></i> The Champions' Duel</div>
           <div class="pstatus">${status}</div>
         </header>
+
+        ${howto}
 
         <section class="panel" style="--tone:var(--gold)">
           <h3>The Champions</h3>
@@ -820,6 +891,14 @@ class WLRApp extends BaseApp {
     const t = this.t, s = t.s, f = t.favor, sus = t.suspicion, b = t.band;
     const total = Math.max(1, f.north + f.south);
     const pct = (n) => Math.round(n / total * 100);
+    const steps = s.mode === "trial" ? HOWTO_GM.trial : HOWTO_GM.thrown;
+    const howto = `
+      <section class="panel howto" style="--tone:var(--ice)">
+        <h3>How a round runs <small>${s.mode === "trial" ? "the same loop, five times" : "the sell is the only roll that scores"}</small></h3>
+        <ol class="howsteps">
+          ${steps.map(([head, body]) => `<li><b>${esc(t.fillThrown(head))}</b> ${esc(t.fillThrown(body))}</li>`).join("")}
+        </ol>
+      </section>`;
     const tally = `
       <section class="panel" style="--tone:var(--gold)">
         <h3>${s.mode === "trial" ? "Crowd Favor" : "Suspicion"} <small>${s.mode === "trial" ? "most Favor after Round V is acclaimed" : "0–3 Flawless · 4–6 Whispers · 7+ Exposed"}</small></h3>
@@ -834,10 +913,12 @@ class WLRApp extends BaseApp {
               <div class="tbar"><div class="tf s" style="width:${Math.min(100, sus / 10 * 100)}%"></div></div>
               <p class="note">${sus <= 3 ? "A convincing, hard-fought contest — nobody smells the fix." : sus <= 6 ? "A rumor of a fix starts to circulate." : "Exposed: worse than an honest concession. Hu looks a caught schemer, Matsuki's win is tainted, and the party is implicated."}</p>
             </div>`}
-        <p class="hint">${s.mode === "trial" ? "Round IV (the People) is worth double Favor. Near-ties give +1 to each side." : "Hu's champion sells each round with Deception/Performance (DC 18). A round sold clean is +0; shaky +1; botched +2; a gorgeous near-loss −1; Matsuki looking too good is a +1 blowout."}</p>
+        <p class="hint">${s.mode === "trial"
+          ? "Round IV (the People) is worth double Favor — its buttons already show the doubled values."
+          : `Suspicion is the whole score here: the winner is already settled, so nothing ${esc(ELDERS[t.thrownWinnerSide].name)}'s champion rolls changes it. Only how well ${esc(t.s[t.throwerSide].name)} sells the loss does.`}</p>
       </section>`;
 
-    return tally + ROUNDS.map(r => this.roundPanel(r, ro)).join("");
+    return howto + tally + ROUNDS.map(r => this.roundPanel(r, ro)).join("");
   }
 
   roundPanel(r, ro) {
@@ -981,6 +1062,19 @@ class WLRApp extends BaseApp {
       .wlw .tag.warn { border-color:var(--rust); color:var(--rust); }
       .wlw .beatnote { font-size:.75rem; line-height:1.45; color:var(--muted); margin:.1rem 0 .4rem 1.35rem;
                       padding-left:.5rem; border-left:1px solid var(--line); }
+
+      .wlw .howto .text { margin:.2rem 0 .1rem; }
+      .wlw .howsteps { margin:.3rem 0 0; padding-left:1.15rem; font-size:.79rem; line-height:1.5; }
+      .wlw .howsteps li { margin-bottom:.32rem; }
+      .wlw .howsteps li::marker { color:var(--ice); font-weight:700; }
+      .wlw .howsteps b { color:var(--ice); }
+      .wlw .yourpart { border:1px solid var(--line); border-radius:4px; padding:.4rem .5rem;
+                      margin-top:.5rem; background:var(--stripe); }
+      .wlw .yourpart .subhead { display:flex; align-items:center; gap:.4rem; font-size:.7rem;
+                               text-transform:uppercase; letter-spacing:.08em; font-weight:700;
+                               color:var(--ice); margin-bottom:.15rem; }
+      .wlw .yourpart .subhead span { margin-left:auto; font-weight:600; color:var(--muted);
+                                    text-transform:none; letter-spacing:0; }
 
       .wlw .topbar { display:flex; align-items:center; gap:.6rem; border:1px solid var(--line);
                     border-radius:4px; background:var(--card); padding:.45rem .6rem; margin-bottom:.5rem; flex-wrap:wrap; }
