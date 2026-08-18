@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-08-18 17:04
+
+### Added
+- **Who Leads Willowshore? — a "how a round runs" panel on both boards.** The round skills and
+  the scoring came from different parts of the source and read as two unrelated systems: the GM
+  tally spoke about Deception/Performance while each round named its own different skills, so
+  nothing said when the sell was rolled or how it landed on a +1 rather than a +2. Both boards
+  now open on an explainer. The GM's Trial tab gets a numbered loop above the tally, token-filled
+  with the actual champions' names: who rolls what, and the full mapping — critical success −1
+  Gorgeous · success +0 Clean · failure +1 Shaky · critical failure +2 Botched, with Blowout
+  called out as a GM judgement recorded *in place of* the sell's own result rather than a roll of
+  its own. The player board gets the same loop prepended in the crowd's voice, and, for a player
+  whose character holds a seat, a numbered "your part" beneath it: in the Trial, one roll of the
+  round's own skill (set DC in III/IV, opposed in I/II, none in V unless the town is split); in a
+  thrown duel, the thrower is told to play the round out and *then* roll once to sell the loss,
+  and that the sell — not the round's own skill — is the roll that counts, while the other seat is
+  told to play every round straight and that Round V isn't theirs. No Favor number, Suspicion
+  number, or band label appears in any of it, and the panel drops away once the verdict is in.
+
+### Fixed
+- **Who Leads Willowshore? — two leaks in the same area.** The player board's roll card named
+  Suspicion outright ("keeps Suspicion down", "bonus if Suspicion is low"), against the board's own
+  reskinning of that track as the crowd's doubt; both notes are now in crowd voice. And the
+  Suspicion tally's hint hardcoded "Hu's champion" and "Matsuki", so it read backwards whenever the
+  fix delivered to Hu — it is now token-filled from the selected sides.
+
 ## 2026-08-18 15:51
 
 ### Fixed
