@@ -116,7 +116,7 @@ const HOWTO_PLAYER = {
   trial: {
     crowd: "Five rounds decide it. In each, both champions face the same test — a speech, a bout, a plan for the winter, a moment of real need — and the town judges who did better. The crowd's favor swings a little each round, and whoever holds most of it after the fifth is acclaimed. The fourth round, the People, moves the crowd twice as far as any other.",
     seat: [
-      "<b>One roll per round.</b> When your champion takes their turn at the test, roll the skill on the card below — that is your whole mechanical part of the round.",
+      "<b>Play the round out in character</b> — each round asks something different, and the card below says what this one asks of you. Then roll the skill on that card, once. That is your whole mechanical part of the round.",
       "<b>III and IV are against a set DC</b>, printed on the button. <b>I and II are opposed</b> — you roll, the other champion rolls, and the better result takes the round, so no DC is shown.",
       "<b>Round V is a closing word</b>, not a contest. You only roll if the town is dead split going into it."
     ]
@@ -124,13 +124,14 @@ const HOWTO_PLAYER = {
   thrown: {
     crowd: "Five rounds decide it. In each, both champions face the same test — a speech, a bout, a plan for the winter, a moment of real need — and the square makes up its mind, about the champions and about the contest itself. The meter below is the town's read on the bout, not a score.",
     sell: [
-      "<b>Play the round as written</b> — argue, fight, offer your plan. Then roll <b>once</b>, from the card below, to make the loss look real: Deception or Performance against DC 18.",
+      "<b>Play the round out in character.</b> Each round asks something different — a speech, a bout, a plan, a hand held out — and the card below says what this one asks of you. Do it, and lose it convincingly.",
+      "<b>Then roll once</b>, from that card, to make the loss look real: Deception or Performance against DC 18.",
       "<b>That sell is the roll that counts.</b> Rolling the round's own skill to try to win is not your job this duel — in every round, the sell is what you roll.",
       "<b>Beat the DC and the crowd buys it.</b> Miss and people start to talk; miss badly and they talk twice as loud. A critical success — a beautiful, agonizing near-miss — buys back doubt you have already earned.",
       "<b>Round V is the fall itself</b>: one last sell, easier if the crowd has believed you so far, harder if it hasn't."
     ],
     straight: [
-      "<b>You play every round straight</b> — roll the skill on your card as though the outcome were still in doubt. III and IV are against a set DC; I and II are opposed, so no DC is shown.",
+      "<b>You play every round straight</b> — do what the card below says the round asks, then roll the skill on it as though the outcome were still in doubt. III and IV are against a set DC; I and II are opposed, so no DC is shown.",
       "<b>Round V has no roll for you.</b> The finale belongs to the other champion."
     ]
   }
@@ -157,6 +158,7 @@ const ROUNDS = [
     dcText: "No fixed DC — the higher degree (then higher total) takes the round; a Society angle (a real, concrete policy) grants +2.",
     text: "Each champion makes the case for their elder before the whole town. Higher degree of success, then higher total, takes the round.",
     crowd: "Faction banners roar; waverers lean toward the better speaker.",
+    player: "Stand up before the whole town and make the case for your elder — why they should be the one to lead Willowshore through the winter.",
     thrown: "{T} argues {LE}'s case half-heartedly and loses with grace — the first sell. Deception or Performance (DC 18) to make the concession read as a close, principled loss.",
     checks: [], rollSkills: ["Diplomacy", "Performance", "Deception"]
   },
@@ -166,6 +168,7 @@ const ROUNDS = [
     dcText: "Best-of-3 opposed exchanges (attack roll or Athletics); first to two wins. To first yield or disarm.",
     text: "A formal champion's bout to first yield or disarm — non-lethal by the Trial. (Or swap in a formal blood-duel, GM Core pp. 202–203.)",
     crowd: "The loudest round. First blood, if any, flips waverers against the one who drew it.",
+    player: "A formal bout against the other champion, to first yield or disarm. Non-lethal by the Trial — nobody is meant to die here.",
     thrown: "{T} must fight hard and lose. Deception/Performance DC 18 to sell a valiant near-miss; a clumsy dive reads off. If {T} starts genuinely winning, they have to lose even harder to get back on script.",
     // Attack rolls stay on the character sheet (strikes need a weapon picked) —
     // Athletics/Acrobatics are the two skill options the bout actually offers.
@@ -177,6 +180,7 @@ const ROUNDS = [
     dcText: "DC 20 Society, or a fitting Lore — or the GM judges the plan the player actually gives.",
     text: "The town's real problem is posed: \"The harvest will fall short and no trade is coming. How do we eat till spring?\" The best plan wins.",
     crowd: "Merchants and farmers swayed; the practical-minded lean to the better plan.",
+    player: "The town puts its real problem to you: the harvest will fall short and no trade is coming. Say how Willowshore eats till spring.",
     thrown: "{T} offers a solid-but-plain plan and lets {W}'s \"vision\" outshine it — sell the shrug, not the failure.",
     checks: ["DC 20 Society"]
   },
@@ -186,6 +190,7 @@ const ROUNDS = [
     dcText: "DC 18 — but judge sincerity over the die.",
     text: "A planted moment of need steps from the crowd — a sick child, a feud between neighbors, a grieving widow. The champion must help, not perform. WORTH DOUBLE FAVOR.",
     crowd: "A cold or cynical handling can lose a champion the whole town, even from ahead.",
+    player: "Someone steps out of the crowd needing help — right there, in front of everyone. Help them. The town is watching whether you mean it or you are performing.",
     thrown: "The easiest round to sell — {T} helps warmly, then defers the credit. But overdoing humility reads as defeatism (+Suspicion).",
     checks: ["DC 18 Society", "DC 18 Medicine"],
     double: true
@@ -196,6 +201,7 @@ const ROUNDS = [
     dcText: "Most Favor after Round V wins. A tie is broken by a final opposed Diplomacy before the crowd.",
     text: "Each champion gets one last appeal; then tally all Favor — most Favor acclaims that elder interim governor. The grace note: a unifying gesture (victor honoring loser, loser pledging support) can heal the rift.",
     crowd: "The whole square holds its breath for the tally.",
+    player: "One last word to the town, and then it makes up its mind.",
     thrown: "THE MONEY SHOT. {W} lands the \"deciding\" blow; {T} sells the dramatic, valiant fall — one last Deception/Performance, bonus if Suspicion is low, penalty if high. {LE} steps forward, clasps {WE}'s hand, and concedes to cheers.",
     checks: []
   }
@@ -683,7 +689,8 @@ class WLRApp extends BaseApp {
         return `
         <div class="rollcard">
           <div class="rc-head">Round ${next.num} — ${esc(next.name)} <small>you fight for ${faction}</small></div>
-          <p class="rc-skills">Play the round as written, then roll <b>once</b> to sell the loss — Deception or Performance.</p>
+          <p class="rc-what">${esc(next.player)}</p>
+          <p class="rc-skills">Play that out in character and lose it convincingly — then roll <b>once</b> to sell the loss: Deception or Performance.</p>
           <div class="rc-btns">
             <button type="button" class="rollbtn" data-act="roll" data-k="${next.key}" data-skill="Deception" data-dc="18">
               <i class="fa-solid fa-dice-d20"></i> Roll Deception <b>DC 18</b></button>
@@ -705,7 +712,8 @@ class WLRApp extends BaseApp {
       return `
       <div class="rollcard">
         <div class="rc-head">Round ${next.num} — ${esc(next.name)} <small>you fight for ${faction}</small></div>
-        <p class="rc-skills">${esc(tieBreak ? "Favor is tied — one final opposed Diplomacy breaks it" : next.skills)}</p>
+        <p class="rc-what">${esc(next.player)}</p>
+        <p class="rc-skills">${esc(tieBreak ? "The town is split — one final opposed Diplomacy breaks it" : next.skills)}</p>
         <div class="rc-btns">${options.map(c =>
           `<button type="button" class="rollbtn" data-act="roll" data-k="${next.key}" data-skill="${esc(c.skill)}" ${c.dc != null ? `data-dc="${c.dc}"` : ""}>
              <i class="fa-solid fa-dice-d20"></i> Roll ${esc(c.skill)}${c.dc != null ? ` <b>DC ${c.dc}</b>` : ""}</button>`).join("")}
@@ -1201,6 +1209,7 @@ class WLRApp extends BaseApp {
                         background:var(--card); padding:.5rem .6rem; margin:.5rem 0 .2rem; }
       .wlw .rc-head { font-size:.82rem; font-weight:700; display:flex; align-items:baseline; gap:.4rem; flex-wrap:wrap; }
       .wlw .rc-head small { font-size:.68rem; font-weight:400; color:var(--muted); }
+      .wlw .rc-what { font-size:.82rem; line-height:1.45; margin:.3rem 0 .3rem; }
       .wlw .rc-skills { font-size:.78rem; line-height:1.4; color:var(--muted); margin:.25rem 0 .4rem; }
       .wlw .rc-btns { display:flex; gap:.35rem; flex-wrap:wrap; }
       .wlw .rollbtn { padding:.32rem .65rem; font-size:.8rem; font-weight:600; border-color:var(--gold); color:var(--gold); background:transparent; }

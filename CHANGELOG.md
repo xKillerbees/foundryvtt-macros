@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-08-18 17:26
+
+### Fixed
+- **Who Leads Willowshore? — the player board told champions to play the round "as written"
+  without ever saying what was written.** The new "your part" steps and the thrown duel's sell
+  card both leaned on that phrase, but the round's script lives in the GM console; the player
+  board showed only round *names* in the stepper, so a champion had no way to know what The
+  Trial of Wisdom or The Trial of the People actually asked of them. Each round now carries a
+  `player` line — a plain, second-person description of what the champion does ("The town puts
+  its real problem to you: the harvest will fall short and no trade is coming. Say how
+  Willowshore eats till spring") — and the roll card leads with it, in both the honest and the
+  sell variants. The "as written" wording is gone from all three "your part" tracks in favour of
+  pointing at that card. The player lines are written clean of the GM framing in the console's
+  own round text: no "planted moment of need", no "WORTH DOUBLE FAVOR", no rules citations.
+- **Who Leads Willowshore? — "Favor is tied" on the player board.** Round V's tie-break card
+  named the mechanical Favor track, which the board otherwise keeps behind the crowd meter. It
+  now reads "The town is split".
+
 ## 2026-08-18 17:04
 
 ### Changed
