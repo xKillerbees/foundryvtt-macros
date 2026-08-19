@@ -287,6 +287,7 @@ const LOOT_PAGES = {
   "3.peachwood": "05ppeachwoodgr00",
   "4.gift": "06themerchantr00",
   "5.yami": "07restoringthe00",    "5.shinzo": "07week3firstlo00",
+  "6.feathers": "08intothewallo00",
   "6.enko": "08b1tormentedk00",    "6.charges": "08b3bridgeshri00",
   "6.orchids": "08c3gardenshri00", "6.soap": "08d3mountainsh00",
   "6.thurible": "08d3mountainsh00",
@@ -430,7 +431,9 @@ const CHAPTERS = [
       { key: "enko", label: "Enko escorted to Mirror Lake", note: "He surfaces with a +1 striking silver shortsword, a wand of environmental endurance, and a minor sturdy shield." },
       { key: "bracelet", label: "Yeri's Bracelet carried out of the chapter", hard: true,
         pays: "Ch 7 · E2 — ends Yuni's ghost without a fight", at: 7 },
-      { key: "gifts", label: "All three shrines reached — Pilgrimage Gifts at the crest", at: 7 },
+      { key: "gifts", label: "All three shrines reached — Pilgrimage Gifts at the crest",
+        pays: "Ch 7 · one magic item per PC from the small shrine", at: 7,
+        note: "Fewer than three and there are no gifts at all — only Zhi Hui's disappointment and an invitation to walk back." },
       { key: "lesson3", label: "Unfinished Lesson seed 3 — the Path is Zhi Hui's own design", pays: "Ch 7 · Lotus", at: 7 }
     ] },
 
@@ -612,6 +615,8 @@ const LOOT = {
     { key: "shinzo", label: "Shinzo at 10% off", where: "During the First Long Night, week 3" }
   ],
   6: [
+    { key: "feathers", label: "Two gemini trophy feathers", where: "The Soulthief's nest, inside the Wall" },
+    { key: "gems", label: "Two fear gem talismans", where: "C1 — a clot of crystallised blood in each slain mandragora" },
     { key: "enko", label: "+1 striking silver shortsword, wand of environmental endurance, minor sturdy shield", where: "Enko surfaces with them at Mirror Lake" },
     { key: "charges", label: "Six moderate ghost charges", where: "Bridge Shrine — fill the clay vials from the dippers" },
     { key: "orchids", label: "Six doses of lesser healing vapor", where: "Garden Shrine — the blue orchids in the oak's roots" },

@@ -1,5 +1,54 @@
 # Changelog
 
+## 2026-08-18 20:44
+
+### Added
+- **Enlightened Path — each shrine now says which life it stands for.** The chapter's whole
+  frame is that the three shrines are the traveller's past, future, and present lives, and the
+  console said so exactly once, buried in the common-knowledge list on the final-day tab as an
+  unattributed "past, future, and present lives". Nothing on the day tabs told you that the
+  Bridge Shrine is the past one. Each day's header now reads shrine, meaning, and weather
+  together, so the day you are actually running names its own theme.
+- **Enlightened Path — what the third enlightenment actually buys.** The final-day tab counted
+  the enlightenments and listed the save bonuses, but never named the Pilgrimage Gifts, which is
+  the reward the party is really walking for: one magic item per PC, out of the small shrine at
+  the crest, chosen from the Adventure Toolbox. The Ruins of Wisdom console has always described
+  this at its arrival; the console whose job is to get the party to the crest did not, so a GM
+  reading only this macro could not tell the table what they had earned. All three now spells out
+  the gifts and how to pick them, and fewer than three spells out that there are none at all.
+- **Ruins of Wisdom — the Aid risk on a purification, said once and plainly.** The outcome table
+  has always noted that failure hits "you and everyone who Aided", but as one clause inside a
+  four-row table it reads like bookkeeping. At 6th level, off a DC 20, 5d6 mental splashing onto
+  every Aider is a plausible party wipe outside of combat, and the natural instinct is for
+  everybody to pile on. The purification panel now carries that warning as its own line.
+- **Enlightened Path — the vulture rejuvenates, and the walk back to A2 is under pressure.**
+  Nothing said what happens if the party leaves Kugaptee's dream with the heart unreturned: the
+  Soulthief comes back and the fight is waiting again. Nor that the return leg to the grave
+  happens with Kugaptee's Anger already roaming, which is the only thing making that walk a
+  scene rather than a formality.
+- **Enlightened Path — the serpents go for Enko.** The Serpent Ambush listed the reward for
+  escorting the kappa to Mirror Lake without mentioning that the amphisbaenas target him if he
+  is left undefended, which is the encounter's actual decision and the way the reward is lost.
+- **Ruins of Wisdom — decide Zhi Hui's healing trigger before session.** The campaign tracker's
+  Chapter 7 prep cues have carried this reminder for a while; the console that runs the fight
+  only said she "can manifest once more". It now says to fix the trigger in advance and offers
+  two PCs below half as a clean one.
+- **Campaign tracker — the two Chapter 6 treasures the ledger never listed.** The gemini trophy
+  feathers in the Soulthief's nest and the fear gem talismans inside the slain mandragoras are
+  both in the Enlightened Path console and were both missing from the loot ledger, so the one
+  screen meant to answer "what did they walk past" was wrong about this chapter.
+
+### Fixed
+- **Ruins of Wisdom — the arrival card no longer tells the table they missed shrines it never
+  checked.** Zhi Hui's welcome is read off the Enlightened Path console's saved state. The
+  on-screen panel handled a missing state properly and said so, but the chat card fell through
+  to the "fewer than three" text, so posting the arrival before that console had ever been run
+  announced a disappointment to a party that may well have reached all three. The card now posts
+  the approach alone and tells the GM why the welcome is missing.
+- **Campaign tracker — the Pilgrimage Gifts thread said what it was owed to, but not what it
+  pays.** The Threads tab renders each item's payoff; this one carried a due chapter and no
+  payoff line, so it showed up as a blank column next to threads that explained themselves.
+
 ## 2026-08-18 17:59
 
 ### Added

@@ -90,6 +90,7 @@ const PURIFY = {
   traits: ["Concentrate", "Exploration"],
   requirement: "All hostile creatures in the encounter area where the statue stands are defeated.",
   text: "10 minutes offering prayers to the statue's guardian spirits, cleaning or repairing the damage, and removing malignant encrustations and supernatural markings. Other PCs can Aid with any of the allowed skills.",
+  warn: "The failure damage is this chapter's real threat: 5d6 mental splashing onto every single Aider, at 6th level, off a DC 20. Everybody piling on to Aid is a plausible party wipe outside of combat. Say the Aid risk out loud once — after that it's their call.",
   checks: ["DC 20 Religion", "DC 22 Crafting", "DC 24 Thievery"],
   outcomes: {
     cs: "The statue is purified.",
@@ -323,7 +324,7 @@ const AREAS = [
       "Let her finish the speech and she rolls Diplomacy for initiative; interrupt her and she rolls Perception.",
       "All seven at once is beyond an Extreme 6 encounter — but with four statues purified, Zhi Hui manifests at the party's side, becomes spiritual energy, and pours into the roots. They thrash down and crush the six kurobozus, leaving Xin Yue alone and furious.",
       "Beating her is only half of it. Her Profane Reincarnation splits her open as a sojiruh nindoru while Kugaptee's fingers flex; Zhi Hui screams as the roots wither, and the six crushed kurobozus split open as meokdan nindorus. Back to back, a Low 6 followed by a Moderate 6.",
-      "If the party needs help in the final fight, Zhi Hui can manifest once more — but only to cast healing spells."
+      "If the party needs help in the final fight, Zhi Hui can manifest once more — but only to cast healing spells. Decide the trigger before session rather than in the moment; two PCs below half is a clean one."
     ] }
 ];
 
@@ -656,12 +657,17 @@ class Monastery {
     return this.postCard(`Purification ${n} of 4`, e.title,
       `<p style="margin:0 0 6px">${e.text}</p>${e.quote ? `<p style="margin:0;font-style:italic">“${e.quote}”</p>` : ""}`, e.tone);
   }
+  /* When the Enlightened Path console was never run there is nothing to read
+     the welcome off, and guessing costs the table a scene — "fewer than three"
+     tells them they missed shrines they may well have reached. Post the
+     approach alone and let the GM pick the welcome. */
   postArrival() {
     const count = this.enlightenments;
-    const body = `<p style="margin:0 0 6px">${ARRIVAL.boxed}</p>` +
-      (count === 3 ? `<p style="margin:0">${ARRIVAL.all}</p>`
-                   : `<p style="margin:0">${ARRIVAL.fewer}</p>`);
-    return this.postCard("Chapter 7", "In the Ruins of Wisdom", body, "gold");
+    if (count === null) ui.notifications.info("No Enlightened Path state saved, so Zhi Hui's welcome is left off the card — tick the shrines on the Arrival tab's console, or read the welcome yourself.");
+    const welcome = count === null ? ""
+      : `<p style="margin:0">${count === 3 ? ARRIVAL.all : ARRIVAL.fewer}</p>`;
+    return this.postCard("Chapter 7", "In the Ruins of Wisdom",
+      `<p style="margin:0${welcome ? " 0 6px" : ""}">${ARRIVAL.boxed}</p>${welcome}`, "gold");
   }
   postConclusion() {
     return this.postCard("Concluding the act", "The grave restored",
@@ -805,6 +811,7 @@ class RWApp extends BaseApp {
         <ul class="outcomes">
           ${DEG.map(d => `<li><b>${DEG_LABEL[d]}</b> ${PURIFY.outcomes[d]}</li>`).join("")}
         </ul>
+        <p class="blocked"><i class="fa-solid fa-triangle-exclamation"></i> ${PURIFY.warn}</p>
       </section>
 
       <div class="grid">${Object.keys(STATUES).map(k => this.statueCard(k, ro)).join("")}</div>

@@ -76,23 +76,24 @@ const VISION = {
       text: "A gateway that stays put while the vision is unresolved. Stepping back through it returns the party toward Willowshore.",
       checks: [] },
     { id: "A2", name: "Tan Sui-Jing's Grave", level: "", tone: "plum",
-      text: "A corpse with its heart torn out by a clawed hand, one arm pointing northeast. \"Kugaptee\" is carved nearby, and a whisper says: find the seed.",
+      text: "A corpse with its heart torn out by a clawed hand, one arm pointing northeast. \"Kugaptee\" is carved nearby in Aklo, and a whisper says: find the seed.",
       checks: ["DC 18 Survival to follow the trail northeast", "DC 21 Survival if the trail has gone cold"] },
     { id: "A3", name: "The Soulthief's Nest", level: "Low 5", tone: "rust",
       text: "A ravenous, intelligent vulture hunkers in its nest chewing at Sui-Jing's heart. It demands the party leave, then attacks — and three clots of blood rip free of the heart as cacodaemons wearing distorted copies of the corpse's face, yellow-eyed and full of teeth.",
       checks: ["DC 15 Nature or DC 18 Perception to spot the nest's trophies"],
+      note: "Leave the vision with the job unfinished and the vulture rejuvenates — the fight is waiting again on the next visit. Hound them with nightmares until they come back and finish it.",
       loot: "Two gemini trophy feathers in the nest." },
     { id: "A4", name: "Planting the Soul Seed", level: "Low 5", tone: "moss",
       text: "Taking the heart turns the mindscape to night, and Kugaptee's Anger wakes as a hazard across the whole forest. Returning the heart to the body is a single Interact action: the anger howls and flees into the distance, the body sinks into stone, and a hundred-foot sugi tree erupts, driving the fog away. Reality fades and the party stands on the real Pilgrim's Path.",
       checks: [],
-      xp: 60, note: "The tunnel through the Wall is now permanently passable." }
+      xp: 60, note: "The walk back to A2 happens under the Anger — don't let them stroll it. Once the seed is planted the tunnel through the Wall is permanently passable." }
   ]
 };
 
 /* ------------------------------------------------------------- the days */
 const DAYS = {
   d1: {
-    title: "The First Day", shrine: "Bridge Shrine",
+    title: "The First Day", shrine: "Bridge Shrine", meaning: "the traveller's past lives",
     weather: "Crisp and cloudy",
     travel: "About five miles, walked slowly so the traveller reaches the shrine at sunset. Dense forest through the morning, then the shore of Mirror Lake. The road looks as it did half a century ago rather than the overgrown ruin it should be.",
     encounters: [
@@ -103,6 +104,7 @@ const DAYS = {
       { id: "B2", name: "Serpent Ambush", level: "Low 5", tone: "rust",
         text: "Two amphisbaenas strike from either side of the path — one hidden in forest detritus, one in the shallow water at the lake's edge. They fight to the death.",
         checks: [],
+        note: "If the party is carrying Enko, the serpents go for him. Left undefended he can die here, and the reward at the lake dies with him.",
         loot: "If Enko was escorted to the lake and survives, he dives and returns with a +1 striking silver shortsword and a wand of environmental endurance carried on a minor sturdy shield.",
         xp: 40, xpNote: "for escorting Enko to the water" }
     ],
@@ -121,7 +123,7 @@ const DAYS = {
     }
   },
   d2: {
-    title: "The Second Day", shrine: "Garden Shrine",
+    title: "The Second Day", shrine: "Garden Shrine", meaning: "the traveller's future lives",
     weather: "Rain by noon, downpour by evening",
     travel: "Mirror Lake's shore, then the northern bank of the West Sugi River, climbing but not yet mountainous. Rain douses small flames and imposes −1 to Perception; the evening downpour raises that to −2. Approaching the shrine, each PC attempts a DC 18 Fortitude save or becomes fatigued — automatic success for anyone with Environmental Endurance or winter clothing.",
     encounters: [
@@ -150,7 +152,7 @@ const DAYS = {
     }
   },
   d3: {
-    title: "The Third Day", shrine: "Mountain Shrine",
+    title: "The Third Day", shrine: "Mountain Shrine", meaning: "the traveller's present life",
     weather: "Fog, then wind, then thunderstorm",
     travel: "Switchbacks and steep slopes, cliffs crowding the path. Fog lifts past noon; the wind then snuffs handheld flames and imposes −1 to physical ranged attacks. Once the fog clears, the view east shows Willowshore under what looks like a bowl of dark cloud.",
     encounters: [
@@ -181,6 +183,15 @@ const DAYS = {
       save: "Fortitude", xp: 40
     }
   }
+};
+
+/* What all three enlightenments actually buy at the crest. The Ruins of
+   Wisdom console reads the same shrine state and opens Chapter 7 with it, so
+   the payoff is spelled out here rather than left to that macro. */
+const GIFTS = {
+  all: "Zhi Hui's welcome is pride rather than disappointment, and the party feels an urge to look inside the small shrine at the crest. Inside are the Pilgrimage Gifts — one magic item per PC, manifested by her power the same way Kugaptee's presence has manifested so many monsters.",
+  how: "Choose one gift per PC from the Adventure Toolbox to suit their abilities and themes; each PC instinctively recognises which is meant for them. The Toolbox items also work as templates for gifts of your own design.",
+  fewer: "Fewer than three and there are no gifts — only an unseen disappointment and the understanding that they should walk back for the shrines they missed. Let them. Nothing on the Path resets."
 };
 
 const COMMON_KNOWLEDGE = [
@@ -551,7 +562,7 @@ class EPApp extends BaseApp {
     const lit = t.enlightened(dayKey);
     return `
       <section class="panel daybar" style="--tone:var(--slate)">
-        <h3>${d.title} <small>${d.weather}</small>
+        <h3>${d.title} <small>${d.shrine} · ${d.meaning} · ${d.weather}</small>
           ${this.jbtn(JPAGE[dayKey])}
           <button type="button" class="say" data-act="postday" data-k="${dayKey}" title="Read to the table"><i class="fa-solid fa-comment"></i></button>
         </h3>
@@ -598,7 +609,11 @@ class EPApp extends BaseApp {
           <div class="cbox">
             <b>${t.enlightenmentCount} of 3 enlightenments</b>
             <p>${bonuses.length ? `+1 item bonus to ${bonuses.join(", ")} saves until the end of the act.` : "No save bonuses banked."}</p>
-            ${missing.length ? `<p class="hint">Missed: ${missing.join(", ")}. Master Zhi Hui's ghost rewards the party by how many they reached.</p>` : `<p class="hint">All three. The party walks in buffed on every save.</p>`}
+            ${missing.length
+              ? `<p class="hint">Missed: ${missing.join(", ")}. ${GIFTS.fewer}</p>`
+              : `<p class="hint">All three. The party walks in buffed on every save.</p>
+                 <p>${GIFTS.all}</p>
+                 <p class="hint">${GIFTS.how}</p>`}
           </div>
           <div class="cbox">
             <b>Threads</b>
