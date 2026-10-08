@@ -28,3 +28,20 @@ invented, so there is nothing in the book to point at.
 Nothing else in the repository depends on this. `classic-level` is installed here and only
 here; the macros themselves stay dependency-free, and `tools/preview/` needs nothing but a
 browser.
+
+## Murder in Metal City
+
+`check-metal-city.mjs` does the same for the Metal City console, against the
+`sf2e-murder-in-metal-city` module:
+
+```bash
+node check-metal-city.mjs ~/Documents/sf2e/sf2e-murder-in-metal-city
+```
+
+It checks every journal entry, page, handout, scene (and its *Original Maps* twin), macro,
+playlist sound, actor, and effect item the console names. It checks that each `LINKS` entry
+belongs to a real card and points only at things in those tables. It also checks that every
+`FOES` creature has a module actor id. It then lists anything the module's own journal links
+to that the console doesn't, which is how new content in a module update shows up. The pack
+is copied to a temporary directory before it's opened, so the module's own files are never
+touched.

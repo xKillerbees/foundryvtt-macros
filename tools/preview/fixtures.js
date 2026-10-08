@@ -388,6 +388,15 @@ globalThis.FIXTURES = {
     }
   },
 
+  /* The At the Table tab: every scene, both playlists, the module's macros
+     and journals. */
+  "metalcity-table": {
+    "world.sf2eMurderMetalCity": {
+      tab: "table",
+      chase: { rounds: [[]], ended: false, override: "caught" }
+    }
+  },
+
   /* Battle for Nova Rush, part way through: the brig is behind them, the
      reactor is fixed, Polly was saved from the sinkwell. */
   "novarush": {

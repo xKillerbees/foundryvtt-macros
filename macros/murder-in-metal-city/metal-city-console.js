@@ -12,8 +12,16 @@
    that may or may not be on the party's side by the Gloaming; and an XP
    ledger of ticked awards, so every point traces back to where it was earned.
 
-   Statblocks are not reproduced. Creature buttons look the actor up by name —
-   in this world first, then in every Actor compendium — and open its sheet.
+   Everything else it points at belongs to the Murder in Metal City Foundry
+   module: journal pages and handouts, the encounter scenes, the ambience and
+   hazard loops, the module's own scene macros, its NPC, creature, and loot
+   actors, and the condition effects the book calls for. Every id was read
+   out of the module's adventure pack, and an adventure import keeps them.
+   Without the module imported the console still runs; those buttons go quiet
+   and a banner says why.
+
+   Statblocks are not reproduced. Creature buttons open the module's own actor
+   by id, falling back to a name search in this world and every Actor pack.
    ============================================================================ */
 
 const MMC_NS = "world";
@@ -65,6 +73,129 @@ const XP_BY_DIFF = { "-4": 10, "-3": 15, "-2": 20, "-1": 30, "0": 40, "1": 60, "
 const xpFor = (lvl, pl) => XP_BY_DIFF[String(Math.max(-4, Math.min(4, lvl - pl)))] ?? 0;
 const encounterXp = (list, pl) => list.reduce((n, c) => n + (c.n ?? 1) * xpFor(c.level, pl), 0);
 
+/* ------------------------------------------------------------ the module
+   Document ids from the Murder in Metal City module's adventure pack. An
+   adventure import preserves them, so these resolve in any world that has
+   imported it. */
+const MODULE = { id: "sf2e-murder-in-metal-city", title: "Murder in Metal City" };
+const JOURNALS = {
+  front: { id: "sf2av00500frontm", name: "Frontmatter" },
+  pregens: { id: "sf2av00500mimpsh", name: "Pregen Sheets" },
+  ch1: { id: "sf2av00501coldca", name: "Chapter 1: Cold Case" },
+  ch2: { id: "sf2av00502seeker", name: "Chapter 2: Seekers in Striving" },
+  ch3: { id: "sf2av00503frozen", name: "Chapter 3: Frozen Heart of Aballon" },
+  npcs: { id: "sf2av00504npcgal", name: "NPC Gallery" },
+  places: { id: "sf2av00505locati", name: "Locations" },
+  faiths: { id: "sf2av00506techfa", name: "Tech Faiths of Aballon" },
+  aliens: { id: "sf2av00507aliens", name: "Aliens & Adversaries" },
+  khizar: { id: "sf2av00508khizar", name: "Khizar" },
+  handouts: { id: "sf2av00509hando1", name: "Handouts" },
+  art: { id: "sf2av005095artga", name: "Art Gallery" }
+};
+/* The module numbers its page ids by journal — "01…" pages are Chapter 1,
+   "95…" the Art Gallery — so a page id is enough to find its entry. The
+   frontmatter and pregen sheets share "00", but nothing here links into the
+   pregens. */
+const PAGE_PREFIX = { "00": "front", "01": "ch1", "02": "ch2", "03": "ch3", "04": "npcs", "05": "places",
+  "06": "faiths", "07": "aliens", "08": "khizar", "09": "handouts", "95": "art" };
+const entryForPage = (pageId) => JOURNALS[PAGE_PREFIX[String(pageId).slice(0, 2)]]?.id;
+
+/* Two versions of most maps ship: the encounter scene, with tokens, walls,
+   lighting, and its ambience, and the plain Paizo map under "Original Maps". */
+const SCENES = {
+  landing: { id: "4FfMTUqoLvtED4tG", name: "Landing", note: "The title screen. The Landing Picker macro swaps its art." },
+  striving: { id: "R69Xp3Pw1GOEsJvp", name: "Striving", note: "The city map, with a pin on every district." },
+  alley: { id: "erex2weqrS2n6EWl", name: "Foggy Alley", orig: "Swz9Qorj9zpfyQ0P", note: "Smog Alert, and Dead End? later." },
+  cache: { id: "YlufX3ZuhkLUsuIJ", name: "Tier-99-Professor’s Cache", note: "The charging platform, and the Stalker in the Shadows." },
+  theology: { id: "WzuvIDTSsKJbURJp", name: "Theology Channel", orig: "Pj2R1MP1a8JhFeTb", note: "The Parade of Faiths, the memorial, and the apothecary." },
+  mall: { id: "JLOjySLNLqyi9Qs9", name: "Abandoned Mall", orig: "Oq49LPP9tFWkjI0m", note: "Pest Control." },
+  archive: { id: "DTgpMIggnM6Pj467", name: "Archive 404", orig: "HoV0RL4I0HpLPSBD", note: "Searching the Archive." },
+  well: { id: "grLbO3iooOJUphzg", name: "Ice Well", orig: "pNorQrVswYcO1BMv", note: "Teardrop Ice Well, zone by zone." },
+  gloaming: { id: "NljaYtpj8rIAiWuQ", name: "The Gloaming", note: "The dewblossom and the shroomclaws." },
+  wreck: { id: "2Q318Qg20GcxIqlM", name: "Wreck of the Condemned Prophet", note: "The particle cannon, and Parting Shots inside." }
+};
+
+/* The scene macros flip the module's own tiles, lights, and sounds on the
+   encounter maps; the journal tells the GM when to click each one. */
+const MOD_MACROS = {
+  pump: { id: "GIWBA4UdAJNbBg4r", name: "Fix Air Pump", note: "Toggles the Foggy Alley's smog: the fog tile, the scene's fog weather, and the broken pump's hiss. Click again to switch back." },
+  wrath: { id: "I48RKo6weCl72u0l", name: "Archivist's Wrath", note: "Turns Archive 404's alarm lights and siren on — or off again." },
+  dew: { id: "ELotS5eg49qX2PLA", name: "Reveal Dewblossom", note: "Swaps the Gloaming's dewblossom tile and reveals its hidden token. Click again to hide it." },
+  landing: { id: "LvE8MXiPru8TQtI9", name: "Landing Picker", note: "Choose the art on the Landing scene." },
+  ring: { id: "W4ExED1OE2dalBoP", name: "Enable Dynamic Token Ring and Turn Marker", note: "The module's token ring and turn marker. Reloads the world." },
+  settings: { id: "8fKLOhKtWWBZJoVs", name: "Open Settings", note: "Foundry's settings window." }
+};
+
+/* Two playlists: "Ambience" holds the location beds, "Loops" the hazards'
+   sound. All of them repeat. */
+const PL_AMBIENCE = "nO5b7gnQk3IiBabF", PL_LOOPS = "BM1DJfPk8QZQAcuY";
+const AUDIO = [
+  { pl: PL_AMBIENCE, s: "d8K27xx3JBW3osxc", name: "Striving", kind: "bed" },
+  { pl: PL_AMBIENCE, s: "XMBPh44Gj1Rx2Vxh", name: "Analog Cafe", kind: "bed" },
+  { pl: PL_AMBIENCE, s: "l5TKHpk2cNO2BErw", name: "Striving Chase", kind: "bed" },
+  { pl: PL_AMBIENCE, s: "jZXaqBKSxCEyznhk", name: "Downgrid Charging Platform", kind: "bed" },
+  { pl: PL_AMBIENCE, s: "wF2Ab7D5QWCXDdaQ", name: "Striving Polytechnica", kind: "bed" },
+  { pl: PL_AMBIENCE, s: "br46kt27OGWJIE7n", name: "Central Circuit", kind: "bed" },
+  { pl: PL_AMBIENCE, s: "1xc9IZRrusHOF6Jl", name: "Parade Of Faiths", kind: "bed" },
+  { pl: PL_AMBIENCE, s: "9R1cmSEe3GFDjTPn", name: "Abandoned Mall", kind: "bed" },
+  { pl: PL_AMBIENCE, s: "V54JSXQcS3Ztyntz", name: "Magenta", kind: "bed" },
+  { pl: PL_AMBIENCE, s: "aUPeBGITJJ0Hp2lf", name: "Archive 404", kind: "bed" },
+  { pl: PL_AMBIENCE, s: "nsIlmnLmfP5kJvNK", name: "Framed", kind: "bed" },
+  { pl: PL_AMBIENCE, s: "xhM86Z2Ci5WFuOHu", name: "Machine Court", kind: "bed" },
+  { pl: PL_AMBIENCE, s: "ld4MKO9ABDLBBWsB", name: "Teardrop Ice Well", kind: "bed" },
+  { pl: PL_LOOPS, s: "StKSJ9wkUoXeN4dE", name: "Air Pump", kind: "loop" },
+  { pl: PL_LOOPS, s: "CcyxE8WYe7y3thzN", name: "Shadowy Duplicates", kind: "loop" },
+  { pl: PL_LOOPS, s: "gvZnoOFSlyVSHTlh", name: "Archivists Wrath", kind: "loop" },
+  { pl: PL_LOOPS, s: "0ekcBqqPPb7zZ2MC", name: "Particle Cannon", kind: "loop" }
+];
+const audioBy = (name) => AUDIO.find(a => a.name === name);
+
+/* The module's actors. Creatures and hazards are keyed by the names FOES
+   uses; NPCs carry their Art Gallery portrait so it can be shown to the
+   players. Spring Frost's actor goes by his full name. */
+const ACTOR_IDS = {
+  "Smog Scamp": "k1swGzkopJGjptUl", "Anacite Wingbot": "vnxdwRVxxDSK9sKJ", "Shadowy Duplicates": "Ax5Vm9M8KBkpPxWi",
+  "Mechanizer Saboteur": "QbMXaJwQ9uoVj5Sp", "Young Sharpwing": "eSjZP3AGDXhItaMD", "Hardlight Dragonet": "QjgPpkjh79nZXuy2",
+  "Archivist's Wrath": "LFmabxFhuhpPZxVI", "Cyberwing": "ADZKlPmKlqp5s2bY", "Shroomclaw": "aY0mgYa6E9BFrojd",
+  "Dewblossom": "QWALSV8WnUxsnjlp", "Particle Cannon": "9WnqrFwdytMw9PFN", "Jinsul Lookout": "rOyw0u1Qz2Srts9w",
+  "Warlord Hura": "k9NEHmjUMWidKMJj", "Sworn Blade of Shields": "wKBAfpJlSeyBhtJy", "Sworn Blade of Sigils": "LeqRQzLTZbAiohqi",
+  "Agent Z": "CQ8MPUvYEowwPvHA", "Anacite Protector": "qGs2c8P8pXH6aSn0", "Evidence Tracker": "cW62Wu7ACCSptUZ7"
+};
+const NPCS = {
+  "Ghellon": { id: "QwV5VBjQwyNfNbdt", art: "95ghellon0000000" },
+  "Tier-99-Professor": { id: "Bm4tylH50iex1fJ0", art: "95tier99profes00" },
+  "Shalalamula": { id: "YNLO1I00daDT6BEc", art: "95shalalamula000" },
+  "Eruco": { id: "YmwyHr3YqBw6b2Yz", art: "95eruditecolla00" },
+  "Hesop": { id: "W64VazjF7Qf0T1vW", art: "95hesop000000000" },
+  "Prime-Facilitator": { id: "hSXhqjcDsDZ6yVlt", art: "95primefacilit00" },
+  "Remena": { id: "3SmAZwlcEtc5Rmcd", art: "95remenaremaum00" },
+  "Vazylyza": { id: "nKGZpOFzjmLDHmi3", art: "95vazylyza000000" },
+  "Enaria": { id: "rPjMVj2sz7XLNmIj", art: "95enaria00000000" },
+  "Bebubelu": { id: "nn7KdwOD5lfIaDmn", art: "95bebubelu000000" },
+  "Lucky": { art: "95luckycompila00" },
+  "Archivist-404": { id: "vENNlAfkqehurjAC", art: "95archivist40400" },
+  "Spring Frost": { id: "LBEyWjxWf96MiKUO", art: "95springfrost000" },
+  "Agent Z": { id: "CQ8MPUvYEowwPvHA", art: "95agentz00000000" }
+};
+const LOOT = {
+  "Abandoned Gear": "qqkrh4mqcTFVPjQp", "Commercial Null Space Chamber": "NOKp1O6fpRIhVbBj",
+  "Work Shift Reward": "rxJLrzQLUtgw7S3I", "Stone": "GNwDBhYpv3krzo6n", "Gifts": "Soo8u1IxbbUlNZiM",
+  "Remena's Gift": "5dybXw26Vd3e2vSH", "Remena's Second Gift": "EtHQS5OaAGUgbLkO", "Ruined Mall": "Cj80KBiMnatXUoKe",
+  "Spring Frost's Homemade Kit": "jqkMlcz7hDEuNAo4", "Steel Lockbox": "vDnYwcAC8aOzWV59",
+  "Supplies": "nvRW2tK8x9GsnDEm", "Rickety Table": "MHYVyjfM5IyOCQMZ", "Behind Mattress": "XOgjzGLnFO3UCaHw",
+  "Ruined Backpack": "VGtXw1ww0jZFKSVp"
+};
+
+/* World effect items the book applies. The console toggles one on the
+   selected tokens' actors: a GM's deliberate act, not stored state. */
+const EFFECTS = {
+  smog: { id: "o4sh41eRjozKwa77", name: "Obscuring Smog", who: "the PCs in the fog" },
+  dweller: { id: "4Xgt3jnUixRBLcQS", name: "Smog Dweller", who: "the scamps" },
+  app: { id: "faN5G5JpTyuCk5RL", name: "Insight Array App", who: "PCs who download it" },
+  suspicion: { id: "ZGPZ1fOmD1Mc9FPq", name: "Local Suspicion", who: "the PCs, until they make local friends" },
+  oppressive: { id: "eXgKXwjRVgYPIIKb", name: "Oppressive Landscape", who: "PCs who failed to find the outpost" }
+};
+
 /* ------------------------------------------------------------------- tabs */
 const TABS = [
   { key: "ch1", label: "Cold Case", sub: "Chapter 1", tone: "slate", icon: "fa-mug-hot" },
@@ -72,7 +203,8 @@ const TABS = [
   { key: "archive", label: "Archive 404", sub: "Ch 2 · framed", tone: "ember", icon: "fa-gavel" },
   { key: "well", label: "Ice Well", sub: "Ch 3 · the descent", tone: "moss", icon: "fa-snowflake" },
   { key: "fields", label: "Abaddon Fields", sub: "Ch 3 · the finale", tone: "rust", icon: "fa-skull" },
-  { key: "case", label: "Case File", sub: "evidence · XP", tone: "gold", icon: "fa-folder-open" }
+  { key: "case", label: "Case File", sub: "evidence · XP", tone: "gold", icon: "fa-folder-open" },
+  { key: "table", label: "At the Table", sub: "scenes · audio · books", tone: "muted", icon: "fa-music" }
 ];
 
 /* --------------------------------------------------------------- evidence
@@ -92,28 +224,30 @@ const EVIDENCE = [
 ];
 const EVIDENCE_NEEDED = 5;
 
-/* --------------------------------------------------------------- handouts */
+/* --------------------------------------------------------------- handouts
+   Number, title, when it's given, and its page in the module's Handouts
+   journal. */
 const HANDOUTS = [
-  [1, "Invitation to Analog", "Before the first scene"],
-  [2, "Drone Programming Scan", "The foggy alley — only if they caught the drone"],
-  [3, "Anacite Habits", "Getting on the case — Recall Knowledge or Gather Information"],
-  [4, "Memory Storage", "The cache — DC 14 Computers on the encrypted file"],
-  [5, "Note from Tierny", "The cache — in Tierny's hand"],
-  [6, "Investigation Status", "Processor — from Hesop"],
-  [7, "Log of Tier-99-Professor's Queries", "Processor — the transcripts"],
-  [8, "Anacite Death Customs", "The memorial"],
-  [9, "Mysterious Comm Unit Message", "After the trial"],
-  [10, "Recording from Agent Z", "Dead End — the cyberwings play it"],
-  [11, "About Insight Array App", "The first PC to download the app"],
-  [12, "Public Profile: Prime-Facilitator", "The first time they look Prime-Facilitator up"],
-  [13, "About Ice Wells", "Asking about the Ice Wells"],
-  [14, "About Jinsuls", "Looking up or asking about jinsuls"],
-  [15, "Special Notice! Parade of Faiths!", "Special job"],
-  [16, "Special Notice! Pest Control!", "Special job"],
-  [17, "Relic Scan", "The murderer's hideout"],
-  [18, "Laptop Entry 1", "The hideout — once the laptop is hacked"],
-  [19, "Laptop Entry 2", "The hideout — once the laptop is hacked"],
-  [20, "Jeotanni's Comm Unit Contents", "The Gloaming — if they look her up"]
+  [1, "Invitation to Analog", "Before the first scene", "09handout0100000"],
+  [2, "Drone Programming Scan", "The foggy alley — only if they caught the drone", "09handout0200000"],
+  [3, "Anacite Habits", "Getting on the case — Recall Knowledge or Gather Information", "09handout3000000"],
+  [4, "Memory Storage", "The cache — DC 14 Computers on the encrypted file", "09handout4000000"],
+  [5, "Note from Tierny", "The cache — in Tierny's hand", "09handout5000000"],
+  [6, "Investigation Status", "Processor — from Hesop", "09handout6000000"],
+  [7, "Log of Tier-99-Professor's Queries", "Processor — the transcripts", "09handout7000000"],
+  [8, "Anacite Death Customs", "The memorial", "09handout8000000"],
+  [9, "Mysterious Comm Unit Message", "After the trial", "09handout9000000"],
+  [10, "Recording from Agent Z", "Dead End — the cyberwings play it", "09handout1000000"],
+  [11, "About Insight Array App", "The first PC to download the app", "09handout1100000"],
+  [12, "Public Profile: Prime-Facilitator", "The first time they look Prime-Facilitator up", "09handout1200000"],
+  [13, "About Ice Wells", "Asking about the Ice Wells", "09handout1300000"],
+  [14, "About Jinsuls", "Looking up or asking about jinsuls", "09handout1400000"],
+  [15, "Special Notice! Parade of Faiths!", "Special job", "09handout1500000"],
+  [16, "Special Notice! Pest Control!", "Special job", "09handout1600000"],
+  [17, "Relic Scan", "The murderer's hideout", "09handout1700000"],
+  [18, "Laptop Entry 1", "The hideout — once the laptop is hacked", "09handout1800000"],
+  [19, "Laptop Entry 2", "The hideout — once the laptop is hacked", "09handout1900000"],
+  [20, "Jeotanni's Comm Unit Contents", "The Gloaming — if they look her up", "09handout2000000"]
 ];
 
 /* ------------------------------------------------------------- encounters
@@ -535,6 +669,61 @@ const CARDS = [
     text: ["Solving the death of a beloved community figure brings renown and reward. Level the PCs to 2nd if they haven't already. Onward: Aballon as freelance investigators, Tierny's research, or Akiton and the Wreck of the Returned — <i>Starfinder Society Scenario #1-01: Invasion's Edge</i>."] }
 ];
 
+/* -------------------------------------------------------- module links
+   What each card opens in the module: its journal pages, the encounter
+   scene, ambience and hazard loops, scene macros, NPC and loot actors,
+   effects, and the handouts given out there. Kept apart from CARDS so the
+   book's text and the module's ids can each be checked on their own. */
+const LINKS = {
+  analog: { pages: ["01coldcase000000", "01joiningthepa00", "01missedconnec00", "01interviewwit00"],
+    scene: "striving", audio: ["Striving", "Analog Cafe"], npcs: ["Ghellon"], handouts: [1] },
+  holovid: { pages: ["01tiernyslastw00"], npcs: ["Tier-99-Professor"] },
+  chase: { pages: ["01downgriddeto00", "01gmtipcombata00"], audio: ["Striving Chase"] },
+  smog: { pages: ["01smogalert00000", "01gmtiprewards00"], scene: "alley", audio: ["Air Pump"], macro: "pump",
+    effects: ["smog", "dweller"], loot: ["Abandoned Gear"], handouts: [2] },
+  case: { pages: ["01gettingonthe00", "01gmtipinvesti00", "01aboutanacite00"], handouts: [3] },
+  platform: { pages: ["01downgridchar00", "01tier99profes00"], scene: "cache", audio: ["Downgrid Charging Platform"],
+    npcs: ["Shalalamula"], loot: ["Commercial Null Space Chamber"], handouts: [4, 5] },
+  stalker: { pages: ["01stalkerinthe00", "01concludingch00"], scene: "cache", audio: ["Shadowy Duplicates"], npcs: ["Shalalamula"] },
+
+  seekers: { pages: ["02seekersinstr00", "02insightarray00", "02workingforin00"], scene: "striving",
+    effects: ["app"], loot: ["Work Shift Reward"], handouts: [11] },
+  poly: { pages: ["02strivingpoly00", "02centralarchi00", "02vendingservi00", "02clinic00000000"],
+    audio: ["Striving Polytechnica"], npcs: ["Eruco"], loot: ["Stone"] },
+  processor: { pages: ["02processorcen00"], audio: ["Central Circuit"], npcs: ["Hesop", "Prime-Facilitator"], handouts: [6, 12] },
+  queries: { pages: ["02theprofessor00"], handouts: [7] },
+  parade: { pages: ["02theologychan00", "02paradeoffait00"], scene: "theology", audio: ["Parade Of Faiths"], handouts: [15] },
+  memorial: { pages: ["02memorialfora00"], scene: "theology", loot: ["Gifts"], handouts: [8] },
+  apothecary: { pages: ["02hiddentrutha00"], scene: "theology", npcs: ["Remena"], loot: ["Remena's Gift", "Remena's Second Gift"] },
+  pest: { pages: ["02pestcontrol000"], scene: "mall", audio: ["Abandoned Mall"], loot: ["Ruined Mall"], handouts: [16] },
+  magenta: { pages: ["02magenta0000000", "02infinitydeck00", "02highrollerap00", "02thrillseeker00", "02wrappingupat00"],
+    audio: ["Magenta"], npcs: ["Vazylyza", "Enaria", "Bebubelu", "Lucky"] },
+
+  entry: { pages: ["02archive4040000", "02alltooeasy0000"] },
+  search: { pages: ["02searchingthe00"], scene: "archive", audio: ["Archive 404", "Archivists Wrath"], macro: "wrath", npcs: ["Archivist-404"] },
+  framed: { pages: ["02framed00000000"], audio: ["Framed"], npcs: ["Hesop"] },
+  pretrial: { pages: ["02beforethetri00"], effects: ["suspicion"] },
+  trial: { pages: ["02machinecourt00"], audio: ["Machine Court"], npcs: ["Prime-Facilitator", "Hesop"] },
+  deadend: { pages: ["02deadend0000000"], scene: "alley", handouts: [9, 10] },
+
+  journey: { pages: ["03frozenhearto00", "03teardropicew00"], scene: "well", audio: ["Teardrop Ice Well"] },
+  lookout: { pages: ["03frostlookout00", "03basecamp000000"], scene: "well", npcs: ["Spring Frost"],
+    loot: ["Spring Frost's Homemade Kit"], handouts: [13] },
+  daydelve: { pages: ["03daydelve000000"], scene: "well", loot: ["Steel Lockbox"] },
+  canopy: { pages: ["03canopy00000000"], scene: "well" },
+  goodbye: { pages: ["03lastgoodbye000"], scene: "well" },
+  hideout: { pages: ["03murderershid00", "03gatheringevi00"], loot: ["Supplies", "Rickety Table", "Behind Mattress"], handouts: [17, 18, 19] },
+  where: { pages: ["03wheresthemur00", "03whatdoyoudo000"] },
+
+  gloaming: { pages: ["03thegloaming000"], scene: "gloaming", audio: ["Teardrop Ice Well"], macro: "dew",
+    loot: ["Ruined Backpack"], handouts: [20] },
+  abaddon: { pages: ["03abaddonfield00", "03gmtiprunning00", "07strandedjins00"], effects: ["oppressive"], handouts: [14] },
+  wreck: { pages: ["03wreckoftheco00"], scene: "wreck", audio: ["Particle Cannon"] },
+  parting: { pages: ["03partingshots00"], scene: "wreck" },
+  agentz: { pages: ["03meetthemurde00", "07campaignrole00"], npcs: ["Agent Z"] },
+  ending: { pages: ["03conclusion0000", "03relicsfate0000", "03facilitators00", "03continuingth00"] }
+};
+
 const FATES = {
   returned: { label: "Returned, untampered", tone: "rust",
     text: "Other anacites take up Tierny's task and crack the activation code. Months later they switch it on — and summon godlike dimension-hopping entities who drain this reality and move on as it collapses. Somewhere else, a different Agent Z tries again." },
@@ -781,11 +970,13 @@ class MetalCity {
     return this.postCard(o.where, o.name, `<p style="margin:0">${linkify(o.overcome)}</p>`, "moss");
   }
 
-  /* Statblocks live in the compendiums. Look the actor up by name — this
-     world first, then every Actor pack, preferring sf2e and Beginner Box ones. */
+  /* Statblocks live in the module's actors. An imported adventure keeps their
+     ids, so try that first; otherwise look the actor up by name — this world
+     first, then every Actor pack, preferring sf2e and Beginner Box ones. */
   async openActor(name) {
     const want = name.toLowerCase();
-    let doc = this.actorCache.get(want) ?? game.actors.find(a => a.name.toLowerCase() === want);
+    const id = ACTOR_IDS[name] ?? NPCS[name]?.id ?? LOOT[name];
+    let doc = this.actorCache.get(want) ?? (id && game.actors.get(id)) ?? game.actors.find(a => a.name.toLowerCase() === want);
     if (!doc) {
       const packs = [...game.packs].filter(p => p.documentName === "Actor");
       const rank = (p) => /metal|beginner|sf2e|starfinder/i.test(`${p.collection} ${p.metadata?.label}`) ? 0 : 1;
@@ -796,9 +987,99 @@ class MetalCity {
         if (hit) { doc = await pack.getDocument(hit._id); break; }
       }
     }
-    if (!doc) return ui.notifications.warn(`No actor named “${name}” in this world or its compendiums. Is the sf2e bestiary or the Beginner Box module enabled?`);
+    if (!doc) return ui.notifications.warn(`No actor named “${name}” in this world or its compendiums. Import the ${MODULE.title} adventure, or enable the sf2e bestiary.`);
     this.actorCache.set(want, doc);
     doc.sheet?.render(true);
+  }
+
+  /* ----- the module ----- */
+  get imported() { return !!game.journal?.get(JOURNALS.ch1.id); }
+  page(pageId) {
+    const entry = game.journal?.get(entryForPage(pageId));
+    return entry?.pages?.get(pageId) ?? null;
+  }
+  openPage(pageId) {
+    const entry = game.journal?.get(entryForPage(pageId));
+    if (!entry) return ui.notifications.warn(`Import the ${MODULE.title} adventure to use the journal links.`);
+    if (!entry.pages?.get(pageId)) return ui.notifications.warn("That page isn't in the imported journal.");
+    entry.sheet.render(true, { pageId });
+  }
+  openJournal(key) {
+    const entry = game.journal?.get(JOURNALS[key]?.id);
+    if (!entry) return ui.notifications.warn(`"${JOURNALS[key]?.name}" isn't in this world — it comes with the ${MODULE.title} adventure.`);
+    entry.sheet.render(true);
+  }
+  /* Shows a page to every player, whatever its ownership — the handouts and
+     portraits are LIMITED to players by default. */
+  async showPage(pageId) {
+    const page = this.page(pageId);
+    if (!page) return ui.notifications.warn(`Import the ${MODULE.title} adventure to show its handouts.`);
+    const J = foundry.documents?.collections?.Journal ?? globalThis.Journal;
+    if (!J?.show) return ui.notifications.warn("This version of Foundry can't show a journal page from a macro.");
+    await J.show(page, { force: true });
+    ui.notifications.info(`Showing “${page.name}” to the players.`);
+  }
+  /* Showing a handout is giving it out, so it ticks the Case File too. */
+  async showHandout(n) {
+    const h = HANDOUTS.find(x => x[0] === Number(n));
+    if (!h) return;
+    await this.showPage(h[3]);
+    if (this.page(h[3]) && !this.s.handouts[h[0]]) { this.s.handouts[h[0]] = true; this.touch(); }
+  }
+
+  /* `view` opens it for the GM alone; otherwise it's activated for everyone.
+     `orig` picks the plain Paizo map over the encounter scene. */
+  async openScene(key, { view = false, orig = false } = {}) {
+    const def = SCENES[key];
+    const scene = def && game.scenes?.get(orig ? def.orig : def.id);
+    if (!scene) return ui.notifications.warn(`The "${def?.name ?? key}" scene isn't in this world — it comes with the ${MODULE.title} adventure.`);
+    await (view ? scene.view() : scene.activate());
+  }
+
+  async runMacro(key) {
+    const def = MOD_MACROS[key];
+    const macro = game.macros?.get(def.id) ?? game.macros?.getName?.(def.name);
+    if (!macro) return ui.notifications.warn(`"${def.name}" isn't in this world — it comes with the ${MODULE.title} adventure.`);
+    await macro.execute();
+  }
+
+  soundState(cue) {
+    const sound = game.playlists?.get(cue.pl)?.sounds?.get(cue.s);
+    return sound ? { ok: true, playing: !!sound.playing } : { ok: false, playing: false };
+  }
+  async toggleSound(name) {
+    const cue = audioBy(name);
+    const pl = cue && game.playlists?.get(cue.pl);
+    const sound = pl?.sounds?.get(cue.s);
+    if (!sound) return ui.notifications.warn(`"${name}" isn't in this world — it comes with the ${MODULE.title} adventure.`);
+    await (sound.playing ? pl.stopSound(sound) : pl.playSound(sound));
+    this.render();
+  }
+  get anyPlaying() { return AUDIO.some(a => this.soundState(a).playing); }
+  async stopAll() {
+    for (const id of [PL_AMBIENCE, PL_LOOPS]) {
+      const pl = game.playlists?.get(id);
+      if (pl && [...pl.sounds].some(s => s.playing)) await pl.stopAll();
+    }
+    this.render();
+  }
+
+  /* Toggles the effect on each selected token's actor: added where it's
+     missing, removed where it's already there. */
+  async toggleEffect(key) {
+    const def = EFFECTS[key];
+    const src = game.items?.get(def.id) ?? game.items?.getName?.(def.name);
+    if (!src) return ui.notifications.warn(`The "${def.name}" effect isn't in this world — it comes with the ${MODULE.title} adventure.`);
+    const actors = [...new Set((canvas?.tokens?.controlled ?? []).map(t => t.actor).filter(Boolean))];
+    if (!actors.length) return ui.notifications.warn(`Select the tokens for ${def.who} first.`);
+    const added = [], removed = [];
+    for (const a of actors) {
+      const have = a.items.find(i => i.type === "effect" && i.name === src.name);
+      if (have) { await have.delete(); removed.push(a.name); }
+      else { await a.createEmbeddedDocuments("Item", [src.toObject()]); added.push(a.name); }
+    }
+    ui.notifications.info([added.length ? `${def.name} on ${added.join(", ")}.` : "",
+      removed.length ? `Removed from ${removed.join(", ")}.` : ""].join(" ").trim());
   }
 }
 
@@ -836,10 +1117,13 @@ class MMCApp extends BaseApp {
   markup() {
     const t = this.t, s = t.s, ro = !t.editable;
     const body = s.tab === "case" ? this.caseTab(ro)
+      : s.tab === "table" ? this.tableTab()
       : CARDS.filter(c => c.tab === s.tab).map(c => this.card(c, ro)).join("");
     return `${this.styles()}
       <div class="mmc">
         ${this.header(ro)}
+        ${t.imported ? "" : `<p class="banner"><i class="fa-solid fa-circle-info"></i>
+          The ${MODULE.title} adventure isn't imported into this world, so the journal, scene, audio, macro, effect, and handout buttons have nothing to open. Import it from the module's compendium; everything else works without it.</p>`}
         <nav class="tabs">
           ${TABS.map(x => `<button type="button" class="tab ${s.tab === x.key ? "on" : ""}" style="--tt:var(--${x.tone})" data-act="tab" data-k="${x.key}">
             <b><i class="fa-solid ${x.icon}"></i> ${x.label}</b><small>${x.sub}</small></button>`).join("")}
@@ -884,11 +1168,13 @@ class MMCApp extends BaseApp {
           ${level ? `<span class="lvl">${level}</span>` : ""}
           ${c.boxed ? `<button type="button" class="say" data-act="postboxed" data-k="${c.key}" title="Read to the table"><i class="fa-solid fa-comment"></i></button>` : ""}
         </h3>
+        ${this.modRow(c.key)}
         ${c.boxed ? `<p class="boxed">${c.boxed}</p>` : ""}
         ${c.boxed2 ? `<p class="boxed">${c.boxed2}
           <button type="button" class="say inline" data-act="postboxed2" data-k="${c.key}" title="Read to the table"><i class="fa-solid fa-comment"></i></button></p>` : ""}
         ${(c.text ?? []).map(x => `<p class="text">${x}</p>`).join("")}
         ${c.qa ? `<div class="qa">${c.qa.map(([q, a]) => `<p><b>${q}</b> “${a}”</p>`).join("")}</div>` : ""}
+        ${this.npcRow(LINKS[c.key]?.npcs)}
         ${c.foes ? this.foeRow(FOES[c.foes]) : ""}
         ${c.widget ? this[`w_${c.widget}`](ro) : ""}
         ${c.obstacles ? c.obstacles.map(k => this.obstacle(k, ro)).join("") : ""}
@@ -898,6 +1184,7 @@ class MMCApp extends BaseApp {
         ${c.danger ? `<p class="danger">${c.danger}</p>` : ""}
         ${c.note ? `<p class="note">${c.note}</p>` : ""}
         ${c.treasure ? `<p class="loot"><b>Treasure</b> ${hl(c.treasure)}</p>` : ""}
+        ${this.lootRow(LINKS[c.key]?.loot)}
         ${c.ev || c.xp ? `<div class="ticks">
           ${(c.ev ?? []).map(k => this.evTick(k, ro)).join("")}
           ${(c.xp ?? []).map(k => this.xpTick(k, ro)).join("")}
@@ -918,6 +1205,55 @@ class MMCApp extends BaseApp {
           <em>${c.hazard ? "hazard" : "creature"} ${c.level}</em>
         </button>`).join("")}
       <span class="foexp">${encounterXp(list, pl)} XP</span>
+    </div>`;
+  }
+
+  /* The card's way into the module: its pages, scene, sound, macro,
+     effects, and handouts. Nothing here without the adventure imported. */
+  modRow(key) {
+    const t = this.t, L = LINKS[key];
+    if (!L || !t.imported) return "";
+    const pages = (L.pages ?? []).map(id => t.page(id)).filter(Boolean);
+    const sc = L.scene && SCENES[L.scene];
+    const bits = [
+      ...pages.map(p => `<button type="button" class="lnk" data-act="page" data-k="${p.id}" title="Open in the ${esc(MODULE.title)} journal"><i class="fa-solid fa-book-open"></i>${esc(p.name)}</button>`),
+      sc ? `<span class="lgrp"><button type="button" class="lnk scn" data-act="scene" data-k="${L.scene}" title="Activate for everyone — ${esc(sc.note)}"><i class="fa-solid fa-map"></i>${esc(sc.name)}</button><button type="button" class="lnk ico" data-act="viewscene" data-k="${L.scene}" title="View it yourself without moving the players"><i class="fa-solid fa-eye"></i></button></span>` : "",
+      ...(L.audio ?? []).map(n => this.soundBtn(n)),
+      L.macro ? `<button type="button" class="lnk mac" data-act="macro" data-k="${L.macro}" title="${esc(MOD_MACROS[L.macro].note)}"><i class="fa-solid fa-wand-magic-sparkles"></i>${esc(MOD_MACROS[L.macro].name)}</button>` : "",
+      ...(L.effects ?? []).map(k => `<button type="button" class="lnk eff" data-act="effect" data-k="${k}" title="Add to — or remove from — the selected tokens: ${esc(EFFECTS[k].who)}"><i class="fa-solid fa-person-rays"></i>${esc(EFFECTS[k].name)}</button>`),
+      ...(L.handouts ?? []).map(n => {
+        const given = !!t.s.handouts[n];
+        return `<button type="button" class="lnk hnd ${given ? "on" : ""}" data-act="showhandout" data-k="${n}" title="Show Handout #${n} to the players${given ? " (already given)" : ""}"><i class="fa-solid fa-file-image"></i>Show #${n}</button>`;
+      })
+    ].filter(Boolean);
+    return bits.length ? `<div class="modrow">${bits.join("")}</div>` : "";
+  }
+
+  soundBtn(name) {
+    const cue = audioBy(name);
+    if (!cue) return "";
+    const st = this.t.soundState(cue);
+    return `<button type="button" class="lnk snd ${st.playing ? "on" : ""}" data-act="sound" data-k="${esc(name)}" ${st.ok ? "" : "disabled"}
+      title="${esc(st.ok ? `${cue.kind === "loop" ? "Loops" : "Ambience"} — ${st.playing ? "stop" : "play"}` : `"${name}" isn't in this world`)}">
+      <i class="fa-solid ${st.playing ? "fa-stop" : cue.kind === "loop" ? "fa-wave-square" : "fa-music"}"></i>${esc(name)}</button>`;
+  }
+
+  npcRow(list) {
+    if (!list?.length) return "";
+    const imported = this.t.imported;
+    return `<div class="crew">
+      ${list.map(n => `<span class="lgrp">
+        ${NPCS[n].id ? `<button type="button" class="npc" data-act="actor" data-k="${esc(n)}" title="Open ${esc(n)}'s sheet"><i class="fa-solid fa-user"></i>${esc(n)}</button>`
+          : `<span class="npc flat"><i class="fa-solid fa-user"></i>${esc(n)}</span>`}
+        ${imported && NPCS[n].art ? `<button type="button" class="npc ico" data-act="showpage" data-k="${NPCS[n].art}" title="Show ${esc(n)}'s portrait to the players"><i class="fa-solid fa-image-portrait"></i></button>` : ""}
+      </span>`).join("")}
+    </div>`;
+  }
+
+  lootRow(list) {
+    if (!list?.length) return "";
+    return `<div class="crew">
+      ${list.map(n => `<button type="button" class="lootbtn" data-act="actor" data-k="${esc(n)}" title="Open the loot actor"><i class="fa-solid fa-box-open"></i>${esc(n)}</button>`).join("")}
     </div>`;
   }
 
@@ -1251,11 +1587,21 @@ class MMCApp extends BaseApp {
         <section class="panel" style="--tone:var(--plum)">
           <h3>Handouts <small>given out</small></h3>
           <div class="ticks col">
-            ${HANDOUTS.map(([n, name, where]) => `<button type="button" class="tick ${s.handouts[n] ? "on" : ""}" data-act="handout" data-k="${n}" ${ro ? "disabled" : ""}>
-              <i class="fa-solid ${s.handouts[n] ? "fa-square-check" : "fa-square"}"></i> <span class="pip">#${n}</span> ${name} <em>${where}</em></button>`).join("")}
+            ${HANDOUTS.map(([n, name, where, pageId]) => `<div class="hrow">
+              <button type="button" class="tick ${s.handouts[n] ? "on" : ""}" data-act="handout" data-k="${n}" ${ro ? "disabled" : ""}>
+                <i class="fa-solid ${s.handouts[n] ? "fa-square-check" : "fa-square"}"></i> <span class="pip">#${n}</span> ${name} <em>${where}</em></button>
+              ${t.imported ? `<button type="button" class="lnk ico" data-act="page" data-k="${pageId}" title="Open it yourself"><i class="fa-solid fa-book-open"></i></button>
+              <button type="button" class="lnk ico" data-act="showhandout" data-k="${n}" title="Show it to the players and tick it given"><i class="fa-solid fa-eye"></i></button>` : ""}
+            </div>`).join("")}
           </div>
+          ${t.imported ? `<p class="hint">The eye shows a handout to every player and ticks it given. The book opens it for you alone.</p>` : ""}
         </section>
       </div>
+      ${t.imported ? `<section class="panel" style="--tone:var(--gold)">
+        <h3>The module's Evidence Tracker <small>an actor with one effect per clue</small></h3>
+        <p class="note">The module also ships the Evidence Tracker as an actor, its ten clues as effects with a Yes / No badge. This console keeps its own count and doesn't write to that actor; open it if you'd rather show the players the sheet.</p>
+        <div class="btnrow"><button type="button" class="ghost" data-act="actor" data-k="Evidence Tracker"><i class="fa-solid fa-magnifying-glass"></i> Open the Evidence Tracker actor</button></div>
+      </section>` : ""}
       <section class="panel" style="--tone:var(--moss)">
         <h3>XP Ledger <small>the same for every PC</small><span class="lvl">level ${t.level}</span></h3>
         <div class="xpbar"><span style="width:${pct}%"></span></div>
@@ -1265,6 +1611,57 @@ class MMCApp extends BaseApp {
           <div class="ticks col">${chapter(n).map(a => this.xpTick(a.key, ro)).join("")}</div>`).join("")}
       </section>
       ${s.log.length ? `<section class="panel"><h3>Log</h3><ul class="checks">${s.log.slice(0, 12).map(l => `<li>${esc(l)}</li>`).join("")}</ul></section>` : ""}`;
+  }
+
+  /* ---------------------------------------------------------- at the table */
+  tableTab() {
+    const t = this.t;
+    if (!t.imported) return `<section class="panel"><h3>At the Table</h3>
+      <p class="note">Everything on this tab belongs to the ${MODULE.title} module — import its adventure to use it.</p></section>`;
+    const audio = (kind) => AUDIO.filter(a => a.kind === kind).map(a => this.soundBtn(a.name)).join("");
+    const macro = (k) => `<div class="scenerow">
+      <button type="button" class="opt" data-act="macro" data-k="${k}"><i class="fa-solid fa-wand-magic-sparkles"></i> ${esc(MOD_MACROS[k].name)}</button>
+      <span>${esc(MOD_MACROS[k].note)}</span></div>`;
+    return `
+      <section class="panel" style="--tone:var(--slate)">
+        <h3>Scenes <small>the map activates for everyone; the eye views it for you alone</small></h3>
+        <div class="scenes">
+          ${Object.entries(SCENES).map(([k, s]) => `<div class="scenerow">
+            <span class="lgrp">
+              <button type="button" class="opt" data-act="scene" data-k="${k}"><i class="fa-solid fa-map"></i> ${esc(s.name)}</button>
+              <button type="button" class="opt ico" data-act="viewscene" data-k="${k}" title="View without moving the players"><i class="fa-solid fa-eye"></i></button>
+            </span>
+            <span>${esc(s.note)}</span>
+            ${s.orig ? `<button type="button" class="ghost sm" data-act="origscene" data-k="${k}" title="Activate the plain Paizo map from Original Maps">Original map</button>` : ""}
+          </div>`).join("")}
+        </div>
+      </section>
+      <section class="panel" style="--tone:var(--plum)">
+        <h3>Ambience <small>location beds, all looping</small>
+          <button type="button" class="ghost sm stopall" data-act="stopall" ${t.anyPlaying ? "" : "disabled"}><i class="fa-solid fa-volume-xmark"></i> Stop all</button></h3>
+        <div class="btnrow">${audio("bed")}</div>
+        <div class="subhead">Hazard loops</div>
+        <div class="btnrow">${audio("loop")}</div>
+        <p class="hint">The encounter scenes start their own ambience when activated. These are for everything else, and for switching mid-scene.</p>
+      </section>
+      <section class="panel" style="--tone:var(--ember)">
+        <h3>Module macros</h3>
+        <div class="subhead">On the encounter maps</div>
+        <div class="scenes">${["pump", "wrath", "dew"].map(macro).join("")}</div>
+        <div class="subhead">Setup</div>
+        <div class="scenes">${["landing", "ring", "settings"].map(macro).join("")}</div>
+      </section>
+      <section class="panel" style="--tone:var(--gold)">
+        <h3>Journals</h3>
+        <div class="btnrow">
+          ${Object.entries(JOURNALS).map(([k, j]) => `<button type="button" class="ghost" data-act="journal" data-k="${k}"><i class="fa-solid fa-book"></i> ${esc(j.name)}</button>`).join("")}
+        </div>
+        <div class="btnrow">
+          <button type="button" class="ghost" data-act="page" data-k="00gmreference000"><i class="fa-solid fa-table"></i> GM Reference — DCs and Recall Knowledge</button>
+          <button type="button" class="ghost" data-act="page" data-k="00introductio000"><i class="fa-solid fa-scroll"></i> Introduction — the truth of it</button>
+          <button type="button" class="ghost" data-act="actor" data-k="Evidence Tracker"><i class="fa-solid fa-magnifying-glass"></i> Evidence Tracker actor</button>
+        </div>
+      </section>`;
   }
 
   /* --------------------------------------------------------------- wiring */
@@ -1288,6 +1685,17 @@ class MMCApp extends BaseApp {
       else if (a === "xp") t.toggleXp(k);
       else if (a === "handout") t.toggleHandout(k);
       else if (a === "actor") t.openActor(k);
+      else if (a === "page") t.openPage(k);
+      else if (a === "journal") t.openJournal(k);
+      else if (a === "showpage") t.showPage(k);
+      else if (a === "showhandout") t.showHandout(k);
+      else if (a === "scene") t.openScene(k);
+      else if (a === "viewscene") t.openScene(k, { view: true });
+      else if (a === "origscene") t.openScene(k, { orig: true });
+      else if (a === "macro") t.runMacro(k);
+      else if (a === "sound") t.toggleSound(k);
+      else if (a === "stopall") t.stopAll();
+      else if (a === "effect") t.toggleEffect(k);
       else if (a === "postboxed") t.postBoxed(k);
       else if (a === "postboxed2") t.postBoxed(k, "boxed2");
       else if (a === "postchase") t.postObstacle();
@@ -1482,6 +1890,37 @@ class MMCApp extends BaseApp {
       .mmc .evdot.on { background:var(--gold); border-color:var(--gold); }
       .mmc .evmeter b { font-size:.78rem; color:var(--muted); margin-left:.4rem; }
 
+      .mmc .banner { display:flex; gap:.5rem; align-items:flex-start; font-size:.76rem; line-height:1.45; color:var(--ember);
+                    border:1px solid var(--ember); border-radius:4px; padding:.4rem .6rem; margin:0 0 .5rem; background:var(--stripe); }
+      .mmc .modrow { display:flex; flex-wrap:wrap; gap:.25rem; margin:-.2rem 0 .45rem; }
+      .mmc .lnk { font-size:.66rem; padding:.12rem .45rem; color:var(--muted); border-color:var(--line); border-radius:10px; gap:.3rem; }
+      .mmc .lnk i { font-size:.62rem; }
+      .mmc .lnk.scn { color:var(--slate); border-color:var(--slate); }
+      .mmc .lnk.snd i { color:var(--plum); }
+      .mmc .lnk.snd.on { color:var(--moss); border-color:var(--moss); }
+      .mmc .lnk.snd.on i { color:var(--moss); }
+      .mmc .lnk.mac { color:var(--ember); border-color:var(--ember); }
+      .mmc .lnk.eff { color:var(--gold); border-style:dashed; }
+      .mmc .lnk.hnd i { color:var(--plum); }
+      .mmc .lnk.hnd.on { color:var(--ink); }
+      .mmc .lnk.ico, .mmc .opt.ico, .mmc .npc.ico { padding:.12rem .35rem; }
+      .mmc .lgrp { display:inline-flex; gap:2px; }
+      .mmc .lgrp > :first-child:not(:last-child) { border-top-right-radius:2px; border-bottom-right-radius:2px; }
+      .mmc .lgrp > :last-child:not(:first-child) { border-top-left-radius:2px; border-bottom-left-radius:2px; }
+      .mmc .npc { font-size:.74rem; padding:.22rem .55rem; color:var(--slate); border:1px solid var(--slate); border-radius:3px;
+                 display:inline-flex; align-items:center; gap:.3rem; }
+      .mmc .npc.flat { cursor:default; }
+      .mmc .lootbtn { font-size:.7rem; padding:.18rem .5rem; color:var(--gold); border-color:var(--gold); }
+      .mmc .scenes { display:flex; flex-direction:column; gap:.3rem; }
+      .mmc .scenerow { display:flex; align-items:center; gap:.6rem; font-size:.77rem; color:var(--muted); }
+      .mmc .scenerow > .lgrp, .mmc .scenerow > .opt { flex:none; min-width:15rem; }
+      .mmc .scenerow > .lgrp > .opt:first-child { flex:1; justify-content:flex-start; }
+      .mmc .scenerow > .opt { justify-content:flex-start; }
+      .mmc .scenerow > span:not(.lgrp) { flex:1; }
+      .mmc .hrow { display:flex; gap:.2rem; align-items:stretch; }
+      .mmc .hrow .tick { flex:1; }
+      .mmc h3 .stopall { margin-left:auto; }
+
       .mmc .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:.6rem; }
       .mmc .xpbar { height:8px; border:1px solid var(--line); border-radius:4px; background:var(--stripe); overflow:hidden; margin:.2rem 0 .4rem; }
       .mmc .xpbar span { display:block; height:100%; background:var(--moss); }
@@ -1529,6 +1968,11 @@ if (AppV2) {
       const fresh = typeof setting.value === "string" ? JSON.parse(setting.value) : setting.value;
       if (fresh && globalThis.__mmcRun) { globalThis.__mmcRun.state = fresh; globalThis.__mmcRun.render(); }
     });
+  }
+  /* Sounds started or stopped from the sidebar, or by a scene, have to
+     repaint the play buttons. */
+  if (!globalThis.__mmcSoundHook) {
+    globalThis.__mmcSoundHook = Hooks.on("updatePlaylistSound", () => globalThis.__mmcRun?.render());
   }
   globalThis.__mmcRun = run;
   app.render(true);

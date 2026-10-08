@@ -264,5 +264,7 @@ All three chapters in one window. It runs the Downgrid Detour chase from each PC
 results, tracks the Evidence Tracker clues the Machine Court's verdict depends on, and covers
 every complex hazard's disable track, the Ice Well's obstacle chain, and an XP ledger where
 each award is a ticked box.
+Each scene links into the Murder in Metal City Foundry module: its journal pages, encounter
+map, ambience, scene macros, NPC portraits, and handouts to show the players.
 
 ![The Downgrid Detour, three rounds in](screenshots/murder-in-metal-city/metal-city-chase.png)

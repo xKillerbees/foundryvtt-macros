@@ -1,5 +1,41 @@
 # Changelog
 
+## 2026-10-07 20:10
+
+### Added
+- **Murder in Metal City — the console now drives the Foundry module's own content.** Before
+  this, the console knew nothing about the *Murder in Metal City* module. It found creatures
+  by name, and the GM still had to go to the sidebar for every journal page, map, ambience
+  track, handout, and scene macro. Every scene card now has a row of links into the module,
+  all read out of its adventure pack by id:
+  - the pages for that scene;
+  - the encounter scene, to activate or just view;
+  - its ambience and hazard loops, with play and stop buttons that follow the sidebar;
+  - the module's *Fix Air Pump*, *Archivist's Wrath*, and *Reveal Dewblossom* macros;
+  - the book's condition effects, toggled on the selected tokens;
+  - its handouts, shown to every player and ticked given in one click.
+
+  NPCs get sheet buttons and a button that shows their Art Gallery portrait. Treasure lines
+  link the loot actors. A new **At the Table** tab lists all ten scenes and their *Original
+  Maps* twins, both playlists with a *Stop all*, the six module macros, and all twelve
+  journals. Without the adventure imported, a banner explains why those buttons are missing.
+- **Murder in Metal City — `tools/module-check/check-metal-city.mjs`.** Checks every id the
+  console names against the module's pack. It also lists anything the module's journal links
+  to that the console doesn't, so a module update that adds content shows up. It copies the
+  pack before opening it, because LevelDB writes lock files into whatever it opens.
+
+### Changed
+- **Murder in Metal City — creature buttons open the module's actor by id first.** The name
+  search was a stopgap: the console had no way to confirm the module's ids, so it guessed.
+  The ids are now confirmed against the pack. The name search is kept as the fallback for a
+  world that hasn't imported the adventure.
+- **Preview stub — the Metal City module's journals, playlists, macros, and scenes.** The ids
+  are generated from the pack. Journal page lists get `.get()`, scenes get `view()`,
+  playlists get `stopAll()`, and `foundry.documents.collections.Journal.show` is stubbed.
+  Without these, the new buttons can't be rendered or clicked outside Foundry. The module's
+  actors and items are left out on purpose. Adding NPCs to the stub's actor directory would
+  change what other consoles' actor pickers list.
+
 ## 2026-10-07 18:55
 
 ### Added

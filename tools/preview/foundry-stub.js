@@ -8,6 +8,8 @@
      game.settings.{register, get, set, settings.has}
      game.actors (iterable, .get, .find, .party)
      game.users (iterable, .get, .activeGM), game.user, game.journal.getName
+     game.journal / playlists / macros / scenes by real module ids, and
+       foundry.documents.collections.Journal.show
      user.{getFlag, setFlag} — a real setFlag fires the updateUser hook
      game.socket.{on, emit} — looped back, but only for a namespace an
        installed package would have registered; anything else is dropped,
@@ -264,6 +266,157 @@ const BB_MACROS = [
 const BB_SCENES = [
   ["c7E7PXzgT5RBkT7S", "Otari"], ["U5t0Mq8glKBXO3qH", "Landing"],
   ["JJJCFUCadDPRwnSX", "Floor 1"], ["cgv9iVmx3dNIL3YA", "Floor 2"]
+];
+
+/* The Murder in Metal City module's ids, generated from its adventure pack:
+   every entry, and the pages the Metal City console links to. */
+const MMC_JOURNALS = [
+  { id: "sf2av00500frontm", name: "Frontmatter", pages: [
+    "00introductio000|Introduction",
+    "00gmreference000|GM Reference"
+  ] },
+  { id: "sf2av00500mimpsh", name: "Pregen Sheets", pages: [] },
+  { id: "sf2av00501coldca", name: "Chapter 1: Cold Case", pages: [
+    "01concludingch00|Concluding Chapter 1",
+    "01stalkerinthe00|Stalker in the Shadows",
+    "01tier99profes00|Tier-99-Professor’s Cache",
+    "01downgridchar00|Downgrid Charging Platform",
+    "01aboutanacite00|About Anacites",
+    "01gmtipinvesti00|GM Tip: Investigations",
+    "01gettingonthe00|Getting on the Case",
+    "01gmtiprewards00|GM Tip: Rewards",
+    "01smogalert00000|Smog Alert",
+    "01gmtipcombata00|GM Tip: Combat and Maps",
+    "01downgriddeto00|Downgrid Detour",
+    "01tiernyslastw00|Tierny’s Last Words",
+    "01interviewwit00|Interview with Ghellon",
+    "01missedconnec00|Missed Connection",
+    "01joiningthepa00|Joining the Party",
+    "01coldcase000000|Cold Case"
+  ] },
+  { id: "sf2av00502seeker", name: "Chapter 2: Seekers in Striving", pages: [
+    "02deadend0000000|Dead End?",
+    "02machinecourt00|Machine Court’s Judgment",
+    "02beforethetri00|Before the Trial",
+    "02framed00000000|Framed!",
+    "02searchingthe00|Searching the Archive",
+    "02alltooeasy0000|All Too Easy",
+    "02archive4040000|Archive 404",
+    "02wrappingupat00|Wrapping up at Magenta",
+    "02thrillseeker00|Thrill Seeker Approach",
+    "02highrollerap00|High Roller Approach",
+    "02infinitydeck00|Infinity Deck",
+    "02magenta0000000|Magenta",
+    "02pestcontrol000|Pest Control",
+    "02hiddentrutha00|Hidden Truth Apothecary",
+    "02memorialfora00|Memorial for a Soulless Machine",
+    "02paradeoffait00|Parade of Faiths",
+    "02theologychan00|Theology Channel",
+    "02workingforin00|Working for Insight Array",
+    "02insightarray00|Insight Array",
+    "02theprofessor00|The Professor’s Queries",
+    "02processorcen00|Processor (Central Circuit)",
+    "02clinic00000000|Clinic",
+    "02vendingservi00|Vending Services",
+    "02centralarchi00|Central Archives",
+    "02strivingpoly00|Striving Polytechnica",
+    "02seekersinstr00|Seekers in Striving"
+  ] },
+  { id: "sf2av00503frozen", name: "Chapter 3: Frozen Heart of Aballon", pages: [
+    "03continuingth00|Continuing the Campaign",
+    "03facilitators00|Facilitator’s Fate",
+    "03relicsfate0000|Relic’s Fate",
+    "03conclusion0000|Conclusion",
+    "03meetthemurde00|Meet the Murderer",
+    "03partingshots00|Parting Shots",
+    "03wreckoftheco00|Wreck of the Condemned Prophet",
+    "03gmtiprunning00|GM Tip: Running Jinsuls",
+    "03abaddonfield00|Abaddon Fields",
+    "03thegloaming000|The Gloaming",
+    "03whatdoyoudo000|What Do You Do?",
+    "03wheresthemur00|Where’s the Murderer?",
+    "03gatheringevi00|Gathering Evidence",
+    "03murderershid00|Murderer’s Hideout",
+    "03lastgoodbye000|Last Goodbye",
+    "03canopy00000000|Canopy",
+    "03daydelve000000|Day Delve",
+    "03basecamp000000|Base Camp",
+    "03frostlookout00|Frost Lookout",
+    "03teardropicew00|Teardrop Ice Well",
+    "03frozenhearto00|Frozen Heart of Aballon"
+  ] },
+  { id: "sf2av00504npcgal", name: "NPC Gallery", pages: [] },
+  { id: "sf2av00505locati", name: "Locations", pages: [] },
+  { id: "sf2av00506techfa", name: "Tech Faiths of Aballon", pages: [] },
+  { id: "sf2av00507aliens", name: "Aliens & Adversaries", pages: [
+    "07campaignrole00|Agent Z",
+    "07strandedjins00|Stranded Jinsul"
+  ] },
+  { id: "sf2av00508khizar", name: "Khizar", pages: [] },
+  { id: "sf2av005095artga", name: "Art Gallery", pages: [
+    "95vazylyza000000|Vazylyza",
+    "95springfrost000|Spring Frost",
+    "95shalalamula000|Shalalamula",
+    "95remenaremaum00|Remena Rema Umana of Clan Kalar",
+    "95tier99profes00|Tier-99-Professor",
+    "95archivist40400|Archivist 404",
+    "95agentz00000000|Agent Z",
+    "95primefacilit00|Prime-Facilitator",
+    "95luckycompila00|Lucky Compilation of Numbers",
+    "95hesop000000000|Hesop",
+    "95ghellon0000000|Ghellon",
+    "95eruditecolla00|Erudite-Collaborator aka Eruco",
+    "95enaria00000000|Enaria",
+    "95bebubelu000000|Bebubelu"
+  ] },
+  { id: "sf2av00509hando1", name: "Handouts", pages: [
+    "09handout9000000|#9: Mysterious Comm Unit Message",
+    "09handout8000000|#8: Anacite Death Customs",
+    "09handout7000000|#7: Log of Tier-99-Professor's Queries",
+    "09handout6000000|#6: Investigation Status",
+    "09handout5000000|#5: Note from Tierny",
+    "09handout4000000|#4: Memory Storage",
+    "09handout3000000|#3: Anacite Habits",
+    "09handout2000000|#20: Jeotanni's Comm Unit Contents",
+    "09handout0200000|#2: Drone Programming Scan",
+    "09handout1900000|#19: Laptop Entry 2",
+    "09handout1800000|#18: Laptop Entry 1",
+    "09handout1700000|#17: Relic Scan",
+    "09handout1600000|#16: Special Notice! Pest Control!",
+    "09handout1500000|#15: Special Notice! Parade of Faiths!",
+    "09handout1400000|#14: About Jinsuls",
+    "09handout1300000|#13: About Ice Wells",
+    "09handout1200000|#12: Public Profile: Prime-Facilitator",
+    "09handout1100000|#11: About Insight Array App",
+    "09handout1000000|#10: Recording from Agent Z",
+    "09handout0100000|#1: Invitation to Analog"
+  ] }
+];
+const MMC_PLAYLISTS = [
+  { id: "BM1DJfPk8QZQAcuY", name: "Loops", ids: {
+    "gvZnoOFSlyVSHTlh": "Archivists Wrath", "StKSJ9wkUoXeN4dE": "Air Pump", "0ekcBqqPPb7zZ2MC": "Particle Cannon", "CcyxE8WYe7y3thzN": "Shadowy Duplicates" } },
+  { id: "nO5b7gnQk3IiBabF", name: "Ambience", ids: {
+    "nsIlmnLmfP5kJvNK": "Framed", "V54JSXQcS3Ztyntz": "Magenta", "d8K27xx3JBW3osxc": "Striving", "9R1cmSEe3GFDjTPn": "Abandoned Mall", "XMBPh44Gj1Rx2Vxh": "Analog Cafe", "aUPeBGITJJ0Hp2lf": "Archive 404", "br46kt27OGWJIE7n": "Central Circuit", "jZXaqBKSxCEyznhk": "Downgrid Charging Platform", "xhM86Z2Ci5WFuOHu": "Machine Court", "1xc9IZRrusHOF6Jl": "Parade Of Faiths", "l5TKHpk2cNO2BErw": "Striving Chase", "wF2Ab7D5QWCXDdaQ": "Striving Polytechnica", "ld4MKO9ABDLBBWsB": "Teardrop Ice Well" } }
+];
+const MMC_MACROS = [
+  ["8fKLOhKtWWBZJoVs", "Open Settings"], ["ELotS5eg49qX2PLA", "Reveal Dewblossom"], ["GIWBA4UdAJNbBg4r", "Fix Air Pump"], ["I48RKo6weCl72u0l", "Archivist's Wrath"], ["LvE8MXiPru8TQtI9", "Landing Picker"], ["W4ExED1OE2dalBoP", "Enable Dynamic Token Ring and Turn Marker"]
+];
+const MMC_SCENES = [
+  ["2Q318Qg20GcxIqlM", "Wreck of the Condemned Prophet"],
+  ["4FfMTUqoLvtED4tG", "Landing"],
+  ["DTgpMIggnM6Pj467", "Archive 404"],
+  ["HoV0RL4I0HpLPSBD", "Archive 404"],
+  ["JLOjySLNLqyi9Qs9", "Abandoned Mall"],
+  ["NljaYtpj8rIAiWuQ", "The Gloaming"],
+  ["Oq49LPP9tFWkjI0m", "Abandoned Mall"],
+  ["Pj2R1MP1a8JhFeTb", "Theology Channel"],
+  ["R69Xp3Pw1GOEsJvp", "Striving"],
+  ["Swz9Qorj9zpfyQ0P", "Foggy Alley"],
+  ["WzuvIDTSsKJbURJp", "Theology Channel"],
+  ["YlufX3ZuhkLUsuIJ", "Tier-99-Professor’s Cache"],
+  ["erex2weqrS2n6EWl", "Foggy Alley"],
+  ["grLbO3iooOJUphzg", "Ice Well"],
+  ["pNorQrVswYcO1BMv", "Ice Well"]
 ];
 
 const SAMPLE_JOURNALS = [
@@ -556,6 +709,7 @@ class StubJournal {
       const [id, name] = p.split("|");
       return { id, name };
     });
+    this.pages.get = (id) => this.pages.find(p => p.id === id) ?? null;
     this.sheet = {
       render: (force, opts = {}) => {
         const page = this.pages.find(p => p.id === opts.pageId);
@@ -569,7 +723,7 @@ class StubJournal {
    which they never do inside Foundry, so anything generic — `JOURNALS`, say —
    will eventually collide with a macro's own constant and stop it loading. */
 const STUB_JOURNAL_DOCS = globalThis.__previewJournals === false
-  ? [] : [...SAMPLE_JOURNALS, ...BB_JOURNALS].map(s => new StubJournal(s));
+  ? [] : [...SAMPLE_JOURNALS, ...BB_JOURNALS, ...MMC_JOURNALS].map(s => new StubJournal(s));
 
 const journalCollection = {
   get: (id) => STUB_JOURNAL_DOCS.find(j => j.id === id) ?? null,
@@ -620,18 +774,19 @@ class StubPlaylist {
   }
   async playSound(sound) { sound.playing = true; this._changed(sound); }
   async stopSound(sound) { sound.playing = false; this._changed(sound); }
+  async stopAll() { for (const s of this._sounds) if (s.playing) await this.stopSound(s); }
   _changed(sound) {
     console.log("[playlist]", `${sound.playing ? "play" : "stop"} ${this.name} / ${sound.name}`);
     Hooks.callAll("updatePlaylistSound", sound, { playing: sound.playing }, {}, "gm");
   }
 }
 
-const STUB_PLAYLIST_DOCS = [...SAMPLE_PLAYLISTS, ...BB_PLAYLISTS].map(s => new StubPlaylist(s));
+const STUB_PLAYLIST_DOCS = [...SAMPLE_PLAYLISTS, ...BB_PLAYLISTS, ...MMC_PLAYLISTS].map(s => new StubPlaylist(s));
 
 /* ------------------------------------------------------- macros and scenes
    Enough of each to let a console's "run the module's macro" and "activate
    the scene" buttons resolve. Neither actually does anything out here. */
-const STUB_MACRO_DOCS = BB_MACROS.map(([id, name]) => ({
+const STUB_MACRO_DOCS = [...BB_MACROS, ...MMC_MACROS].map(([id, name]) => ({
   id, name,
   execute: async () => console.log("[macro]", name)
 }));
@@ -641,9 +796,10 @@ const macroCollection = {
   [Symbol.iterator]: () => STUB_MACRO_DOCS[Symbol.iterator]()
 };
 
-const STUB_SCENE_DOCS = BB_SCENES.map(([id, name]) => ({
+const STUB_SCENE_DOCS = [...BB_SCENES, ...MMC_SCENES].map(([id, name]) => ({
   id, name,
-  activate: async () => console.log("[scene]", `activate ${name}`)
+  activate: async () => console.log("[scene]", `activate ${name}`),
+  view: async () => console.log("[scene]", `view ${name}`)
 }));
 const sceneCollection = {
   get: (id) => STUB_SCENE_DOCS.find(s => s.id === id) ?? null,
@@ -900,6 +1056,13 @@ globalThis.foundry = {
         return dst;
       };
       return merge(target, other);
+    }
+  },
+  /* Journal.show, where v13 keeps it — enough for a "show to players"
+     button to resolve. Nothing is shown; the call is logged. */
+  documents: {
+    collections: {
+      Journal: { show: async (doc, opts = {}) => console.log("[journal.show]", doc?.name, opts.force ? "(forced)" : "") }
     }
   },
   applications: {

@@ -146,6 +146,9 @@ SHOTS = {
     "metalcity-case": (
         "murder-in-metal-city/metal-city-console.js", "metalcity-case",
         "murder-in-metal-city/metal-city-case-file.png"),
+    "metalcity-table": (
+        "murder-in-metal-city/metal-city-console.js", "metalcity-table",
+        "murder-in-metal-city/metal-city-table.png"),
     "novarush-scene": (
         "battle-for-nova-rush/nova-rush-console.js", "novarush-scene",
         "battle-for-nova-rush/nova-rush-scene.png"),

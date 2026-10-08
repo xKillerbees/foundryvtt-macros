@@ -28,7 +28,7 @@ clues spread over the first two chapters. They pay off all at once at the Machin
 where five pieces clear the party outright. The console keeps that count in the header and
 puts each clue's toggle on the scene that awards it, so you can't miss one in passing.
 
-Six tabs, in the book's order:
+Seven tabs, the first six in the book's order:
 
 - **Cold Case**: Analog and Ghellon's Q&A, Tierny's holovid, the **Downgrid Detour** chase,
   Smog Alert, the charging platform's cache, and the Stalker in the Shadows.
@@ -42,8 +42,56 @@ Six tabs, in the book's order:
 - **Abaddon Fields**: the Gloaming and the dewblossom, finding the raider outpost, the wreck
   of the *Condemned Prophet*, Parting Shots, Agent Z, and the relic's fate.
 - **Case File**: the Evidence Tracker, the twenty handouts, and the XP ledger.
+- **At the Table**: every scene, both playlists, the module's macros, and its journals.
 
 ![The Downgrid Detour, three rounds in](../../screenshots/murder-in-metal-city/metal-city-chase.png)
+
+## The Foundry module
+
+The console is built around the **Murder in Metal City** Foundry module and links into
+everything it ships. Import the adventure from the module's compendium first. Every id was
+read out of the module's adventure pack, and an import keeps them. Without the import the
+console still runs. The module buttons don't appear, and a banner at the top says why.
+
+Under each scene's title there's a row of links into the module:
+
+- **Journal pages.** The module's pages for that scene, opened at the right page. The Analog
+  card has four, Magenta five.
+- **The encounter scene.** Clicking the map activates it for everyone. The eye views it for
+  you alone, which is handy for prep.
+- **Ambience and hazard loops.** Each one plays or stops the module's own track, such as
+  Analog Cafe, Striving Chase, the Archivist's siren, or the particle cannon. A playing track
+  shows a stop icon. The buttons update when a sound is started from the sidebar or by a
+  scene.
+- **The module's scene macros.** *Fix Air Pump* on Smog Alert, *Archivist's Wrath* on
+  Searching the Archive, and *Reveal Dewblossom* on the Gloaming. Each toggles the tiles,
+  lights, weather, or hidden tokens the module put on that map.
+- **Effects.** Obscuring Smog, Smog Dweller, the Insight Array App, Local Suspicion, and
+  Oppressive Landscape. Select the tokens and click: the effect is added to their actors, or
+  removed from any that already have it.
+- **Handouts.** *Show #4* shows the handout to every player, whatever its ownership, and
+  ticks it given in the Case File.
+
+NPCs get a button for their sheet and one that shows their Art Gallery portrait to the
+players. That covers Ghellon, Shalalamula, Eruco, Hesop, Prime-Facilitator, Remena, Vazylyza,
+Enaria, Bebubelu, Spring Frost, the Archivist, and Agent Z, and Lucky has a portrait too.
+Treasure lines get buttons for the module's loot actors.
+
+The **Case File** handout list has the same show and open buttons on every handout. The
+**At the Table** tab holds the rest:
+
+- **Scenes.** All ten, with the plain Paizo version from *Original Maps* beside the five that
+  have one.
+- **Audio.** Thirteen ambience beds, four hazard loops, and a *Stop all* button.
+- **Macros.** The module's three scene macros and its three setup macros (*Landing Picker*,
+  the dynamic token ring, and settings).
+- **Journals.** All twelve, plus the GM Reference and Introduction pages.
+
+The module also ships its Evidence Tracker as an actor, with one effect per clue. The console
+keeps its own count and never writes to that actor. Hard rule 3 applies: there's no state on
+documents. There's a button to open the actor if you'd rather show the players its sheet.
+
+![At the Table](../../screenshots/murder-in-metal-city/metal-city-table.png)
 
 ## The chase
 
@@ -90,9 +138,10 @@ tampering, an innocent verdict, and Agent Z's XP if they help destroy the relic 
 
 ## Statblocks
 
-None are reproduced here. Each creature and hazard button **looks the actor up by name**:
-first in this world, then in every Actor compendium, trying sf2e and Beginner Box packs first.
-It then opens the sheet. If nothing by that name exists, the button says so.
+None are reproduced here. Each creature, hazard, NPC, and loot button opens **the module's
+own actor by id**. If that isn't in the world, it falls back to a name search, first in this
+world and then in every Actor compendium, trying sf2e and Beginner Box packs first. If
+nothing turns up, the button says so.
 
 The names searched are the book's own: Smog Scamp, Anacite Wingbot, Shadowy Duplicates,
 Mechanizer Saboteur, Young Sharpwing, Hardlight Dragonet, Archivist's Wrath, Cyberwing,
