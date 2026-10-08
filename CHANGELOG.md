@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-10-07 18:55
+
+### Added
+- **Murder in Metal City — a new GM console for the Starfinder Second Edition Beginner Box
+  adventure.** The repo had nothing for this adventure, which is the first one most new SF2e
+  tables will run. It's a mystery, so its bookkeeping is easy to drop between sessions. The
+  console covers all three chapters in six tabs. The GM Aid's ten-clue Evidence Tracker sits
+  in the header, and each clue's toggle is on the scene that awards it, because the Machine
+  Court's verdict turns on reaching five. The Downgrid Detour chase is replayed from each PC's
+  degree of success, so un-ticking a result rewinds it exactly. How the chase ends feeds
+  Smog Alert's scamp count, pump DC, and XP. Every complex hazard has its disable track. Each
+  Chapter 3 obstacle has a pass/fail switch that shows the fight it triggers in place. The
+  injured shroomclaw carries forward from Day Delve to the Gloaming. The XP ledger stores
+  the amount each award granted, so taking one back is exact. Creature buttons find actors by
+  name, because nothing here could confirm the Beginner Box module's actor ids. The deactivation
+  DC for Agent Z's relic is invented (the book prints none), and the card says so.
+
 ## 2026-08-18 20:44
 
 ### Added

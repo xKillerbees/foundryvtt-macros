@@ -137,6 +137,15 @@ SHOTS = {
     "mantis-alternates": (
         "mark-of-the-mantis/mark-of-the-mantis-console.js", "mantis-alternates",
         "mark-of-the-mantis/mark-of-the-mantis-alternates.png"),
+    "metalcity": (
+        "murder-in-metal-city/metal-city-console.js", "metalcity",
+        "murder-in-metal-city/metal-city-chase.png"),
+    "metalcity-trial": (
+        "murder-in-metal-city/metal-city-console.js", "metalcity-trial",
+        "murder-in-metal-city/metal-city-trial.png"),
+    "metalcity-case": (
+        "murder-in-metal-city/metal-city-console.js", "metalcity-case",
+        "murder-in-metal-city/metal-city-case-file.png"),
     "novarush-scene": (
         "battle-for-nova-rush/nova-rush-console.js", "novarush-scene",
         "battle-for-nova-rush/nova-rush-scene.png"),

@@ -347,6 +347,47 @@ globalThis.FIXTURES = {
     }
   },
 
+  /* Murder in Metal City, round three of the Downgrid Detour: the party is
+     through Cloaking, Traffic, and Safety, one obstacle behind the drone. */
+  "metalcity": {
+    "world.sf2eMurderMetalCity": {
+      tab: "ch1",
+      done: { analog: true, holovid: true },
+      handouts: { 1: true },
+      xp: { analog: 10, ghellon: 10 },
+      chase: { rounds: [
+        [{ pc: 0, d: "s" }, { pc: 1, d: "cs" }, { pc: 2, d: "f" }, { pc: 3, d: "s" }],
+        [{ pc: 1, d: "s" }, { pc: 0, d: "f" }, { pc: 3, d: "wait" }, { pc: 2, d: "s" }],
+        [{ pc: 2, d: "s" }, { pc: 0, d: "cf" }]
+      ], ended: false, override: null }
+    }
+  },
+
+  /* The trial, with six pieces of evidence gathered and the verdict in. */
+  "metalcity-trial": {
+    "world.sf2eMurderMetalCity": {
+      tab: "archive", approach: "intrigue",
+      done: { entry: true, search: true },
+      evidence: { datapad: true, drone: true, slice: true, queries: true, keycaps: true, off: true },
+      tracks: { entry: 4, archive: 4 },
+      trial: { verdict: "innocent" },
+      chase: { rounds: [[]], ended: false, override: "caught" }
+    }
+  },
+
+  /* The case file late in Chapter 2: most of the clues, most of the XP. */
+  "metalcity-case": {
+    "world.sf2eMurderMetalCity": {
+      tab: "case",
+      evidence: { datapad: true, drone: true, slice: true, queries: true, briefing: true, keycaps: true, footage: true },
+      handouts: { 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 7: true, 8: true, 11: true, 15: true },
+      xp: { analog: 10, ghellon: 10, chase: 40, caught: 40, f_smog: 40, camp: 10, cache: 20, glimpse: 40,
+            f_stalker: 80, hesop: 30, queries: 20, crowd: 10, f_parade: 60, remena: 20, magenta: 80, tamper: 20 },
+      chase: { rounds: [[]], ended: false, override: "caught" },
+      tracks: { crowd: 1 }
+    }
+  },
+
   /* Battle for Nova Rush, part way through: the brig is behind them, the
      reactor is fixed, Polly was saved from the sinkwell. */
   "novarush": {

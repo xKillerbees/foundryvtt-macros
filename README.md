@@ -11,6 +11,7 @@ manifest, no install step. Open a macro file, copy it, paste it into Foundry, ru
 | [PF2e Multi-Part Boss](macros/pf2e-multipart-boss) | PF2e | v11 – v14 | 1 |
 | [Mark of the Mantis](macros/mark-of-the-mantis) | PF2e | v11 – v14 | 1 |
 | [Battle for Nova Rush](macros/battle-for-nova-rush) | SF2e | v11 – v14 | 1 |
+| [Murder in Metal City](macros/murder-in-metal-city) | SF2e | v11 – v14 | 1 |
 
 Most of these are GM consoles for a particular adventure. [PF2e
 Downtime](macros/pf2e-downtime) and [PF2e Multi-Part Boss](macros/pf2e-multipart-boss)
@@ -251,3 +252,17 @@ Adventure content — encounter text, DCs, NPC names, and rewards — is derived
 *Season of Ghosts*, *Mark of the Mantis*, and *Battle for Nova Rush*, and remains Paizo's
 intellectual property. These macros are unofficial, are not endorsed by Paizo, and are intended
 as an aid for GMs who own the adventures. No stat blocks are reproduced.
+
+## Murder in Metal City
+
+A GM console for the adventure in the **Starfinder Second Edition Beginner Box**. Details in
+the [collection README](macros/murder-in-metal-city).
+
+### [Murder in Metal City Console](macros/murder-in-metal-city/metal-city-console.js)
+
+All three chapters in one window. It runs the Downgrid Detour chase from each PC's
+results, tracks the Evidence Tracker clues the Machine Court's verdict depends on, and covers
+every complex hazard's disable track, the Ice Well's obstacle chain, and an XP ledger where
+each award is a ticked box.
+
+![The Downgrid Detour, three rounds in](screenshots/murder-in-metal-city/metal-city-chase.png)
