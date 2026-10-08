@@ -1,5 +1,37 @@
 # Changelog
 
+## 2026-10-07 20:55
+
+### Added
+- **Guilt of the Grave World — a new GM console for Paizo's five-chapter Starfinder Second
+  Edition adventure.** The repo had nothing for this adventure. Its bookkeeping changes from
+  chapter to chapter, and much of it carries forward. The number of failed phases in the
+  Diaspora sets the ship's condition against the Amaranth. Lingering in Pact Port adds a
+  boarder to the shuttle fight. How the spectra parted moves Opa Zari's parley. The planar
+  magnetite helps bind the tethers on Barrow. Barrow's alert level decides how many
+  bonecrushers wait in E1, when reinforcements come, how long Nobrom listens, and how hard the
+  E7 door is. The console holds all of it, scene by scene, in five chapter tabs, plus a Ledger
+  of those threads and the XP, and an At the Table tab.
+  - Both chases (the zombie horde and the caldera) are replayed from each PC's results, so
+    un-ticking any result rewinds them exactly.
+  - Cooking Points are kept per PC per stage, with the six cooking rounds as a click-to-cycle
+    grid.
+  - Gravedigging hides the eight packets at random and digs each grave with the module's own
+    macro for it.
+  - Barrow's alert is worked out from its causes, so undoing the cause undoes the alert.
+  - Every encounter has its own module actor, by id.
+
+  Finished scenes fold down to their title bar. A chapter runs to twenty cards, and the one in
+  play shouldn't be buried under the ones behind it.
+- **Guilt of the Grave World — `tools/module-check/check-grave-world.mjs`.** Checks every id
+  the console names against the module's pack: journals, pages, scenes and Paizo maps, all
+  39 macros, sounds, actors (with their levels and hazard complexity), and effects. It reads
+  pages within the journal the console names, because this module reuses page ids across
+  journals.
+- **Preview stub — the Grave World module's journals, playlists, macros, and scenes.** They're
+  generated from the pack. Without them, the console's module buttons can't be rendered or
+  clicked outside Foundry. There are six fixtures for the new screenshots.
+
 ## 2026-10-07 20:17
 
 ### Fixed

@@ -397,6 +397,106 @@ globalThis.FIXTURES = {
     }
   },
 
+  /* Guilt of the Grave World, Chapter 1: the first scenes behind them, the
+     approach through the Diaspora on its fourth phase with two failures. */
+  "graveworld": {
+    "world.sf2eGuiltGraveWorld": {
+      tab: "ch1",
+      done: { breakfast: true, interview: true, stations: true },
+      flags: { imp_belenze: true, imp_helmut: true },
+      xp: { tutorial: 40 },
+      drift: { cur: 3, maint: {}, seventh: null, res: [
+        { 0: "s", 1: "cs", 2: "f", 3: "s" },
+        { 0: "f", 1: "cf", 2: "s", 3: "f" },
+        { 0: "s", 1: "f", 2: "f", 3: "cf" },
+        { 0: "cs", 2: "s" }, {}, {}
+      ] }
+    }
+  },
+
+  /* The zombie horde chase, round three: the party is on Necromantic Ruins
+     and the horde has just reached Higher Ground. */
+  "graveworld-chase": {
+    "world.sf2eGuiltGraveWorld": {
+      tab: "ch2",
+      done: { pactport: true, linger: true, shuttle: true },
+      flags: { lingered: true },
+      picks: { shuttle: "landed" },
+      xp: { pactport: 120, noeli: 40, f_shuttle: 120, crash: 120 },
+      chases: {
+        horde: { rounds: [
+          [{ pc: 0, d: "s" }, { pc: 1, d: "cs" }, { pc: 2, d: "f" }, { pc: 3, d: "s" }],
+          [{ pc: 2, d: "s" }, { pc: 0, d: "s" }, { pc: 3, d: "cf" }, { pc: 1, d: "cs" }],
+          [{ pc: 1, d: "s" }, { pc: 0, d: "f" }]
+        ], moves: [false, true] },
+        caldera: { rounds: [[]], moves: [] }
+      }
+    }
+  },
+
+  /* Sabotage Soufflé after the gravedigging and three rounds of cooking. */
+  "graveworld-souffle": {
+    "world.sf2eGuiltGraveWorld": {
+      tab: "ch3",
+      done: { petsnacks: true, frontroom: true, meat: true, graves: true, gauntlet: true },
+      xp: { f_pets: 80, desk: 40, f_meat: 120, f_gauntlet: 80 },
+      cook: {
+        intro: { 0: "s", 1: "cs", 2: "s", 3: "f" },
+        meat: { 0: "s", 1: "cs", 2: "f", 3: "s" },
+        gauntlet: { 0: "s", 1: "s", 2: "cf", 3: "s" },
+        r1: { 0: "s", 1: "cs", 2: "f", 3: "s" },
+        r2: { 0: "f", 1: "s", 2: "cf", 3: "s" },
+        r3: { 1: "s", 3: "cs" }
+      },
+      fridge: 1,
+      packets: { 0: 2, 1: 3, 2: 1, 3: 2 },
+      graves: { full: [2, 3, 5, 8, 10, 11, 14, 16], dug: { 2: true, 3: true, 4: true, 5: true, 8: true, 10: true, 11: true, 12: true, 14: true, 16: true } },
+      sabotage: "puzzle"
+    }
+  },
+
+  /* Barrow on preliminary alert after a rough cargo door, Nobrom won over. */
+  "graveworld-barrow": {
+    "world.sf2eGuiltGraveWorld": {
+      tab: "ch5",
+      done: { silent: true, fracture: true, freefall: true, turrets: true, door: true, rf1: true, rf2: true, rf3: true,
+              E1: true, E2: true, E3: true, E4: true },
+      counters: { infil: 6, alertPts: 5, scanBarrow: 2, rooms: 3, nobrom: 5, nobromRounds: 3, magnetite: 2 },
+      flags: { nbHelp: true, nbOffer: true },
+      picks: { nav: "f" },
+      door: ["f", "s", "f", "f", "s", "f"],
+      xp: { f_silent: 80, f_fall: 6, f_turrets: 60, f_rf1: 40, f_E1: 80, f_E2: 60, f_E3: 60, f_E4: 80 }
+    }
+  },
+
+  /* The ledger near the end of Chapter 4. */
+  "graveworld-ledger": {
+    "world.sf2eGuiltGraveWorld": {
+      tab: "ledger",
+      flags: { lingered: true, signed: true, telmarci: true, scanned: true, aaNW: true, aaNE: true, aaSE: true },
+      picks: { marauders: "escaped", shuttle: "landed", spectra: "peaceful", bomb: "defused", brawl: "brawl" },
+      trek: { lost: "s", events: { pit: 2, horde: 1, homestead: 3 } },
+      counters: { eterrina: 6, magnetite: 2, opa: 2 },
+      cook: { intro: { 0: "s", 1: "cs", 2: "s", 3: "f" }, meat: { 0: "s", 1: "cs", 2: "f", 3: "s" }, tasting: { 0: "s", 1: "s" } },
+      drift: { cur: 6, maint: { 2: true }, seventh: "cs", res: [
+        { 0: "s", 1: "s", 2: "s" }, { 0: "f", 1: "f" }, { 0: "f" }, { 0: "cs", 1: "s" }, { 0: "s", 1: "s", 2: "s" }, { 0: "cs", 1: "s" }
+      ] },
+      xp: { tutorial: 40, discover: 40, a1: 40, f_a2: 60, a3: 40, f_a4: 80, f_a5: 80, a5: 40, f_a6: 24, f_a7: 80, a8: 40, f_a8: 60,
+            a9: 40, f_a9: 80, f_a10: 120, a11: 40, marauders: 120, scan: 20,
+            pactport: 120, noeli: 40, f_shuttle: 120, crash: 120, horde: 80, f_serpent: 60, trek: 80, f_camp: 60, shelter: 60,
+            f_xoalats: 80, eterrina: 60, manor: 60, f_kill: 120, datapad: 80,
+            f_pets: 80, desk: 40, f_meat: 120, f_gauntlet: 80, f_souffle: 160, cooking: 80, f_c1: 60, f_c3: 80, f_c5: 80,
+            f_c6: 80, f_c7: 80, f_c9: 80, f_c10: 8, rescue: 120,
+            f_e1: 60, f_e2: 40, spectra: 80, f_d2: 60, f_d3: 120, magnetite: 120, f_recip: 80 }
+    }
+  },
+
+  /* At the Table: every scene and its Paizo map, three playlists, the
+     module's macros, and its journals. */
+  "graveworld-table": {
+    "world.sf2eGuiltGraveWorld": { tab: "table" }
+  },
+
   /* Battle for Nova Rush, part way through: the brig is behind them, the
      reactor is fixed, Polly was saved from the sinkwell. */
   "novarush": {

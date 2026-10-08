@@ -149,6 +149,24 @@ SHOTS = {
     "metalcity-table": (
         "murder-in-metal-city/metal-city-console.js", "metalcity-table",
         "murder-in-metal-city/metal-city-table.png"),
+    "graveworld": (
+        "guilt-of-the-grave-world/grave-world-console.js", "graveworld",
+        "guilt-of-the-grave-world/grave-world-diaspora.png"),
+    "graveworld-chase": (
+        "guilt-of-the-grave-world/grave-world-console.js", "graveworld-chase",
+        "guilt-of-the-grave-world/grave-world-chase.png"),
+    "graveworld-souffle": (
+        "guilt-of-the-grave-world/grave-world-console.js", "graveworld-souffle",
+        "guilt-of-the-grave-world/grave-world-souffle.png"),
+    "graveworld-barrow": (
+        "guilt-of-the-grave-world/grave-world-console.js", "graveworld-barrow",
+        "guilt-of-the-grave-world/grave-world-barrow.png"),
+    "graveworld-ledger": (
+        "guilt-of-the-grave-world/grave-world-console.js", "graveworld-ledger",
+        "guilt-of-the-grave-world/grave-world-ledger.png"),
+    "graveworld-table": (
+        "guilt-of-the-grave-world/grave-world-console.js", "graveworld-table",
+        "guilt-of-the-grave-world/grave-world-table.png"),
     "novarush-scene": (
         "battle-for-nova-rush/nova-rush-console.js", "novarush-scene",
         "battle-for-nova-rush/nova-rush-scene.png"),

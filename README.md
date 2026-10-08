@@ -12,6 +12,7 @@ manifest, no install step. Open a macro file, copy it, paste it into Foundry, ru
 | [Mark of the Mantis](macros/mark-of-the-mantis) | PF2e | v11 – v14 | 1 |
 | [Battle for Nova Rush](macros/battle-for-nova-rush) | SF2e | v11 – v14 | 1 |
 | [Murder in Metal City](macros/murder-in-metal-city) | SF2e | v11 – v14 | 1 |
+| [Guilt of the Grave World](macros/guilt-of-the-grave-world) | SF2e | v11 – v14 | 1 |
 
 Most of these are GM consoles for a particular adventure. [PF2e
 Downtime](macros/pf2e-downtime) and [PF2e Multi-Part Boss](macros/pf2e-multipart-boss)
@@ -268,3 +269,22 @@ Each scene links into the Murder in Metal City Foundry module: its journal pages
 map, ambience, scene macros, NPC portraits, and handouts to show the players.
 
 ![The Downgrid Detour, three rounds in](screenshots/murder-in-metal-city/metal-city-chase.png)
+
+## Guilt of the Grave World
+
+A GM console for Paizo's five-chapter Starfinder Second Edition adventure, 1st to 5th level.
+Details in the [collection README](macros/guilt-of-the-grave-world).
+
+### [Guilt of the Grave World Console](macros/guilt-of-the-grave-world/grave-world-console.js)
+
+All five chapters in one window. It runs the seven-phase approach through the Diaspora and
+the ship damage it leaves for the Amaranth fight. It replays both chases from each PC's
+results, and adds up the Atraskien Shelf trek in hours. It covers both influence encounters,
+every Cooking Point on Sabotage Soufflé and its sixteen graves, the turrets that decide how
+the getaway shuttle leaves, and the corsairs' parley. It also tracks Barrow's alert level,
+which sets most of Chapter 5. An XP ledger makes each award a ticked box.
+Each scene links into the Guilt of the Grave World Foundry module: its journal pages,
+encounter map and Paizo map, ambience, scene macros, NPC portraits, and art to show the
+players.
+
+![Diaspora Drifting, four phases in](screenshots/guilt-of-the-grave-world/grave-world-diaspora.png)

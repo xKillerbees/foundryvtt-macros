@@ -45,3 +45,20 @@ belongs to a real card and points only at things in those tables. It also checks
 to that the console doesn't, which is how new content in a module update shows up. The pack
 is copied to a temporary directory before it's opened, so the module's own files are never
 touched.
+
+## Guilt of the Grave World
+
+`check-grave-world.mjs` does the same for the Grave World console, against the
+`sf2e-guilt-of-the-grave-world` module:
+
+```bash
+node check-grave-world.mjs ~/Documents/sf2e/sf2e-guilt-of-the-grave-world
+```
+
+Page ids in this module are only unique inside their journal, so pages are checked in the
+journal the console names. The script checks every journal, page, and Art Gallery piece.
+It checks every scene and its Paizo map, every macro (including all sixteen *Dig Grave*
+macros, in order), every playlist sound, and every NPC, foe, loot, and tracker actor. It
+checks each foe's level and hazard complexity against the console, and the effect items. It
+lists any module macro the console doesn't offer, and any actor a chapter journal links to
+that the console doesn't know.

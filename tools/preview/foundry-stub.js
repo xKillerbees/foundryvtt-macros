@@ -419,6 +419,245 @@ const MMC_SCENES = [
   ["pNorQrVswYcO1BMv", "Ice Well"]
 ];
 
+/* The Guilt of the Grave World module's ids, generated from its adventure
+   pack: every entry, the pages the Grave World console links to, every
+   playlist sound, macro, and scene. Page ids repeat between entries here —
+   the NPC Gallery and the Art Gallery share several — which is why the
+   console names a page together with its journal. */
+const GGW_JOURNALS = [
+  { id: "pzo2400601frontm", name: "Frontmatter", pages: [
+    "01adventuresum00|Adventure Summary",
+    "01adventurebac00|Adventure Background",
+    "01gettingstart00|Getting Started"
+  ] },
+  { id: "pzo2400602echoes", name: "Ch 1: Echoes from the Grave", pages: [
+    "02echoesfromth00|Echoes from the Grave",
+    "02jobinterview00|Job Interview",
+    "02toyourbattle00|To Your Battle Stations!",
+    "02diasporadrif00|Diaspora Drifting",
+    "02iovanstation00|Iovan Station Alpha",
+    "02a1dockingpor00|Docking Port",
+    "02a2airlockamb00|Airlock Ambush",
+    "02a3safetycorr00|Safety Corridor",
+    "02a4crewquarte00|Crew Quarters",
+    "02a5auditorium00|Auditorium",
+    "02a6gymnasium000|Gymnasium",
+    "02a7utilitycor00|Utility Corridor",
+    "02a8computerce00|Computer Center",
+    "02a9arcanelabo00|Arcane Laboratory",
+    "02a10hydroponi00|Hydroponics Bay",
+    "02a11commandco00|Command Core",
+    "02maliciousmar00|Malicious Marauders",
+    "02concludingth00|Concluding the Chapter"
+  ] },
+  { id: "pzo2400603worldo", name: "Ch 2: World of the Dead", pages: [
+    "03worldofthede00|World of the Dead",
+    "03unlivinghosp00|Unliving Hospitality",
+    "03hangingaroun00|Hanging Around or Heading Out",
+    "03firstclassdi00|First Class Disaster",
+    "03norestforthe00|No Rest for the Weary",
+    "03snakeinthegl00|Snake in the Glass",
+    "03overthedeadh00|Over the Dead Hills",
+    "03campingoneox00|Camping on Eox",
+    "03zephyrousshe00|Zephyrous Shelter",
+    "03spookedxoala00|Spooked Xoalats",
+    "03undeadreckon00|Undead Reckoning",
+    "03etchedmemori00|Etched Memories",
+    "03killsquad00000|Kill Squad",
+    "03smileyoureon00|Smile, You're on Camera!",
+    "03concludingth00|Concluding the Chapter"
+  ] },
+  { id: "pzo2400604hallso", name: "Ch 3: Halls of the Living", pages: [
+    "04hallsoftheli00|Halls of the Living",
+    "04petsnacks00000|Pet Snacks",
+    "04frontroomdea00|Front Room Deals",
+    "04sabotagesouf00|Sabotage Soufflé",
+    "04bsoufflstadi00|Soufflé Stadium",
+    "04b1themeatjun00|The Meat Jungle",
+    "04b2kitchensta00|Kitchen Stage",
+    "04b3gravediggi00|Gravedigging Grounds",
+    "04b4flaminggau00|Flaming Gauntlet",
+    "04letthemcook000|Let Them Cook!",
+    "04sabotagespin00|Sabotage Spinner",
+    "04cookingchall00|Cooking Challenge Results",
+    "04tastingandju00|Tasting and Judgment",
+    "04realhoardsof00|Real Hoards of Triaxus",
+    "04thelastelebr00|The Last Elebrian",
+    "04cfrontlinesf00|Front Lines Frayed",
+    "04c1contestedl00|Contested Land",
+    "04c2newcrater000|New Crater",
+    "04c3trenches0000|Trenches",
+    "04c4mortartube00|Mortar Tubes",
+    "04c5dugout000000|Dugout",
+    "04c6crossingpa00|Crossing Paths",
+    "04c7commsbunke00|Comms Bunker",
+    "04c8perimeterd00|Perimeter Defense",
+    "04c9searchligh00|Searchlight Hill",
+    "04c10landingzo00|Landing Zone",
+    "04hallsoftheli01|Halls of the living",
+    "04unlockingthe00|Unlocking the Data",
+    "04meetingahmzo00|Meeting Ahmzovar",
+    "04concludingth00|Concluding the Chapter"
+  ] },
+  { id: "pzo2400605intoth", name: "Ch 4: Into the Drift", pages: [
+    "05intothedrift00|Into the Drift",
+    "05farewelltopa00|Farewell to Pact Port",
+    "05intothedrift01|Into the Drift",
+    "05event1malfun00|Event 1: Malfunction",
+    "05event2allhan00|Event 2: All Hands on Deck",
+    "05event3conver00|Event 3: Convergence",
+    "05dplanarfragm00|Planar Fragment",
+    "05d1slipperysl00|Slippery Slope",
+    "05d2lavaflow0000|Lava Flow",
+    "05d3gravitywel00|Gravity Well",
+    "05eventexplosi00|Event: Explosive Caldera",
+    "05reciprocity000|Reciprocity",
+    "05event4finalo00|Event 4: Final Onslaught",
+    "05eventfaceoff00|Event 5: Face Off",
+    "05cosmiccapers00|Cosmic Capers",
+    "05thedefiance000|The Defiance",
+    "05driftersdrau00|Drifter’s Draught",
+    "05concludingth00|Concluding the Chapter"
+  ] },
+  { id: "pzo2400606robbin", name: "Ch 5: Robbing the Barrow", pages: [
+    "06robbingtheba00|Robbing the Barrow",
+    "06silentrunnin00|Silent Running",
+    "06freefalling000|Free Falling",
+    "06turretdefens00|Turret Defense",
+    "06auxiliaryres00|Auxiliary Research Center",
+    "06reinforcemen00|Reinforcements",
+    "06event1welcom00|Event 1: Welcome Party",
+    "06event2junior00|Event 2: Junior officers",
+    "06event3ghostl00|Event 3: Ghostly Assassins",
+    "06eauxiliaryre00|Auxiliary Research Center",
+    "06e1loadingdoc01|Loading Dock",
+    "06e2centralhal00|Central Hallway",
+    "06e3morticlab000|Mortic Lab",
+    "06e4necrotechl00|Necrotech Lab",
+    "06e5geflab000000|Gef Lab",
+    "06e6lab000000000|Lab",
+    "06e7computerce00|Computer Center",
+    "06e8destroyedl00|Destroyed Lab",
+    "06e9theprisone00|The Prisoner",
+    "06e10transport00|Transport Tubes",
+    "06researchdome00|Research Dome",
+    "06fobservation00|Observation Deck",
+    "06concludingth00|Concluding the Adventure",
+    "06continuingth00|Continuing the Campaign"
+  ] },
+  { id: "pzo2400607advent", name: "Adventures on Eox", pages: [
+    "07theatraskien00|The Atraskien Shelf",
+    "07thehallsofth00|The Halls of the Living",
+    "07pactport000000|Pact Port"
+  ] },
+  { id: "pzo2400608advent", name: "Adventure Toolbox", pages: [] },
+  { id: "pzo2400609elebri", name: "Elebrian", pages: [] },
+  { id: "pzo2400610corpse", name: "Corpsefolk", pages: [] },
+  { id: "pzo2400611aliena", name: "Alien Archive", pages: [] },
+  { id: "pzo2400612npcgal", name: "NPC Gallery", pages: [
+    "12sanimusslayn00|Sanimus Slayn",
+    "12zo000000000000|Zo!",
+    "12campaignrole02|Campaign Role"
+  ] },
+  { id: "pzo2400613player", name: "Player's Guide", pages: [] },
+  { id: "pzo2400614artgal", name: "Art Gallery", pages: [
+    "12afaella0000000|Afaella",
+    "12ahmzovar000000|Ahmzovar",
+    "12ancientmanor00|Ancient Manor",
+    "12barrow00000000|Barrow",
+    "12belenzeshadr00|Belenze Shadraz",
+    "12bonespeakerb00|Bone Speaker Bobblehead",
+    "12cameradrone000|Camera Drone",
+    "12captainconci00|Captain Concierge",
+    "12cloudnine00000|Cloud Nine",
+    "12corpsefleets00|Corpse Fleet Ship",
+    "12defiance000000|Defiance",
+    "12emmozie0000000|Emmozie",
+    "12eterrinariku00|Eterrina Rikutan",
+    "12ghoulflighta00|Ghoul Flight Attendant",
+    "12helmutnavdee00|Helmut Navdeep",
+    "12iovanammunit00|Iovan Ammunition",
+    "12ivorychomper00|Ivory Chompers",
+    "12jazzymalsavi00|Jazzy Malsavis",
+    "12kitthainekit00|Kitthaine Kitar",
+    "12luwazielsebo00|Luwazi Elsebo",
+    "12mummywasphiv00|Mummy Wasp Hive",
+    "12nobromdarame00|Nobrom Darameer",
+    "12noeli000000000|Noeli",
+    "12opazari0000000|Opa Zari",
+    "12rebechshadra00|Rebech Shadraz",
+    "12replicazomic00|Replica Zo! Microphone",
+    "12rexalliasrex00|Rexallias “Rex” Steelscale",
+    "12sadratphain000|Sadrat Phain",
+    "12sanimusslayn00|Sanimus Slayn",
+    "12shredskin00000|Shredskin",
+    "12shuttleticke00|Shuttle Ticket",
+    "12telmarcijusi00|Telmarci Jusinoa",
+    "12undeademerge00|Undead Emergency Supply Kit",
+    "12vanyravoshin00|Vanyra Voshin",
+    "12wazashakevir00|Wazasha Kevir",
+    "12whatzonwhatz00|Whatzon Whatz-Gurz"
+  ] }
+];
+const GGW_PLAYLISTS = [
+  { id: "9Lmi6mJKs43KDJFy", name: "Loops", ids: {
+    "EDmuX95psyohW3Xm": "Cascade Faults", "i76TrHnhY0OFlXzW": "Console Beeps", "MpZ85aVa6ASz8Xhk": "Flaming Gauntlet", "MyjxU0bUHI2QrMgf": "Force Field", "14s3H91shFKpXFEw": "Zombie Horde", "jHyQNoMKfDLtHMJ6": "Lava Flow", "FKRWxLySACPUGukZ": "Meat Jungle", "kWEP3JWKDqCCP1UG": "Mortar Shelling", "trSDeibA70BFTEDQ": "Ticking", "C98RZIykEBDI8U0p": "Projector", "ZTc3bFUhu6OboFp5": "Red Alert", "8VIHNRGy7zIwa2wk": "Shock Grid", "AfScCuh33AjBXYvV": "Souffle Surprise", "A5P0ockY0e6soolv": "Treadmill" } },
+  { id: "Faqf1Y1hdWKxx6aH", name: "Ambience", ids: {
+    "QcoQFEyV2e3odMuJ": "Absalom Station Indoors", "3UGHotPdDenpJ0xx": "Absalom Station", "YZNRG3iGdWkzkIbS": "Ancient Manor", "9ylvbnYTNWKdmtDI": "Atraskein Shelf", "dXyORrwHC7ALI87s": "Bar Music", "PDmuoBq1a3rF8M6m": "Barrow Facility", "m6hHF5YdOkoOGfKL": "Barrow", "1EA9IxEKf0jrQOfQ": "Depressurized", "znMGVRciBZSi242q": "Doomed Shuttle", "73GOLulbL9bsj1z0": "Drifter's Draught", "bNpJPkdmQS05jMiX": "Eterrina's Barn", "a0g0R1IvepTUBP1F": "Front Lines Frayed", "U3BdAWoQ79ZPyePy": "Halls of The Living", "VTeiXZGMgDq8Ta5Z": "Iovan Station Alpha", "oKWWG8MxcAirKvnv": "Nova Rush Under Attack", "whyK351dclCzDPae": "Nova Rush", "ImSQlwndv0RcTybd": "Pact Port", "bIyMAmdyK4GrlM1d": "Planar Fragment", "Kb5xmTOxogGxpmbC": "Shuttle", "Tdnek0YqeajWGvKc": "Souffle Stadium", "rUCcOxR6SimWAe6H": "Star Citadel Theodrane", "e5uXeWFPBvUdTxWj": "The Defiance", "Ovu1Tv4Ek4gZge93": "The Drift" } },
+  { id: "hEYaHAjGo4J9n32B", name: "SFX", ids: {
+    "G2VTgrEUFpA8NYFP": "Artillery Impact", "po7HlKwl9B9CN46h": "Burning Rockslide", "K3VHGKRIkERtusuz": "Crowd Boo", "6m8w6oiXRgjLdzNQ": "Crowd Cheer", "6oL9gc6dICwxV178": "Explosion", "DPp2a61nNGdUTeZ2": "Grave Digging", "G46SH1sf94U8ALDs": "Rapid Depressurization", "8jIKklCAaEqVRZ5V": "Sabotage Spinner Wheel", "Zs8WbPGd8RQy9lFB": "Toggle" } }
+];
+const GGW_MACROS = [
+  ["FalzOIaHYaT1j8ye", "Activate Dynamic Ring"], ["LYVnBasloKBssEKp", "Create Crater"], ["9hlzMVsIgmiHl1cj", "Deactivate Force Field"],
+  ["xNCCCbuEKNQLm7Du", "Depressurization"], ["OyM9SN0BGKKmda6M", "Dig Grave"], ["gyOntEj0c1MTB7mf", "Dig Grave 1"],
+  ["uQWuTTIQ1nBvZg25", "Dig Grave 10"], ["ZeCarpppLZ7FSejU", "Dig Grave 11"], ["oLL01iJKCtBqao3f", "Dig Grave 12"],
+  ["COmD9irXCXGWtMZ0", "Dig Grave 13"], ["dv4XzPx6qodeAkDp", "Dig Grave 14"], ["4LsiKqLntH16hRM4", "Dig Grave 15"],
+  ["St0lZmXabN5G56S0", "Dig Grave 16"], ["o8n0a6RkFYchkuvF", "Dig Grave 2"], ["nQvprGCV4yEHgyi6", "Dig Grave 3"],
+  ["h7LFrTHPg8X8qiBt", "Dig Grave 4"], ["UXlQ0r4GJdhCIpfR", "Dig Grave 5"], ["wWBnh6XBRe2CXHD9", "Dig Grave 6"],
+  ["XAmX9YLBXSk6uW9u", "Dig Grave 7"], ["xQ3S9soTMHbdTgGf", "Dig Grave 8"], ["UIKMu8bHCjDH50lk", "Dig Grave 9"],
+  ["gGGaSt5KtOSPwEwA", "Disable Anti-aircraft Turret (NE)"], ["4mb52YeU160coHgq", "Disable Anti-aircraft Turret (NW)"], ["8Y2rV7zTvE5BeJeL", "Disable Anti-aircraft Turret (SE)"],
+  ["Ls5yjOghrPMAnk65", "Disable Anti-aircraft Turret (SW)"], ["2chjRLv3cI2eYsOe", "Disable Mortars"], ["efLoncochBWHbYYF", "Enable Rig Gradient"],
+  ["BYUCaWAGxGY76NKd", "Landing Picker"], ["LdVAtoAoZTYAfDxA", "Preliminary Alert Door Lock"], ["F8AZY7YU9odAKAOb", "Reset Crater"],
+  ["Q2pIDHw2j01PdVSu", "Toggle Decontamination"], ["MlMnLwg8fSALiidP", "Toggle Doomed Shuttle Ambience"], ["wPq3osEja3I2OMkd", "Toggle Emergency Force Fields"],
+  ["kN83zK5AhmbpgcnK", "Toggle Forcefield"], ["eQc83NSruCwgGKjN", "Toggle Projector"], ["Q5V8s9eFpz5fSiVY", "Toggle Sandbags South"],
+  ["bxEaLS7kVBGSiwc1", "Toggle Sandbags West"], ["lazBTVDVFVWQrEAm", "Toggle Shock Grid"], ["lgftdPI0jhVNepU2", "Toggle Token Gradient"]
+];
+const GGW_SCENES = [
+  ["H8X4fWtzq41B0enD", "A. Iovan Station Alpha"],
+  ["rDWDTtx1v0p7h0Vb", "Approaching Barrow"],
+  ["fFyhdTnPerPaNgMc", "B. Souffle Stadium"],
+  ["2uruu1TobCYonPjR", "C. Front Lines Frayed"],
+  ["DUN5xy00cDwE9lkZ", "Camping On Eox"],
+  ["rnkixlFpkxUDLP75", "Cosmic Capers"],
+  ["2LmFAs5VSYgBX44i", "D. Planar Fragment"],
+  ["1FOcKGf70ucG7oDX", "Drifter's Draught"],
+  ["huhOUcVnEisQNHuR", "E. Auxiliary Research Center"],
+  ["bCCpgI9PlQDQ2lA4", "F. Observation Deck"],
+  ["UkviH2KWZEWHfeEe", "First Class Disaster"],
+  ["gYrKcRYbLunH8CSq", "Kill Squad"],
+  ["ddAa8hkhfLPGbDcd", "Landing"],
+  ["FJsM8T7mIqKWSYbq", "Malicious Marauders"],
+  ["BVeEq94IFopLoUJn", "Nova Rush Lower Deck"],
+  ["DR5GA7lfexg7CwFp", "Nova Rush Upper Deck"],
+  ["r3m0ZIfo2eHsFdcI", "Pact Port"],
+  ["bgV6d83ucPv4SkcM", "Paizo Auxiliary Research Center"],
+  ["OGDKtkKUg6aM72Ji", "Paizo Drifter\u2019s Draught"],
+  ["fmphimrInA5PK8sC", "Paizo First Class Disaster"],
+  ["esE4mMBCX3md5vAy", "Paizo Front Lines Frayed"],
+  ["WSnqjdqg8qfQAxPf", "Paizo Iovan Station Alpha"],
+  ["ilVUykpbKM92ZHFk", "Paizo Kill Squad"],
+  ["8prhpjVFjdHcimkB", "Paizo Observation Deck"],
+  ["eCjQJz87mkRdrlUA", "Paizo Pet Snacks"],
+  ["Y5ivjR8PJJEkYnrp", "Paizo Planar Fragment"],
+  ["eCgoKIVOSJBKo3L2", "Paizo Souffl\u00e9 Stadium"],
+  ["LFxuKMrWCkjzxytB", "Paizo Spooked Xoalats"],
+  ["lvaKWd7isP1mV11B", "Pet Snacks"],
+  ["4fQ0jwzAh9BJq4GW", "Reciprocity"],
+  ["PtFIUzqAlNiL1Lzm", "Snake in the Glass"],
+  ["zJ2lsr3TjYhJpfF8", "Spooked Xoalats"],
+  ["ieSNim8gyixONaFM", "Turret Defense"]
+];
+
 const SAMPLE_JOURNALS = [
   { id: "pf2apsog02willow", name: "Willowshore", pages: [
     "02willowshores01|Willowshore's Hinterlands",
@@ -723,7 +962,7 @@ class StubJournal {
    which they never do inside Foundry, so anything generic — `JOURNALS`, say —
    will eventually collide with a macro's own constant and stop it loading. */
 const STUB_JOURNAL_DOCS = globalThis.__previewJournals === false
-  ? [] : [...SAMPLE_JOURNALS, ...BB_JOURNALS, ...MMC_JOURNALS].map(s => new StubJournal(s));
+  ? [] : [...SAMPLE_JOURNALS, ...BB_JOURNALS, ...MMC_JOURNALS, ...GGW_JOURNALS].map(s => new StubJournal(s));
 
 const journalCollection = {
   get: (id) => STUB_JOURNAL_DOCS.find(j => j.id === id) ?? null,
@@ -781,12 +1020,12 @@ class StubPlaylist {
   }
 }
 
-const STUB_PLAYLIST_DOCS = [...SAMPLE_PLAYLISTS, ...BB_PLAYLISTS, ...MMC_PLAYLISTS].map(s => new StubPlaylist(s));
+const STUB_PLAYLIST_DOCS = [...SAMPLE_PLAYLISTS, ...BB_PLAYLISTS, ...MMC_PLAYLISTS, ...GGW_PLAYLISTS].map(s => new StubPlaylist(s));
 
 /* ------------------------------------------------------- macros and scenes
    Enough of each to let a console's "run the module's macro" and "activate
    the scene" buttons resolve. Neither actually does anything out here. */
-const STUB_MACRO_DOCS = [...BB_MACROS, ...MMC_MACROS].map(([id, name]) => ({
+const STUB_MACRO_DOCS = [...BB_MACROS, ...MMC_MACROS, ...GGW_MACROS].map(([id, name]) => ({
   id, name,
   execute: async () => console.log("[macro]", name)
 }));
@@ -796,7 +1035,7 @@ const macroCollection = {
   [Symbol.iterator]: () => STUB_MACRO_DOCS[Symbol.iterator]()
 };
 
-const STUB_SCENE_DOCS = [...BB_SCENES, ...MMC_SCENES].map(([id, name]) => ({
+const STUB_SCENE_DOCS = [...BB_SCENES, ...MMC_SCENES, ...GGW_SCENES].map(([id, name]) => ({
   id, name,
   activate: async () => console.log("[scene]", `activate ${name}`),
   view: async () => console.log("[scene]", `view ${name}`)
