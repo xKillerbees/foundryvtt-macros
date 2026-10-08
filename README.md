@@ -13,6 +13,7 @@ manifest, no install step. Open a macro file, copy it, paste it into Foundry, ru
 | [Battle for Nova Rush](macros/battle-for-nova-rush) | SF2e | v11 – v14 | 1 |
 | [Murder in Metal City](macros/murder-in-metal-city) | SF2e | v11 – v14 | 1 |
 | [Guilt of the Grave World](macros/guilt-of-the-grave-world) | SF2e | v11 – v14 | 1 |
+| [Waffle House Isekai](macros/waffle-house-isekai) | PF2e | v11 – v14 | 1 |
 
 Most of these are GM consoles for a particular adventure. [PF2e
 Downtime](macros/pf2e-downtime) and [PF2e Multi-Part Boss](macros/pf2e-multipart-boss)
@@ -251,7 +252,7 @@ Code is released under the [MIT licence](LICENSE) — use it, modify it, ship it
 
 Adventure content — encounter text, DCs, NPC names, and rewards — is derived from Paizo's
 *Season of Ghosts*, *Mark of the Mantis*, and *Battle for Nova Rush*, and remains Paizo's
-intellectual property. These macros are unofficial, are not endorsed by Paizo, and are intended
+intellectual property. *Waffle House Isekai* is Snowy's Maps' and remains theirs. These macros are unofficial, are not endorsed by Paizo, and are intended
 as an aid for GMs who own the adventures. No stat blocks are reproduced.
 
 ## Murder in Metal City
@@ -289,3 +290,19 @@ encounter map and Paizo map, ambience, scene macros, NPC portraits, and art to s
 players.
 
 ![Diaspora Drifting, four phases in](screenshots/guilt-of-the-grave-world/grave-world-diaspora.png)
+
+## Waffle House Isekai
+
+A GM console for Snowy's Maps' slot-in session for 10th-level characters. Details in the
+[collection README](macros/waffle-house-isekai).
+
+### [Waffle House Isekai Console](macros/waffle-house-isekai/waffle-house-console.js)
+
+One shift at the Waffle House. Every task the party finishes takes one attack away from the
+Chef in the final fight, so the console scores each task the way the book does: each PC's save
+mopping the floors, the Clog's knockouts, the tables served and the Karen, the timed register
+problems, and the three dishes. Then it shows what the Chef has left. The register posts
+each order to chat and runs the clock. Each area links into the module's journal pages,
+actors, items, map, and its three playlists.
+
+![Closing Time, with three of the Chef's five gone](screenshots/waffle-house-isekai/waffle-house-closing.png)

@@ -1,5 +1,38 @@
 # Changelog
 
+## 2026-10-07 22:06
+
+### Added
+- **Waffle House Isekai — a new GM console for Snowy's Maps' PF2e slot-in session.** The repo
+  had nothing for it. The session turns on one rule that's easy to lose track of at the table:
+  each of the five areas has a task, and every task the party finishes takes one attack away
+  from the Chef in the final fight. The console scores each task the way the book does and
+  works out whether it's done or failed. Un-ticking a result undoes the outcome, and a
+  per-task override covers a GM ruling. The header shows all five of the Chef's task abilities
+  as a strip, and the Closing Time tab lists what he has left. It can post each live ability
+  from his own sheet; locked ones aren't offered.
+  - A1 tracks each PC's Fortitude save and the once-per-helper help. A2 counts the Clog's
+    knockouts, switches the Clog elite for six PCs (on the map token too), and can hide the
+    Clog and its oozes, which the module leaves visible.
+  - A3 adds up the served tables and brings out the Karen on the first failure.
+  - A4 deals one order per PC with its answer, posts the order to chat without the answer,
+    and runs a countdown, doubled for a PC who earned extra time.
+  - A5 takes the guesses off each dish's DC and scores each PC's dishes, so the Aftermath
+    knows who gets the Waffle House Coupon.
+  - Every fight's threat is worked out from the GM Core tables for the actual party size and
+    level, since the book prints only creature levels.
+  - Every id was read out of the module's adventure pack: the journal and its pages, the map,
+    the three playlists (starting one stops the others, as the journal asks), the three
+    actors, and the two items.
+- **Waffle House Isekai — `tools/module-check/check-waffle-house.mjs`.** Checks every id
+  the console names against the module's pack, including the nine Chef abilities Closing Time
+  posts by name and the foe tokens the hide and elite buttons look for on the map.
+- **Preview stub — the Waffle House module's journal, playlists, scene, and items, and a
+  `__pcLevel` fixture flag.** The sample party is 5th level, and this session is written for
+  10th, so without the flag every screenshot would show a level warning and the wrong
+  threats. `game.items` is new in the stub too, because the console opens the module's world
+  items by id. There are four fixtures for the new screenshots.
+
 ## 2026-10-07 21:45
 
 ### Changed

@@ -498,6 +498,66 @@ globalThis.FIXTURES = {
     "world.sf2eGuiltGraveWorld": { tab: "table" }
   },
 
+  /* Waffle House Isekai, mid-shift: the floors mopped with one PC helped
+     through, the Clog beaten but with two PCs knocked out, and a Karen at
+     table three. */
+  "waffle": {
+    __pcLevel: 10,
+    "world.pf2eWaffleHouseIsekai": {
+      tab: "start", hook: "sleep",
+      a1: { res: { pc1: "s", pc2: "f", pc3: "s", pc4: "s" }, help: { pc2: "pc3" }, after: { pc2: "s" }, scour: true },
+      a2: { ko: 2, won: true },
+      a3: { rolls: ["s", "f", "cs"], karen: null }
+    }
+  },
+
+  /* The register, two orders rung up and a third on the clock's settings. */
+  "waffle-register": {
+    __pcLevel: 10,
+    "world.pf2eWaffleHouseIsekai": {
+      tab: "a4",
+      a4: { secs: 20, rows: [
+        { pc: "pc1", prob: 0, aid: null, res: "s" },
+        { pc: "pc2", prob: 1, aid: "s", res: "f" },
+        { pc: "pc3", prob: 2, aid: null, res: null },
+        { pc: "pc4", prob: 3, aid: "s", res: null }
+      ] }
+    }
+  },
+
+  /* The kitchen, two dishes out and the chilli on the stove. */
+  "waffle-kitchen": {
+    __pcLevel: 10,
+    "world.pf2eWaffleHouseIsekai": {
+      tab: "a5",
+      a5: { rec: {
+        steak: { guess: 1, via: 0, pc: "pc4", d: "cs" },
+        burger: { guess: 2, via: 1, pc: "pc3", d: "s" },
+        chilli: { guess: 0, via: 2, pc: null, d: null }
+      } }
+    }
+  },
+
+  /* Closing Time: every task settled, three of the Chef's five gone. */
+  "waffle-close": {
+    __pcLevel: 10,
+    "world.pf2eWaffleHouseIsekai": {
+      tab: "close",
+      a1: { res: { pc1: "s", pc2: "f", pc3: "s", pc4: "s" }, help: { pc2: "pc3" }, after: { pc2: "s" }, scour: true },
+      a2: { ko: 2, won: true },
+      a3: { rolls: ["s", "f", "cs", "s"], karen: "appeased" },
+      a4: { secs: 20, rows: [
+        { pc: "pc1", prob: 0, res: "s" }, { pc: "pc2", prob: 1, res: "f" },
+        { pc: "pc3", prob: 2, res: "f" }, { pc: "pc4", prob: 3, res: "f" }
+      ] },
+      a5: { rec: {
+        steak: { guess: 1, via: 0, pc: "pc4", d: "cs" },
+        burger: { guess: 2, via: 1, pc: "pc3", d: "s" },
+        chilli: { guess: 0, via: 2, pc: "pc1", d: "s" }
+      } }
+    }
+  },
+
   /* Battle for Nova Rush, part way through: the brig is behind them, the
      reactor is fixed, Polly was saved from the sinkwell. */
   "novarush": {

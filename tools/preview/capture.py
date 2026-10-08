@@ -167,6 +167,18 @@ SHOTS = {
     "graveworld-table": (
         "guilt-of-the-grave-world/grave-world-console.js", "graveworld-table",
         "guilt-of-the-grave-world/grave-world-table.png"),
+    "waffle": (
+        "waffle-house-isekai/waffle-house-console.js", "waffle",
+        "waffle-house-isekai/waffle-house-console.png"),
+    "waffle-register": (
+        "waffle-house-isekai/waffle-house-console.js", "waffle-register",
+        "waffle-house-isekai/waffle-house-register.png"),
+    "waffle-kitchen": (
+        "waffle-house-isekai/waffle-house-console.js", "waffle-kitchen",
+        "waffle-house-isekai/waffle-house-kitchen.png"),
+    "waffle-close": (
+        "waffle-house-isekai/waffle-house-console.js", "waffle-close",
+        "waffle-house-isekai/waffle-house-closing.png"),
     "novarush-scene": (
         "battle-for-nova-rush/nova-rush-console.js", "novarush-scene",
         "battle-for-nova-rush/nova-rush-scene.png"),

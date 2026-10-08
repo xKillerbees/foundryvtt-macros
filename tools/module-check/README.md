@@ -62,3 +62,18 @@ macros, in order), every playlist sound, and every NPC, foe, loot, and tracker a
 checks each foe's level and hazard complexity against the console, and the effect items. It
 lists any module macro the console doesn't offer, and any actor a chapter journal links to
 that the console doesn't know.
+
+## Waffle House Isekai
+
+`check-waffle-house.mjs` does the same for the Waffle House console, against the
+`snowys-maps-waffle-house-isekai-pf2e` module:
+
+```bash
+node check-waffle-house.mjs ~/Documents/pf2e/snowys-maps-waffle-house-isekai-pf2e
+```
+
+It checks the journal and every page the console opens, the map, the three playlists and their
+tracks, the three actors with their levels, and the two items. It counts each foe's tokens on
+the map, because the hide button and the elite toggle look for them there. It also checks that
+the Chef's sheet carries all nine abilities the Closing Time tab posts by name, and lists
+anything the journal links to that the console doesn't.

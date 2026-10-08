@@ -98,7 +98,7 @@ class StubActor {
     this.prototypeToken = { texture: { src: this.img } };
     this.system = {
       details: {
-        level: { value: spec.level },
+        level: { value: globalThis.__previewPcLevel ?? spec.level },
         class: { name: spec.cls },
         ancestry: { name: spec.ancestry }
       },
@@ -658,6 +658,24 @@ const GGW_SCENES = [
   ["ieSNim8gyixONaFM", "Turret Defense"]
 ];
 
+/* The Snowy's Maps Waffle House Isekai PF2e module's ids, from its adventure
+   pack: its one journal with every page, its three playlists, the map, and
+   the two items its journal links to. */
+const WHI_JOURNALS = [
+  { id: "zfacoIbVRBM543Cb", name: "Dungeon Design", pages: [
+    "LqaVuKAI3bfdhfah|GM Background", "VK6CcOYDncx8j364|A1. Break Room", "6tJZkHKC65N2Kmzx|A2. Bathrooms",
+    "a4Hj6piXEbWG7I7i|A3. Waiting Tables", "EFRw7eYXVupJp1ru|A4. Cash Register", "t2DAwLryYB7KhSf8|A5. Kitchen",
+    "tdXBkrMG8wJCt2VF|Aftermath", "x8MQGs8DmfaOMH90|The Beginning", "Fvf5tUbrS85rDyQ6|...The End"
+  ] }
+];
+const WHI_PLAYLISTS = [
+  { id: "fWwhFxPQ0BUfEdxw", name: "A1-A3.", ids: { "aWaOv7jyiiGM9KoC": "Awkward Spellcasting - RPG Music Maker" } },
+  { id: "Kej3sX7OzTfKLyqr", name: "A4.", ids: { "8gcc84NHlWRa7aMw": "Spilled Ale - RPG Music Maker" } },
+  { id: "KRrwilu5LokuJ9bl", name: "A5.", ids: { "IpjthTPhMyn4nXeb": "Metallic Inspiration - RPG Music Maker" } }
+];
+const WHI_SCENES = [["evTqLHpKZY5qRI41", "[20x30] waffle house day"]];
+const WHI_ITEMS = [["RNAMWIOL8TdmJokG", "Scour"], ["NFm5VTRsR5kFYUZQ", "Striking (Greater)"]];
+
 const SAMPLE_JOURNALS = [
   { id: "pf2apsog02willow", name: "Willowshore", pages: [
     "02willowshores01|Willowshore's Hinterlands",
@@ -962,7 +980,7 @@ class StubJournal {
    which they never do inside Foundry, so anything generic — `JOURNALS`, say —
    will eventually collide with a macro's own constant and stop it loading. */
 const STUB_JOURNAL_DOCS = globalThis.__previewJournals === false
-  ? [] : [...SAMPLE_JOURNALS, ...BB_JOURNALS, ...MMC_JOURNALS, ...GGW_JOURNALS].map(s => new StubJournal(s));
+  ? [] : [...SAMPLE_JOURNALS, ...BB_JOURNALS, ...MMC_JOURNALS, ...GGW_JOURNALS, ...WHI_JOURNALS].map(s => new StubJournal(s));
 
 const journalCollection = {
   get: (id) => STUB_JOURNAL_DOCS.find(j => j.id === id) ?? null,
@@ -1020,7 +1038,7 @@ class StubPlaylist {
   }
 }
 
-const STUB_PLAYLIST_DOCS = [...SAMPLE_PLAYLISTS, ...BB_PLAYLISTS, ...MMC_PLAYLISTS, ...GGW_PLAYLISTS].map(s => new StubPlaylist(s));
+const STUB_PLAYLIST_DOCS = [...SAMPLE_PLAYLISTS, ...BB_PLAYLISTS, ...MMC_PLAYLISTS, ...GGW_PLAYLISTS, ...WHI_PLAYLISTS].map(s => new StubPlaylist(s));
 
 /* ------------------------------------------------------- macros and scenes
    Enough of each to let a console's "run the module's macro" and "activate
@@ -1035,7 +1053,7 @@ const macroCollection = {
   [Symbol.iterator]: () => STUB_MACRO_DOCS[Symbol.iterator]()
 };
 
-const STUB_SCENE_DOCS = [...BB_SCENES, ...MMC_SCENES, ...GGW_SCENES].map(([id, name]) => ({
+const STUB_SCENE_DOCS = [...BB_SCENES, ...MMC_SCENES, ...GGW_SCENES, ...WHI_SCENES].map(([id, name]) => ({
   id, name,
   activate: async () => console.log("[scene]", `activate ${name}`),
   view: async () => console.log("[scene]", `view ${name}`)
@@ -1044,6 +1062,15 @@ const sceneCollection = {
   get: (id) => STUB_SCENE_DOCS.find(s => s.id === id) ?? null,
   getName: (name) => STUB_SCENE_DOCS.find(s => s.name === name) ?? null,
   [Symbol.iterator]: () => STUB_SCENE_DOCS[Symbol.iterator]()
+};
+/* World items, by id — the ones an adventure import brings in. */
+const STUB_WORLD_ITEMS = WHI_ITEMS.map(([id, name]) => ({
+  id, name, sheet: { render: () => console.log("[sheet]", name) }
+}));
+const itemCollection = {
+  get: (id) => STUB_WORLD_ITEMS.find(i => i.id === id) ?? null,
+  getName: (name) => STUB_WORLD_ITEMS.find(i => i.name === name) ?? null,
+  [Symbol.iterator]: () => STUB_WORLD_ITEMS[Symbol.iterator]()
 };
 const playlistCollection = {
   get size() { return STUB_PLAYLIST_DOCS.length; },
@@ -1132,6 +1159,7 @@ globalThis.game = {
   playlists: playlistCollection,
   macros: macroCollection,
   scenes: sceneCollection,
+  items: itemCollection,
   packs: [],   /* no compendiums out here; the world lookup is what's exercised */
   settings: {
     settings: settingDefs,

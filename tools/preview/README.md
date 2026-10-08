@@ -89,6 +89,12 @@ The stub ships a small journal directory whose ids follow the Season of Ghosts m
 scheme, so a macro's chapter and area lookups can be exercised. Set `__journals: false` on a
 fixture to empty it and preview what a world without the adventure module looks like.
 
+## Testing a party of another level
+
+The sample party is 5th level. Set `__pcLevel: 10` on a fixture to preview them at another
+level, for a console that reads the party's level, as the Waffle House console does when it
+works out each fight's threat.
+
 ## Limits
 
 This is a preview harness, not an emulator. It knows nothing about actors beyond the four
