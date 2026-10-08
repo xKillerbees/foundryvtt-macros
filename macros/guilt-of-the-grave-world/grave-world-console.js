@@ -32,6 +32,10 @@ const GGW_KEY = "sf2eGuiltGraveWorld";
 const GGW_ID = `${GGW_NS}.${GGW_KEY}`;
 const MAX_PCS = 6;
 const LEVEL_AT = 1000;
+/* "milestone": the party levels where the book says to, ticked on the card
+   where it happens, and no XP anywhere. "xp": every award is a ticked box and
+   the level follows the total. */
+const LEVELING = "milestone";  // or "xp"
 
 const THEME = "eox";  // or "daylight"
 const PALETTES = {
@@ -301,7 +305,7 @@ const TABS = [
   { key: "ch3", label: "Halls of the Living", sub: "Ch 3 · Zo! Media", tone: "plum", icon: "fa-clapperboard" },
   { key: "ch4", label: "Into the Drift", sub: "Ch 4 · the Drift", tone: "ember", icon: "fa-meteor" },
   { key: "ch5", label: "Robbing the Barrow", sub: "Ch 5 · Barrow", tone: "moss", icon: "fa-user-secret" },
-  { key: "ledger", label: "Ledger", sub: "threads · XP", tone: "gold", icon: "fa-book-skull" },
+  { key: "ledger", label: "Ledger", sub: LEVELING === "xp" ? "threads · XP" : "threads · levels", tone: "gold", icon: "fa-book-skull" },
   { key: "table", label: "At the Table", sub: "scenes · audio · books", tone: "muted", icon: "fa-music" }
 ];
 
@@ -673,6 +677,13 @@ const AWARDS = [
   { key: "f_E9", ch: 5, label: "E9 · Kitthaine Kitar", threat: "Moderate",
     gate: (t) => t.s.picks.kitthaine !== "freed" ? "Only if they dropped the shield" : null },
   { key: "f_F", ch: 5, label: "F · Sanimus Slayn and his phantom gefs", threat: "Severe" }
+];
+/* The four places the book levels the party up. */
+const MILESTONES = [
+  { level: 2, card: "ch1end", label: "End of Chapter 1, at Star Citadel Theodrane" },
+  { level: 3, card: "ch2end", label: "End of Chapter 2, settling into the Halls of the Living" },
+  { level: 4, card: "ch3end", label: "End of Chapter 3, before leaving Eox" },
+  { level: 5, card: "E1", label: "Barrow's loading dock (E1), during the ten-minute decontamination" }
 ];
 const CHAPTER_NAMES = { 1: "Echoes from the Grave", 2: "World of the Dead", 3: "Halls of the Living", 4: "Into the Drift", 5: "Robbing the Barrow" };
 
@@ -1232,7 +1243,7 @@ const CARDS = [
     widget: "dock",
     checks: ["DC 19 Perception: a container stolen from an Ulrikka mining expedition, worth a 500-credit reward."],
     treasure: "A designer satchel (300 credits) holding a 3rd-rank spell gem of motivating ringtone, two tactical medpatches, two bone serums, and two applications of sprayflesh.",
-    note: "By now they should have enough XP for 5th level — let them level up during the 10 minutes.",
+    note: "This is where the book has them reach 5th level — let them level up during the 10 minutes.",
     xp: ["f_E1"] },
 
   { key: "E2", tab: "ch5", eid: "E2", title: "Central Hallway", level: "Low 5", tone: "rust",
@@ -1429,6 +1440,7 @@ function blankState(pcs) {
     v: 1, tab: "ch1", pcs,
     done: {},          // card key -> true
     xp: {},            // award key -> XP granted (stored, so it reverses exactly)
+    milestones: {},    // level -> true, for milestone leveling
     flags: {},         // yes/no threads: lingered, telmarci, keycards…
     picks: {},         // one-of-several choices: spectra, brawl, kitthaine…
     counters: {},      // TRACKS key -> number
@@ -1515,7 +1527,16 @@ class GraveWorld {
 
   /* ----- the XP ledger ----- */
   get xpTotal() { return Object.values(this.s.xp).reduce((n, v) => n + (Number(v) || 0), 0); }
-  get level() { return 1 + Math.floor(this.xpTotal / LEVEL_AT); }
+  get level() {
+    if (LEVELING !== "xp") return Math.max(1, ...MILESTONES.filter(m => this.s.milestones[m.level]).map(m => m.level));
+    return 1 + Math.floor(this.xpTotal / LEVEL_AT);
+  }
+  get nextMilestone() { return MILESTONES.find(m => !this.s.milestones[m.level]); }
+  toggleMilestone(lv) {
+    if (this.s.milestones[lv]) delete this.s.milestones[lv];
+    else { this.s.milestones[lv] = true; ui.notifications.info(`The party reaches level ${lv}.`); this.log(`Level ${lv}.`); }
+    this.touch();
+  }
   awardThreat(a) { return a.threatFn ? a.threatFn(this) : a.threat; }
   awardValue(a) {
     if (a.foes) return foesXp(FOES[a.foes], a.pl);
@@ -1981,9 +2002,11 @@ class GGWApp extends BaseApp {
           ${lamp(t.alert > 0, `Alert: ${ALERTS[t.alert]}`, "Barrow's alert level", t.alert >= 2 ? "rust" : "ember")}
           ${lamp(t.scrambled, "Comms scrambled", "The necroserver's security network is theirs — alerts and reinforcements are over", "plum")}
         </div>
-        <div class="xpbox" title="XP total — every ${LEVEL_AT} is a level">
+        ${LEVELING === "xp" ? `<div class="xpbox" title="XP total — every ${LEVEL_AT} is a level">
           <span>XP · level ${t.level}</span><b>${t.xpTotal}</b>
-        </div>
+        </div>` : `<div class="xpbox" title="${esc(t.nextMilestone ? `Next level-up: ${t.nextMilestone.label}` : "Every milestone reached")}">
+          <span>milestone leveling</span><b>Level ${t.level}</b>
+        </div>`}
         <button type="button" class="say" data-act="rescan" title="Re-detect the party" ${DIS(ro)}><i class="fa-solid fa-users"></i></button>
         <button type="button" class="say" data-act="reset" title="Reset the adventure" ${DIS(ro)}><i class="fa-solid fa-rotate-left"></i></button>
       </header>`;
@@ -2000,7 +2023,7 @@ class GGWApp extends BaseApp {
       <section class="panel done" style="--tone:var(--${c.tone})">
         <h3>${c.eid ? `<span class="eid">${c.eid}</span>` : ""}${c.title}
           ${c.sub ? `<small>${c.sub}</small>` : ""}
-          ${(c.xp ?? []).some(k => t.s.xp[k] != null) ? `<span class="pip">${(c.xp ?? []).reduce((n, k) => n + (t.s.xp[k] ?? 0), 0)} XP</span>` : ""}
+          ${LEVELING === "xp" && (c.xp ?? []).some(k => t.s.xp[k] != null) ? `<span class="pip">${(c.xp ?? []).reduce((n, k) => n + (t.s.xp[k] ?? 0), 0)} XP</span>` : ""}
           <button type="button" class="ghost sm reopen" data-act="done" data-k="${c.key}" ${DIS(ro)}>Reopen</button>
         </h3>
       </section>`;
@@ -2030,7 +2053,8 @@ class GGWApp extends BaseApp {
         ${c.note ? `<p class="note">${c.note}</p>` : ""}
         ${c.treasure ? `<p class="loot"><b>Treasure</b> ${hl(c.treasure)}</p>` : ""}
         ${this.lootRow(LINKS[c.key])}
-        ${c.xp ? `<div class="ticks">${c.xp.map(k => this.xpTick(k, ro)).join("")}</div>` : ""}
+        ${LEVELING === "xp" && c.xp ? `<div class="ticks">${c.xp.map(k => this.xpTick(k, ro)).join("")}</div>` : ""}
+        ${MILESTONES.filter(m => m.card === c.key).map(m => `<div class="ticks">${this.milestoneTick(m, ro)}</div>`).join("")}
         <div class="btnrow end">
           <button type="button" class="${done ? "ghost" : "primary"} sm" data-act="done" data-k="${c.key}" ${DIS(ro)}>
             ${done ? "Reopen" : "Mark done"}</button>
@@ -2099,6 +2123,13 @@ class GGWApp extends BaseApp {
       ${loot.map(n => `<button type="button" class="lootbtn" data-act="actor" data-id="${LOOT[n]}" data-k="${esc(n)}" title="Open the loot actor"><i class="fa-solid fa-box-open"></i>${esc(n)}</button>`).join("")}
       ${trk.map(k => `<button type="button" class="lootbtn trk" data-act="actor" data-id="${TRACKERS[k].id}" data-k="${esc(TRACKERS[k].name)}" title="The module's tracker actor, for showing the players. The console keeps its own count."><i class="fa-solid fa-chart-simple"></i>${esc(TRACKERS[k].name)}</button>`).join("")}
     </div>`;
+  }
+
+  milestoneTick(m, ro) {
+    const on = !!this.t.s.milestones[m.level];
+    return `<button type="button" class="tick ${on ? "on" : ""}" data-act="milestone" data-k="${m.level}" ${DIS(ro)}
+      title="${on ? "Reached — click to undo" : "Level the party up"}">
+      <i class="fa-solid ${on ? "fa-square-check" : "fa-square"}"></i> <span class="pip">level ${m.level}</span> ${m.label}</button>`;
   }
 
   xpTick(key, ro) {
@@ -2722,14 +2753,18 @@ class GGWApp extends BaseApp {
         <h3>Threads <small>what carries forward</small></h3>
         <div class="threads">${threads.map(([k, v, where]) => `<div class="thread ${v ? "on" : ""}"><b>${k}</b><span>${v ?? "—"}</span><em>${where}</em></div>`).join("")}</div>
       </section>
-      <section class="panel" style="--tone:var(--moss)">
+      ${LEVELING !== "xp" ? `<section class="panel" style="--tone:var(--moss)">
+        <h3>Milestones <small>the book's level-ups</small><span class="lvl">level ${t.level}</span></h3>
+        <p class="note">The party levels where the book says to. Each milestone also has its tick on the card where it happens.</p>
+        <div class="ticks col">${MILESTONES.map(m => this.milestoneTick(m, ro)).join("")}</div>
+      </section>` : `<section class="panel" style="--tone:var(--moss)">
         <h3>XP Ledger <small>the same for every PC</small><span class="lvl">level ${t.level}</span></h3>
         <div class="xpbar"><span style="width:${into / LEVEL_AT * 100}%"></span></div>
         <p class="note">${xp} XP — level ${t.level}, ${LEVEL_AT - into} to the next. The book expects 2nd level after Chapter 1, 3rd after Chapter 2, 4th after Chapter 3, and 5th in Barrow's loading dock. Encounter XP is the threat's budget (low 60, moderate 80, severe 120); trivial encounters are worked out from their foes' levels. Each award is stored as ticked, so un-ticking takes back exactly what was given.</p>
         ${[1, 2, 3, 4, 5].map(n => `
           <div class="subhead">Chapter ${n} · ${CHAPTER_NAMES[n]} · ${sum(n)} XP</div>
           <div class="ticks col">${chapter(n).map(a => this.xpTick(a.key, ro)).join("")}</div>`).join("")}
-      </section>
+      </section>`}
       ${s.log.length ? `<section class="panel"><h3>Log</h3><ul class="checks">${s.log.slice(0, 12).map(l => `<li>${esc(l)}</li>`).join("")}</ul></section>` : ""}`;
   }
 
@@ -2805,6 +2840,7 @@ class GGWApp extends BaseApp {
       }
       else if (a === "done") t.toggleDone(k);
       else if (a === "xp") t.toggleXp(k);
+      else if (a === "milestone") t.toggleMilestone(Number(k));
       else if (a === "flag") t.toggleFlag(k);
       else if (a === "pick") t.pick(k, v);
       else if (a === "bump") t.bump(k, n);

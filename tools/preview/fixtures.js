@@ -473,6 +473,7 @@ globalThis.FIXTURES = {
   "graveworld-ledger": {
     "world.sf2eGuiltGraveWorld": {
       tab: "ledger",
+      milestones: { 2: true, 3: true, 4: true },
       flags: { lingered: true, signed: true, telmarci: true, scanned: true, aaNW: true, aaNE: true, aaSE: true },
       picks: { marauders: "escaped", shuttle: "landed", spectra: "peaceful", bomb: "defused", brawl: "brawl" },
       trek: { lost: "s", events: { pit: 2, horde: 1, homestead: 3 } },

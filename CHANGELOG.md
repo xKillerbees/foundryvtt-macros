@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-10-07 21:45
+
+### Changed
+- **Guilt of the Grave World — milestone leveling by default.** Before this, the console
+  only levelled the party from an XP total. That meant ticking an award box on nearly every
+  scene, which is noise for a table that levels by milestone. A new `LEVELING` setting at
+  the top of the file defaults to `"milestone"`. In that mode the XP boxes are gone, and the
+  book's four level-ups are ticks instead: the end of Chapters 1, 2, and 3, and Barrow's
+  loading dock. Each tick sits on the card where it happens, and all four are listed on the
+  Ledger tab. The header shows the level, and hovering over it names the next milestone.
+  Setting it to `"xp"` brings back the XP ledger exactly as it was.
+
 ## 2026-10-07 20:55
 
 ### Added

@@ -282,7 +282,8 @@ the ship damage it leaves for the Amaranth fight. It replays both chases from ea
 results, and adds up the Atraskien Shelf trek in hours. It covers both influence encounters,
 every Cooking Point on Sabotage Soufflé and its sixteen graves, the turrets that decide how
 the getaway shuttle leaves, and the corsairs' parley. It also tracks Barrow's alert level,
-which sets most of Chapter 5. An XP ledger makes each award a ticked box.
+which sets most of Chapter 5. Leveling is by milestone, at the book's four level-ups; an
+XP ledger is one setting away.
 Each scene links into the Guilt of the Grave World Foundry module: its journal pages,
 encounter map and Paizo map, ambience, scene macros, NPC portraits, and art to show the
 players.

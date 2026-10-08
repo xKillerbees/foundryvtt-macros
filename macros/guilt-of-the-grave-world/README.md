@@ -42,7 +42,7 @@ all of it, scene by scene, in seven tabs:
   and its caldera, the Amaranth's return, the Cosmic Corsairs, and the Defiance.
 - **Robbing the Barrow**: Chapter 5. Silent Running, the spacewalk, the necroturrets, the
   cargo door, the auxiliary research center from E1 to E10, Sanimus Slayn, and the getaway.
-- **Ledger**: every thread that carries forward, and the XP ledger.
+- **Ledger**: every thread that carries forward, and the party's level-ups.
 - **At the Table**: every scene and Paizo map, all three playlists, the module's macros, and
   its journals.
 
@@ -114,23 +114,39 @@ ruse.
 
 ![Barrow on preliminary alert, Nobrom won over](../../screenshots/guilt-of-the-grave-world/grave-world-barrow.png)
 
-## The XP ledger
+## Leveling
 
-The ledger has one ticked box per award. That covers every story award the book prints, plus
-each encounter's XP. Ticking a box **stores the amount granted**, so un-ticking takes back
-exactly that, even if the encounter's threat has changed since. Some awards stay greyed out
-until they're earned:
+The console uses **milestone leveling** by default. The party levels up where the book says
+to, and there's no XP anywhere. The four level-ups are ticked on the card where each happens,
+and they're also listed on the Ledger tab:
+
+- 2nd at the end of Chapter 1;
+- 3rd at the end of Chapter 2;
+- 4th at the end of Chapter 3;
+- 5th in Barrow's loading dock.
+
+The header shows the party's level, and hovering over it names the next milestone.
+
+![The Ledger near the end of Chapter 4](../../screenshots/guilt-of-the-grave-world/grave-world-ledger.png)
+
+### Playing with XP instead
+
+Near the top of the file:
+
+```js
+const LEVELING = "milestone";  // or "xp"
+```
+
+Set it to `"xp"` and every scene gets ticked boxes for its awards. That covers every story
+award the book prints, plus each encounter's XP. The Ledger becomes an XP ledger, and the
+level follows the total, one level per 1,000 XP. Ticking a box **stores the amount granted**,
+so un-ticking takes back exactly that, even if the encounter's threat has changed since.
+Some awards stay greyed out until they're earned:
 
 - scanning the Amaranth;
 - the 7-Cooking-Point bonus;
 - the spectra's fight XP versus their peaceful-meeting XP;
 - Kitthaine, but only if the party dropped the shield on their cell.
-
-The level shown is every 1,000 XP. The book expects 2nd level after Chapter 1, 3rd after
-Chapter 2, 4th after Chapter 3, and 5th in Barrow's loading dock. The ledger's totals land
-close to that.
-
-![The Ledger near the end of Chapter 4](../../screenshots/guilt-of-the-grave-world/grave-world-ledger.png)
 
 ## The Foundry module
 
@@ -175,7 +191,7 @@ search, first in this world and then in every Actor compendium, trying sf2e pack
 
 ## Not in the book
 
-- **Encounter XP.** The book prints each encounter's threat, not its XP. The console awards the
+- **Encounter XP**, with `LEVELING = "xp"`. The book prints each encounter's threat, not its XP. The console awards the
   threat's budget for four PCs: low 60, moderate 80, severe 120. Trivial encounters have no
   fixed budget, so their XP is worked out from the module actors' levels. The soufflé
   surprises are labelled "Hazard 3" rather than a threat; they're worked out the same way, as
