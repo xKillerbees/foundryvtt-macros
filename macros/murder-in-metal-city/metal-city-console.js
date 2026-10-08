@@ -1824,6 +1824,7 @@ class MMCApp extends BaseApp {
       .mmc .tab small { font-size:.6rem; color:var(--muted); font-weight:400; white-space:nowrap;
                        text-overflow:ellipsis; overflow:hidden; max-width:100%; }
       .mmc .tab.on { background:var(--tt); border-color:var(--tt); color:var(--paper); }
+      .mmc .tab.on:hover:not(:disabled) { background:var(--tt); filter:brightness(1.15); }
       .mmc .tab.on b i, .mmc .tab.on small { color:var(--paper); opacity:.85; }
 
       .mmc .crew { display:flex; gap:.35rem; flex-wrap:wrap; align-items:center; margin:.2rem 0 .45rem; }

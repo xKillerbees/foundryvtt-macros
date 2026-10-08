@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-07 20:17
+
+### Fixed
+- **Murder in Metal City — hovering the selected chapter tab no longer blanks it.** The
+  console's generic button hover rule outranked the selected-tab rule. Hovering the active tab
+  swapped its chapter colour for the faint hover tint, but the text kept the dark colour meant
+  for the coloured fill, so the label and subtitle almost disappeared. Now the selected tab
+  keeps its colour on hover and only brightens, the same way primary buttons do.
+
 ## 2026-10-07 20:10
 
 ### Added
