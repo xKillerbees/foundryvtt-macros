@@ -147,7 +147,7 @@ const CH8_EVENTS = [
     id: "W14",
     key: "ch8-opening",
     name: "Red Smoke, Gold Eyes",
-    when: "First day of winter · mid-morning",
+    when: "Day 1 — the first day of winter · mid-morning",
     tone: "ember",
     boxed: "Four glowing golden eyes blaze into existence in the smoke, moving forward without a body or legs to carry them. A monstrous red visage bleeds into air around them for just a moment, yellowed fangs twisting gruesomely out of its mouth before abruptly vanishing. Black sleeves billow around a crimson body, slipping into reality in torrents of cloth and leaking rolling clouds of incense before collapsing into ash and blowing away in the wind. A few paces more, and the golden eyes wink out. The acrid smell of smoke remains, and calls for help continue to ring out from the collapsing building beyond.",
     text: "During the final week of the previous act, one citizen mysteriously vanished (exorcised). Now, mid-morning, red smoke (no flame) pours from the Cloud Paper House (W14) on the southern shore of Woodraft Lake — the exorcists' living-world ritual “seeps” into the mindscape. Dozens of frightened townsfolk report parts of the building vanishing into smoke; three civilians are trapped inside the slowly collapsing building. The PCs begin the act knowing they are trapped in a cyclic mindscape that resets every year on the last day of spring, with the texts recovered from the Tan Sugi monastery in hand.",
@@ -309,6 +309,7 @@ const CH8_DREAM = [
     id: "Dream",
     key: "ch8-dream-setting",
     name: "The Governor's Dying Dream",
+    when: "The day Mindscape Shift is cast — the book expects it in the first week, and before the first month is out",
     tone: "ice",
     text: "Setting. A near-duplicate of the PCs' Willowshore, but much smaller — its borders wrap around the town's boundaries rather than extending into the hinterlands. Buildings restored or destroyed in the PCs' mindscape aren't altered here: the Cerulean Teahouse remains in ruins, Cloud Paper House is still standing, and the governor's manor remains in place in downtown Willowshore. The grim truth: when his ritual failed, Kugaptee devoured Heh entirely — mind, body, and soul; this mindscape sprang from the last flickers of his panicked consciousness as his mind struggles to maintain individuality before Kugaptee absorbs him. Lean into the wrongness.",
     note: "First impression: a lovely winter afternoon — damp warmth, chirping crickets, sweet smells of incense, wood smoke, and cooking food. Residents are friendly to a fault and prioritize routines over conversation; even quarrelsome residents are playful; none recognize the PCs — they treat them as welcome but unknown visitors.",
@@ -567,26 +568,13 @@ const CH9_TIMELINE = [
     id: "Transition",
     key: "ch9-winter-start",
     name: "Winter in Willowshore",
-    when: "Start of winter (weekly thereafter)",
+    when: "The day the PCs come back from Heh's mindscape",
     tone: "ice",
     creatures: "Black Bean the cat (1) · Yami the bakeneko (1)",
     boxed: "Governor Heh's manor has returned to Willowshore as if it had never vanished. Its doors have been ripped open and the warding fulus lie in tatters. Anyone can enter, but no villager dares.",
     text: "With the mindscape over, Heh Shan-Bao's soul becomes Kugaptee's prisoner. Inside the manor, a plaintive wailing comes from a battered cupboard: Black Bean, a little black cat — frightened, clingy, and starving, but otherwise healthy. Yami the bakeneko tolerates Black Bean but bullies him by smacking him on the head.",
-    note: "Weekly attrition (the winter clock): every week −1d4 Hope, −1 Food, −1 Security. A depleted track culls population. Run in weekly downtime mode: (1) apply attrition, (2) one downtime activity per PC, (3) play scheduled events — events don't consume the downtime pursuit.",
-    checks: [
-      "DC 16 Flat Check (start of every week — Unexpected Troubles complication roll)",
-      "DC 24 Nature or DC 24 Survival (minimize 1d4 Food Point loss)",
-      "DC 24 Diplomacy or DC 24 Performance (minimize 1d4 + 2 Hope Point loss)",
-      "DC 24 Athletics or DC 24 Crafting (minimize 1d4 Security Point loss)"
-    ],
-    outcomes: [
-      "Unexpected Troubles table (roll 1–2 / 3–4 / 5–6): 1d4 Food · 1d4 + 2 Hope · 1d4 Security points lost for the week.",
-      "Minimizing: critical success — no points lost; success — only 1 point lost; critical failure — twice as many points lost. A particularly helpful spell, ritual, or tactic may increase the result by one degree of success (GM discretion). Other PCs may spend downtime to Aid.",
-      "Creating Food saves lives: if a Hope Point loss on a 0-Food week would kill 2d6 locals, the deaths are prevented if the PCs cast enough create food spells to feed a minimum of 12 people within an hour of the loss (regardless of the 2d6 roll). Create food meals last less than a day — they can't bulk up Food Points."
-    ],
+    note: "The weekly attrition and Unexpected Troubles that the book lists at the head of this chapter have been running since Day 1 — they live on the Winter tab.",
     beats: [
-      { key: "ch9-winter-attrition", label: "Weekly attrition applied", note: "−1d4 Hope, −1 Food, −1 Security each week (tick/untick as the dice fall)." },
-      { key: "ch9-winter-troubles", label: "Unexpected Troubles complication", note: "Rolled at the start of every week on a DC 16 Flat Check; see the table above for the Preparation Point loss and its DC 24 minimize check." },
       { key: "ch9-winter-bean", label: "Black Bean found in the manor", note: "Frightened, clingy, starving but healthy — he can be adopted." }
     ]
   },
@@ -618,7 +606,7 @@ const CH9_TIMELINE = [
     id: "Event 5",
     key: "ch9-e5-faceless",
     name: "Event 5 — Faceless Evil",
-    when: "Begins the day after Heh's mindscape; incidents every 1d4 days",
+    when: "Begins the day after the return from Heh's mindscape; an incident every 1d4 days",
     level: "Moderate 8",
     tone: "slate",
     creatures: "Noppera-bo impersonators (4)",
@@ -643,7 +631,7 @@ const CH9_TIMELINE = [
     id: "Event 6",
     key: "ch9-e6-gifts",
     name: "Event 6 — Little Gifts",
-    when: "Every 7 days",
+    when: "Every 7 days (Days 7, 14, 21…) — only if Yami was befriended in the previous act",
     tone: "gold",
     creatures: "Yami the bakeneko (1)",
     text: "If befriended in the previous act, Yami the bakeneko brings gifts to favored PCs each week. Yami tolerates Black Bean but smacks him on the head. Roll 1d8 on Yami's Gift table:",
@@ -663,7 +651,7 @@ const CH9_TIMELINE = [
     id: "Event 7",
     key: "ch9-e7-fox",
     name: "Event 7 — The Fox Ghost",
-    when: "Any",
+    when: "Any day after the return from Heh's mindscape",
     level: "Trivial 8",
     tone: "ember",
     creatures: "Rin, kitsune ghost (1)",
@@ -713,7 +701,7 @@ const CH9_TIMELINE = [
     id: "Event 9",
     key: "ch9-e9-crane",
     name: "Event 9 — The Crane-Wife",
-    when: "Any",
+    when: "Any day after the return from Heh's mindscape",
     tone: "muted",
     creatures: "None — a nameless mourner",
     text: "A local hunter kills a large crane and cooks it. The next day a strange, beautiful, nameless woman arrives, sobbing and calling out the most compassionate or nature-tied PC's name — her husband was slain and she seeks death too. She won't leave until killed or starved, and does not become a crane on death. She could be a thoughtform of collective despair, a naiad or nixie, or a grudge-prank with a Mage's Hat — however it's handled matters.",
@@ -737,7 +725,7 @@ const CH9_TIMELINE = [
     id: "Event 10",
     key: "ch9-e10-festival",
     name: "Event 10 — The Claylight Festival",
-    when: "Day 21 (winter solstice — first actual day of winter)",
+    when: "Day 21 (winter solstice — first actual day of winter); preparation takes week 3's downtime",
     tone: "gold",
     creatures: "Ouh Ba-Ming (1)",
     text: "Ouh Ba-Ming (W16), caretaker of Nine Ear Shrine, proposes the old Claylight tradition: clay huts with small lights in the fields, grilled vegetables, and prayers. Each participating PC devotes that week's downtime to preparing their hut; villagers praise or mock accordingly.",
@@ -761,7 +749,7 @@ const CH9_TIMELINE = [
     id: "Event 11",
     key: "ch9-e11-nosois",
     name: "Event 11 — Nosois' Brunch",
-    when: "Any",
+    when: "Any day after the return from Heh's mindscape",
     level: "Moderate 8",
     tone: "plum",
     creatures: "Nosois (4) — Yamaguchi, Sakaguchi, Iguchi, Noguchi",
@@ -788,7 +776,7 @@ const CH9_TIMELINE = [
     id: "Event 12",
     key: "ch9-e12-seance-pointer",
     name: "Event 12 — The Seance",
-    when: "Any (before Chapter 10)",
+    when: "After the return, before the first Transmigrate — about a month after the exorcists' first attempt (around Day 30)",
     level: "Moderate 8",
     tone: "plum",
     creatures: "Cao Chen · Pan Fenfang · Sha Guanghao (exorcists)",
@@ -798,7 +786,7 @@ const CH9_TIMELINE = [
     id: "Event 13",
     key: "ch9-e13-spider-pointer",
     name: "Event 13 — Interview with a Spider",
-    when: "Day 71",
+    when: "Day 71 — the day before New Year's",
     level: "Moderate 8",
     tone: "plum",
     creatures: "Ren Mei Li (1) · thoughtform servants (4)",
@@ -808,7 +796,7 @@ const CH9_TIMELINE = [
     id: "Event 14",
     key: "ch9-e14-trees",
     name: "Event 14 — The Trees Live",
-    when: "Any (optional)",
+    when: "Any day after the return (optional)",
     level: "Moderate 8",
     tone: "moss",
     creatures: "Arboreal reapers (2) · awakened tree (1)",
@@ -825,7 +813,7 @@ const CH9_TIMELINE = [
     id: "Event 15",
     key: "ch9-e15-reprisal",
     name: "Event 15 — Reprisal",
-    when: "Any (optional)",
+    when: "Any day after the return (optional)",
     level: "Low 8",
     tone: "ember",
     creatures: "Kugaptee's centipede (1)",
@@ -839,7 +827,7 @@ const CH9_TIMELINE = [
     id: "Event 16",
     key: "ch9-e16-favor",
     name: "Event 16 — One Kind Favor",
-    when: "Any (optional)",
+    when: "Any day after the return (optional)",
     level: "Moderate 8",
     tone: "slate",
     creatures: "Ghost (1) · forgotten spirits, revenants (4)",
@@ -898,7 +886,7 @@ const CH9_PIECES = [
     id: "Event 12",
     key: "ch9-seance",
     name: "The Seance",
-    when: "Any (before Chapter 10)",
+    when: "After the return, before the first Transmigrate — about a month after the exorcists' first attempt (around Day 30)",
     level: "Moderate 8",
     tone: "plum",
     creatures: "Cao Chen (1) · Pan Fenfang (1) · Sha Guanghao (1) · caged songbirds (5)",
@@ -945,7 +933,7 @@ const CH9_PIECES = [
     id: "Event 13",
     key: "ch9-spider",
     name: "Interview with a Spider",
-    when: "Day 71",
+    when: "Day 71 — the day before New Year's",
     level: "Moderate 8",
     tone: "plum",
     creatures: "Ren Mei Li (1) · thoughtform servants (4)",
@@ -1445,7 +1433,7 @@ const CLOCK = {
   createFood: "On a 0-Food week, a Hope loss that would kill 2d6 locals is prevented if the PCs cast enough create food to feed at least 12 people within the hour. Meals last less than a day, so it can't top up the pool.",
   troubles: {
     check: "DC 16 flat check at the start of each week — on a success, roll a complication.",
-    minimize: "A PC spends the week's downtime to minimise it (others may Aid). Crit success: nothing lost · success: only 1 point · crit failure: twice as much.",
+    minimize: "A PC spends the week's downtime to minimise it (others may Aid). Crit success: nothing lost · success: only 1 point · crit failure: twice as much. A particularly helpful spell, ritual or tactic can improve the result one degree.",
     rows: [
       ["1–2", "1d4 Food Points", "DC 24 Nature or DC 24 Survival"],
       ["3–4", "1d4 + 2 Hope Points", "DC 24 Diplomacy or DC 24 Performance"],
@@ -1454,11 +1442,87 @@ const CLOCK = {
   }
 };
 
+/* --------------------------------------------------------------- calendar
+   The book schedules winter by day. Fixed days come from the Winter Timeline;
+   everything else hangs off a day the GM records as it happens — the
+   Mindscape Shift cast, the return from Heh's dream, the slats going in to
+   soak, and the first Transmigrate. Chapter 9's events wait for the return. */
+const weekOf = (d) => Math.max(1, Math.ceil(d / 7));
+const ANCHORS = [
+  { key: "cast", label: "Mindscape Shift cast", hint: "the visit to Heh's dream" },
+  { key: "back", label: "Back from the dream", hint: "Chapter 9 opens the next day" },
+  { key: "slats", label: "Slats put to soak", hint: "ready six weeks later" },
+  { key: "ritual", label: "First Transmigrate cast", hint: "4th rank — Chapter 10 for one month" }
+];
+const CAL_FIXED = [
+  { day: 1, label: "Red Smoke, Gold Eyes — three fights at Cloud Paper House", tone: "rust", go: ["ch8", "events"], card: "ch8-opening" },
+  { day: 2, label: "Myna's Gift arrives; the town elder's reward if both waldgeists fell", tone: "gold", go: ["ch8", "events"], card: "ch8-wrapping-up" },
+  { day: 10, label: "Event 8 — A Lonely Home (Aruka, or a substitute, asks for help)", tone: "slate", go: ["ch9", "timeline"], card: "ch9-e8-home" },
+  { day: 21, label: "Event 10 — The Claylight Festival on the winter solstice", note: "Preparation takes this week's downtime.", tone: "gold", go: ["ch9", "timeline"], card: "ch9-e10-festival" },
+  { day: 44, label: "The earliest day the sakaki slats can be ready", tone: "ember", go: ["ch9", "research"] },
+  { day: 71, label: "Event 13 — Interview with a Spider", note: "Shinzo's prophecy in Event 4 says she comes on the winter solstice; the Winter Timeline puts her on Day 71. Pick one.", tone: "plum", go: ["ch9", "pieces"], card: "ch9-spider" },
+  { day: 72, label: "New Year's Day — the 5th-rank Transmigrate, once the Eternal Lantern is relit", tone: "gold", go: ["ch10", "after"] }
+];
+/* Unscheduled events: any day after the return. */
+const CAL_FLOATING = [
+  ["ch9-e7-fox", "Event 7 — The Fox Ghost", ["ch9", "timeline"]],
+  ["ch9-e9-crane", "Event 9 — The Crane-Wife", ["ch9", "timeline"]],
+  ["ch9-e11-nosois", "Event 11 — Nosois' Brunch", ["ch9", "timeline"]],
+  ["ch9-seance", "Event 12 — The Seance (before the first Transmigrate)", ["ch9", "pieces"]],
+  ["ch9-e14-trees", "Event 14 — The Trees Live (optional)", ["ch9", "timeline"]],
+  ["ch9-e15-reprisal", "Event 15 — Reprisal (optional)", ["ch9", "timeline"]],
+  ["ch9-e16-favor", "Event 16 — One Kind Favor (optional)", ["ch9", "timeline"]]
+];
+
+function calHorizon(s) {
+  const A = s.anchors ?? {};
+  return Math.max(72, s.day + 7, A.ritual ? A.ritual + 30 : 0, A.slats ? A.slats + 42 : 0);
+}
+function calEntries(s) {
+  const A = s.anchors ?? {}, end = calHorizon(s);
+  const out = CAL_FIXED.map(e => ({ ...e }));
+  const add = (day, e) => { if (day >= 1) out.push({ day, ...e }); };
+  for (let d = 1; d <= end; d++) {
+    if (d % 7 === 1) add(d, { label: `Week ${weekOf(d)} begins — Unexpected Troubles (DC 16 flat check)`, tone: "rust", go: ["clock"], weekly: true });
+    if (d % 7 === 0) {
+      add(d, { label: "Event 6 — Little Gifts (if Yami was befriended)", tone: "gold", go: ["ch9", "timeline"], card: "ch9-e6-gifts", weekly: true });
+      add(d, { label: "Week's end — attrition: −1d4 Hope, −1 Food, −1 Security", tone: "ice", go: ["clock"], weekly: true });
+    }
+  }
+  if (A.cast) add(A.cast, { label: "Mindscape Shift — Heh Shan-Bao's dying dream", tone: "ice", go: ["ch8", "dream"], card: "ch8-dream-setting" });
+  if (A.back) {
+    const d = A.back + 1;
+    add(d, { label: "Winter in Willowshore — the manor is back; Black Bean in the cupboard", tone: "ice", go: ["ch9", "timeline"], card: "ch9-winter-start" });
+    add(d, { label: "Event 4 — Shinzo's Answers; transmigration research opens", tone: "gold", go: ["ch9", "timeline"], card: "ch9-e4-shinzo" });
+    add(d, { label: "Event 5 — Faceless Evil begins (an incident every 1d4 days)", tone: "slate", go: ["ch9", "timeline"], card: "ch9-e5-faceless" });
+    add(d + 21, { label: "The severe winter storm and heavy fog Shinzo foretold", tone: "ice", go: ["clock"] });
+    for (let v = d + 14; v <= end; v += 14) add(v, { label: "Shinzo returns — trade, advice, Consulting Experts (Occultism)", tone: "muted", go: ["ch9", "research"] });
+  }
+  if (A.slats) add(A.slats + 42, { label: "Sakaki slats ready — six weeks after they went to soak", tone: "ember", go: ["ch9", "research"] });
+  if (A.ritual) {
+    add(A.ritual, { label: "4th-rank Transmigrate — Between Life and Death, then Chapter 10", tone: "slate", go: ["ch9", "pieces"], card: "ch9-blad" });
+    add(A.ritual + 30, { label: "The 4th-rank ritual runs out — the PCs fade back to the mindscape if not done", note: "Attrition keeps running while they're away.", tone: "plum", go: ["ch10", "terror"] });
+  }
+  return out.sort((a, b) => a.day - b.day || (a.weekly ? 1 : 0) - (b.weekly ? 1 : 0));
+}
+/* What the GM should be watching for that no date pins down yet. */
+function calPending(s) {
+  const A = s.anchors ?? {}, out = [];
+  if (!A.cast) out.push({ warn: s.day >= 8, text: s.day >= 8
+    ? "Mindscape Shift hasn't been cast. The book expects the dream before the first month is out, and Chapter 9's events wait for the return."
+    : "Mindscape Shift hasn't been cast. The book expects the dream in the first week; Chapter 9's events wait for the return." });
+  else if (!A.back) out.push({ warn: false, text: `In Heh's dream since Day ${A.cast}. Record the day they come back.` });
+  if (A.back && !A.slats) out.push({ warn: s.day > A.back + 7, text: "The sakaki slats aren't soaking yet — they take six weeks and can't be hurried." });
+  if (A.back && !A.ritual && !s.cleared["ch9-seance"] && s.day >= 25) out.push({ warn: true, text: "The Seance must run before the first Transmigrate (around Day 30)." });
+  return out;
+}
+
 /* ------------------------------------------------------------------ state */
 function blankState(pcs) {
   return {
     v: 1, tab: "clock", ctab: { ch8: "events", ch9: "timeline", ch10: "terror" }, pcs,
-    week: 1, population: 225,
+    day: 1, week: 1, calWeek: null, population: 225,
+    anchors: {},          // cast / back / slats / ritual -> winter day
     rp: { ch8: 0, ch9: 0 },
     components: { kiln: false, feathers: false, slats: false },
     terror: 0,
@@ -1588,7 +1652,26 @@ class Winter {
     this.touch();
   }
 
-  setWeek(delta) { this.s.week = Math.max(1, this.s.week + delta); this.log(`Week ${this.s.week}.`); this.touch(); }
+  setWeek(delta) { this.setDay(delta * 7); }
+  setDay(delta) {
+    const from = this.s.day;
+    this.s.day = Math.max(1, from + delta);
+    this.s.week = weekOf(this.s.day);
+    this.s.calWeek = null;
+    if (weekOf(from) !== this.s.week) this.log(`Week ${this.s.week} begins.`);
+    this.log(`Day ${this.s.day}.`);
+    /* Moving forward reports everything passed on the way, not only the landing day. */
+    const passed = delta > 0 ? calEntries(this.s).filter(e => e.day > from && e.day <= this.s.day && !e.weekly) : [];
+    if (passed.length) ui.notifications.info(passed.map(e => `Day ${e.day}: ${e.label}`).join(" · "));
+    this.touch();
+  }
+  setAnchor(key, clear) {
+    this.s.anchors = this.s.anchors ?? {};
+    if (clear) delete this.s.anchors[key]; else this.s.anchors[key] = this.s.day;
+    const a = ANCHORS.find(x => x.key === key);
+    this.log(`${a?.label ?? key}: ${clear ? "cleared" : `Day ${this.s.day}`}.`);
+    this.touch();
+  }
   setPopulation(delta) { this.s.population = Math.max(0, this.s.population + delta); this.log(`Population ${delta >= 0 ? "+" : ""}${delta} (now ${this.s.population}).`); this.touch(); }
 
   /* ----- research ----- */
@@ -1706,7 +1789,7 @@ class Winter {
   postStatus() {
     const p = this.pools();
     return this.postCard("Act 3", "No Breath to Cry",
-      `<p style="margin:0 0 6px"><b>Week</b> ${this.s.week} · <b>Population</b> ${this.s.population}</p>
+      `<p style="margin:0 0 6px"><b>Day</b> ${this.s.day} · <b>Week</b> ${this.s.week} · <b>Population</b> ${this.s.population}</p>
        <p style="margin:0 0 6px"><b>Pools</b> ${p ? `Hope ${p.hope ?? 0} · Food ${p.food ?? 0} · Security ${p.security ?? 0}` : "downtime tracker not run"}</p>
        <p style="margin:0"><b>Terror</b> ${this.s.terror} · <b>Milestone XP</b> ${this.s.xp}</p>`, "ice");
   }
@@ -1785,7 +1868,7 @@ class WNRApp extends BaseApp {
         </div>
         <div class="flags">
           ${flag(t.hasDowntime, "Downtime tracker")}
-          <span class="flag">Week <b>${t.s.week}</b></span>
+          <span class="flag">Day <b>${t.s.day}</b> · Week <b>${t.s.week}</b></span>
           <span class="flag">People <b>${t.s.population}</b></span>
           <span class="flag">Terror <b>${t.s.terror}</b></span>
         </div>
@@ -1813,7 +1896,7 @@ class WNRApp extends BaseApp {
         <b class="${(t.pool(key)) <= 0 ? "neg" : ""}">${t.pool(key)}</b>
         <button type="button" class="qbtn" data-act="pool" data-p="${key}" data-d="1" ${ro || !t.hasDowntime ? "disabled" : ""}>+</button>
       </div>`;
-    return `
+    return `${this.calendarMarkup(ro)}
       <section class="panel" style="--tone:var(--ice)">
         <h3>The winter clock <small>draws down the town's Preparation Points</small></h3>
         ${t.hasDowntime
@@ -1834,16 +1917,6 @@ class WNRApp extends BaseApp {
         <p class="text">${CLOCK.population}</p>
       </section>
 
-      <section class="panel" style="--tone:var(--moss)">
-        <h3>Week <small>winter is long</small></h3>
-        <div class="clockrow">
-          <span class="clabel">Week</span>
-          <button type="button" class="qbtn" data-act="week" data-d="-1" ${ro ? "disabled" : ""}>−</button>
-          <b>${t.s.week}</b>
-          <button type="button" class="qbtn" data-act="week" data-d="1" ${ro ? "disabled" : ""}>+</button>
-        </div>
-      </section>
-
       <section class="panel" style="--tone:var(--rust)">
         <h3>Unexpected Troubles <small>${CLOCK.troubles.check}</small></h3>
         <p class="text">${CLOCK.troubles.minimize}</p>
@@ -1857,6 +1930,59 @@ class WNRApp extends BaseApp {
       <section class="panel" style="--tone:var(--gold)">
         <h3>Depleted tracks <small>what an empty pool costs</small></h3>
         <ul class="checks">${CLOCK.depleted.map(([l, d]) => `<li><b>${l}</b> — ${d}</li>`).join("")}</ul>
+      </section>`;
+  }
+
+
+  /* ------------------------------------------------------------ calendar */
+  calendarMarkup(ro) {
+    const s = this.t.s, A = s.anchors ?? {};
+    const all = calEntries(s), end = calHorizon(s), weeks = weekOf(end);
+    const view = s.calWeek ?? s.week;
+    const first = (view - 1) * 7 + 1;
+    const strip = Array.from({ length: weeks }, (_, k) => {
+      const w = k + 1, lo = k * 7 + 1, hi = lo + 6;
+      const big = all.filter(e => !e.weekly && e.day >= lo && e.day <= hi);
+      return `<button type="button" class="wkcell ${w === s.week ? "now" : ""} ${w === view ? "on" : ""} ${hi < s.day ? "past" : ""}"
+        data-act="calweek" data-w="${w}" title="${esc(big.map(e => `Day ${e.day}: ${e.label}`).join("\n") || `Days ${lo}–${hi}`)}">
+        <b>${w}</b><small>${lo}–${hi}</small>
+        <span class="dots">${big.map(e => `<i style="background:var(--${e.tone})"></i>`).join("")}</span></button>`;
+    }).join("");
+    const go = (e) => e.go ? `<button type="button" class="jbtn" data-act="goto" data-tab="${e.go[0]}" data-sub="${e.go[1] ?? ""}" data-card="${e.card ?? ""}" title="Open it">open</button>` : "";
+    const days = Array.from({ length: 7 }, (_, k) => first + k).map(d => {
+      const items = all.filter(e => e.day === d);
+      return `<div class="calday ${d === s.day ? "today" : ""} ${d < s.day ? "past" : ""}">
+        <span class="dnum">Day ${d}${d === s.day ? " · today" : ""}</span>
+        <div class="dlist">${items.length ? items.map(e => `
+          <div class="ditem ${e.weekly ? "weekly" : ""} ${e.card && s.cleared[e.card] ? "done" : ""}" style="--tone:var(--${e.tone})">
+            <span>${e.label}${e.note ? `<em>${e.note}</em>` : ""}</span>${go(e)}</div>`).join("") : `<div class="ditem quiet">—</div>`}</div>
+      </div>`;
+    }).join("");
+    const pending = calPending(s);
+    const floating = A.back ? CAL_FLOATING.filter(([k]) => !s.cleared[k]) : [];
+    return `
+      <section class="panel cal" style="--tone:var(--moss)">
+        <h3>Winter calendar <small>Day ${s.day} · Week ${s.week}</small></h3>
+        <div class="clockrow">
+          <span class="clabel">Day</span>
+          <button type="button" class="qbtn" data-act="day" data-d="-1" ${ro ? "disabled" : ""}>−</button>
+          <b>${s.day}</b>
+          <button type="button" class="qbtn" data-act="day" data-d="1" ${ro ? "disabled" : ""}>+</button>
+          <button type="button" class="ghost" data-act="day" data-d="${8 - (((s.day - 1) % 7) + 1)}" ${ro ? "disabled" : ""}>Next week</button>
+          ${s.calWeek && s.calWeek !== s.week ? `<button type="button" class="ghost" data-act="calweek" data-w="">Back to this week</button>` : ""}
+        </div>
+        <div class="wkstrip">${strip}</div>
+        ${pending.map(p => `<p class="${p.warn ? "blocked" : "hint"}">${p.text}</p>`).join("")}
+        <div class="caldays">${days}</div>
+        ${floating.length ? `<div class="sub"><div class="subhead"><i class="fa-solid fa-shuffle"></i> Any day now <span>${floating.length} open</span></div>
+          <div class="floatrow">${floating.map(([k, label, g]) => `<span class="fchip">${label}${go({ go: g, card: k })}</span>`).join("")}</div></div>` : ""}
+        <div class="sub"><div class="subhead"><i class="fa-solid fa-thumbtack"></i> Pivot days <span>set to today as they happen</span></div>
+          ${ANCHORS.map(a => `<div class="inflrow">
+            <span class="ilabel">${a.label}</span><b>${A[a.key] ? `Day ${A[a.key]}` : "—"}</b>
+            <button type="button" class="ghost" data-act="anchor" data-k="${a.key}" ${ro ? "disabled" : ""}>Today</button>
+            ${A[a.key] ? `<button type="button" class="qbtn" data-act="anchor" data-k="${a.key}" data-clear="1" title="Clear" ${ro ? "disabled" : ""}>×</button>` : ""}
+            <span class="itag">${a.hint}</span></div>`).join("")}
+        </div>
       </section>`;
   }
 
@@ -1969,7 +2095,7 @@ class WNRApp extends BaseApp {
     const cleared = !!t.s.cleared[card.key];
     const beats = card.beats ?? [];
     return `
-      <section class="panel area ${cleared ? "done" : ""}" style="--tone:var(--${TONES.includes(card.tone) ? card.tone : "muted"})">
+      <section class="panel area ${cleared ? "done" : ""}" data-card="${card.key}" style="--tone:var(--${TONES.includes(card.tone) ? card.tone : "muted"})">
         <h3>${card.id ? `<span class="eid">${card.id}</span>` : ""}${card.name}
           ${card.level ? `<span class="lvl">${card.level}</span>` : ""}
           ${card.when ? `<small>${card.when}</small>` : ""}
@@ -2040,6 +2166,16 @@ class WNRApp extends BaseApp {
       else if (a === "pool") t.adjustPool(btn.dataset.p, Number(btn.dataset.d));
       else if (a === "pop") t.setPopulation(Number(btn.dataset.d));
       else if (a === "week") t.setWeek(Number(btn.dataset.d));
+      else if (a === "day") t.setDay(Number(btn.dataset.d));
+      else if (a === "anchor") t.setAnchor(btn.dataset.k, btn.dataset.clear === "1");
+      else if (a === "calweek") { t.s.calWeek = Number(btn.dataset.w) || null; t.render(); }
+      else if (a === "goto") {
+        t.s.tab = btn.dataset.tab;
+        if (btn.dataset.sub) t.s.ctab[btn.dataset.tab] = btn.dataset.sub;
+        t.touch();
+        const k = btn.dataset.card;
+        if (k) setTimeout(() => document.querySelector(`#nbt-console [data-card="${k}"]`)?.scrollIntoView({ block: "start", behavior: "smooth" }), 80);
+      }
       else if (a === "rp") t.setRp(btn.dataset.ch, Number(btn.dataset.d));
       else if (a === "terror") t.setTerror(Number(btn.dataset.d));
       else if (a === "infl") t.setInfluence(btn.dataset.k, Number(btn.dataset.d), Number(btn.dataset.max));
@@ -2198,6 +2334,34 @@ class WNRApp extends BaseApp {
                                  background:var(--stripe); justify-content:center; margin:0; }
 
       .nbt .qbtn { width:22px; height:20px; padding:0; font-size:.8rem; }
+
+      .nbt .wkstrip { display:grid; grid-template-columns:repeat(auto-fill, minmax(62px, 1fr)); gap:3px; margin:.3rem 0 .5rem; }
+      .nbt .wkcell { flex-direction:column; padding:.2rem .1rem .25rem; gap:0; border-top:3px solid var(--line); }
+      .nbt .wkcell b { font-size:.9rem; line-height:1.1; }
+      .nbt .wkcell small { font-size:.58rem; color:var(--muted); }
+      .nbt .wkcell .dots { display:flex; gap:2px; min-height:6px; margin-top:2px; }
+      .nbt .wkcell .dots i { width:6px; height:6px; border-radius:50%; display:block; }
+      .nbt .wkcell.past { opacity:.6; }
+      .nbt .wkcell.now { border-top-color:var(--moss); font-weight:700; }
+      .nbt .wkcell.on { background:var(--stripe); border-color:var(--moss); }
+      .nbt .caldays { display:flex; flex-direction:column; gap:2px; margin:.3rem 0 .5rem; }
+      .nbt .calday { display:grid; grid-template-columns:5.5rem 1fr; gap:.4rem; padding:.25rem .35rem;
+                    border:1px solid var(--line); border-radius:3px; background:var(--card); }
+      .nbt .calday.today { border-color:var(--moss); box-shadow:inset 3px 0 0 var(--moss); }
+      .nbt .calday.past { opacity:.65; }
+      .nbt .dnum { font-size:.7rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); padding-top:.1rem; }
+      .nbt .calday.today .dnum { color:var(--moss); font-weight:700; }
+      .nbt .dlist { display:flex; flex-direction:column; gap:2px; }
+      .nbt .ditem { display:flex; align-items:flex-start; gap:.4rem; font-size:.78rem; line-height:1.35;
+                   border-left:3px solid var(--tone, var(--line)); padding-left:.4rem; }
+      .nbt .ditem > span { flex:1; }
+      .nbt .ditem em { display:block; font-size:.72rem; color:var(--muted); }
+      .nbt .ditem.weekly { font-size:.72rem; color:var(--muted); }
+      .nbt .ditem.done > span { text-decoration:line-through; opacity:.6; }
+      .nbt .ditem.quiet { border-left-color:transparent; color:var(--muted); }
+      .nbt .floatrow { display:flex; flex-wrap:wrap; gap:.3rem; }
+      .nbt .fchip { display:inline-flex; align-items:center; gap:.3rem; font-size:.74rem; padding:1px 2px 1px 7px;
+                   border:1px solid var(--line); border-radius:10px; background:var(--card); }
       .nbt .inflrow { display:flex; align-items:center; gap:.4rem; margin:.2rem 0; }
       .nbt .ilabel { font-size:.76rem; min-width:9rem; }
       .nbt .inflrow b { min-width:1.2rem; text-align:center; }
@@ -2248,6 +2412,7 @@ if (AppV2) {
     state = blankState(detectPCs());
     if (game.user.isGM) await game.settings.set(WNR_NS, WNR_KEY, state);
   } else {
+    if (state.day == null) state.day = ((state.week ?? 1) - 1) * 7 + 1;
     state = foundry.utils.mergeObject(blankState(detectPCs()), state, { inplace: false });
     state.pcs = refreshPCs(state.pcs);
   }
