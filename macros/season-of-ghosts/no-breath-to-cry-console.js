@@ -254,10 +254,12 @@ const CH8_EVENTS = [
     text: "Tone of the aftermath scales with PC success: extensive destruction → silent, somber town; good containment → defiant, with elders loudly insulting the unseen forces. Tick exactly one rescue tier, plus the mill beat if the mill was lost. Myna Kawaka, owner of Cloud Paper House (W14), visits the next day with gifts (cumulative by lives saved).",
     beats: [
       { key: "ch8-rescue-3", label: "All 3 civilians rescued", note: "tick exactly one", xp: 120, hope: 3, rep: 1 },
-      { key: "ch8-rescue-2", label: "2 civilians rescued", note: "tick exactly one · +1 reputation with ONE faction, the party's choice (the book deviates from the both-factions default here)", xp: 80, hope: 1, rep: 1 },
+      { key: "ch8-rescue-2", label: "2 civilians rescued", note: "tick exactly one · +1 reputation with ONE faction, the party's choice — add it by hand in the Fall Downtime Tracker (a beat's rep always writes to both factions)", xp: 80, hope: 1 },
       { key: "ch8-rescue-1", label: "1 civilian rescued", note: "tick exactly one · no Hope gain or loss", xp: 40 },
       { key: "ch8-rescue-0", label: "0 civilians rescued", note: "tick exactly one · lose 2 Hope Points and 1 Reputation Point with each faction", hope: -2, rep: -1 },
-      { key: "ch8-mill-collapse", label: "Cloud Paper House collapsed (or damaged)", note: "Lose 1 Security Point; the mill can no longer be used as a work site or to purchase paper/paper products (also unavailable if only damaged). If damaged, spending 4 Security Points repairs it after 2 weeks of work.", security: -1 }
+      { key: "ch8-mill-collapse", label: "Cloud Paper House collapsed", note: "Collapse only: lose 1 Security Point. Collapsed or merely damaged, the mill can no longer be used as a work site or to purchase paper/paper products. If damaged, spending 4 Security Points repairs it after 2 weeks of work.", security: -1 },
+      { key: "ch8-mr-jelly", label: "Mr. Jelly returned intact", note: "Yu Er's parents give the party a pair of boots of bounding. The book says “recovered intact” — whether a repaired doll counts is your call." },
+      { key: "ch8-waldgeists", label: "Both waldgeists defeated before they vanished", note: "One day later the town elder presents a pair of leather bands of force and a celadon vase decorated with phoenixes worth 150 gp." }
     ],
     treasure: "Myna's Gift (cumulative by lives saved): saved at least 1 → a greater smokestick and four moderate healing potions; saved at least 2 → additionally a vial of everlasting adhesive and four additional moderate healing potions; saved all 3 → a potion of quickness and a runestone bearing a resilient armor rune. Yu Er's Parents' Thanks (if Mr. Jelly was recovered intact): a pair of boots of bounding. Townsfolks' Rewards (if both waldgeists were defeated before they vanished — if allowed to vanish on their own, fears they may return linger): a pair of leather bands of force and a celadon vase decorated with phoenixes worth 150 gp.",
     note: "Shadow-curse follow-up: if the PCs became infested with the familiar shadows' curse and have no curse-removal method, consider having Shinzo deliver a few 4th-rank scrolls of cleanse affliction for free, saying he had a feeling they could use them."
@@ -267,7 +269,7 @@ const CH8_EVENTS = [
 const CH8_RESEARCH = {
   title: "Mindscape Shift",
   subtitle: "Another Willowshore · Research 7 — after the three events, Mago Kai's exorcists retreat (strategic, not permanent) to report to Mago Kai at Karahai. The PCs are free to research the Willowshore Mindscape. Uses the research subsystem (Pathfinder GM Core 190). No time limit, but every research day is a day winter's events keep ticking.",
-  total: 7,
+  total: 8,
   modes: [
     {
       name: "Solo Investigations",
@@ -857,7 +859,7 @@ const CH9_TIMELINE = [
     id: "Climax",
     key: "ch9-blad-pointer",
     name: "Between Life and Death",
-    when: "Day 72 (New Year's Day) or later",
+    when: "First cast — formula done and sakaki slats ready (Day 44 at the earliest)",
     level: "Severe 8",
     tone: "slate",
     creatures: "Kagekuma nindorus (3)",
@@ -887,7 +889,7 @@ const CH9_RESEARCH = {
   ],
   cast: {
     title: "The casting",
-    text: "The party casts Transmigrate on New Year's Day (Day 72), the earliest possible date once the sakaki slats are ready. As the flames bake them in their clay shells, a baleful voice resembling Governor Heh's orders them to give in to desire and be consumed by emotion — have the players describe their characters' strongest feelings; these guide the ghostly powers they gain in modern Shenmen (Haunting the Living, Chapter 10). While the Eternal Lantern stays unlit in the living world, only the 4th-rank version works: the PCs manifest temporarily as spirits and do NOT wake in the living world. The 5th-rank permanent version becomes castable only once the lantern's flame is recovered and relit in Chapter 10 (Karahai)."
+    text: "The party first casts the 4th-rank Transmigrate as soon as they have the formula and the sakaki slats are ready (Day 44 at the earliest) — that cast opens Chapter 10. New Year's Day (Day 72) is when the 5th-rank version can be cast, after the lantern is relit. As the flames bake them in their clay shells, a baleful voice resembling Governor Heh's orders them to give in to desire and be consumed by emotion — have the players describe their characters' strongest feelings; these guide the ghostly powers they gain in modern Shenmen (Haunting the Living, Chapter 10). While the Eternal Lantern stays unlit in the living world, only the 4th-rank version works: the PCs manifest temporarily as spirits and do NOT wake in the living world. The 5th-rank permanent version becomes castable only once the lantern's flame is recovered and relit in Chapter 10 (Karahai)."
   }
 };
 
@@ -990,7 +992,7 @@ const CH9_PIECES = [
     id: "Climax",
     key: "ch9-blad",
     name: "Between Life and Death",
-    when: "Day 72 (New Year's Day) or later",
+    when: "First cast — formula done and sakaki slats ready (Day 44 at the earliest)",
     level: "Severe 8",
     tone: "slate",
     creatures: "Kagekuma nindorus (3)",
@@ -1595,6 +1597,14 @@ class Winter {
     const maxRp = Math.max(R.total, ...(R.thresholds ?? []).map(t => t.rp || 0));
     const cur = this.s.rp[ch] ?? 0;
     this.s.rp[ch] = Math.max(0, Math.min(maxRp, cur + delta));
+    /* Revelation XP accrues as a threshold is crossed, and comes back off if the RP is undone. */
+    const lo = Math.min(cur, this.s.rp[ch]), hi = Math.max(cur, this.s.rp[ch]);
+    const xp = (R.thresholds ?? []).filter(t => t.xp && t.rp > lo && t.rp <= hi).reduce((n, t) => n + t.xp, 0);
+    if (xp) {
+      const d = this.s.rp[ch] > cur ? 1 : -1;
+      this.s.xp += d * xp;
+      if (d > 0) ui.notifications.info(`Award ${xp} XP.`);
+    }
     this.log(`${CHAPTERS[ch].act} research: ${this.s.rp[ch]} RP.`);
     this.touch();
   }
