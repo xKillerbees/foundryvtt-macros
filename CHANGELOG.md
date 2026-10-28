@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-10-27 20:36
+
+### Changed
+- **No Breath to Cry — Wrapping Up lists the party's items for the outcomes you tick.** The
+  card used to end with the book's Treasure paragraph, which mixes three rewards with three
+  different conditions, and Myna's Gift is cumulative by lives saved. So at the end of the
+  session the GM had to work out the list by hand. Beats can now carry a `loot` list, and
+  a card that has any shows a "The party receives" box. It lists the items from every ticked
+  beat and updates as you tick and un-tick. Each rescue tier lists Myna's full cumulative
+  gift (all three saved: greater smokestick, eight moderate healing potions, everlasting
+  adhesive, potion of quickness, resilient runestone). Mr. Jelly adds the boots of bounding,
+  and the waldgeists add the leather bands of force and the 150 gp celadon vase. The
+  Treasure paragraph is gone, since the box replaces it.
+
 ## 2026-10-07 22:06
 
 ### Added

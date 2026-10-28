@@ -117,9 +117,12 @@ const TABS = [
      phases     ordered list of phase notes
      hazard     hazard text (labelled "Hazard")
      treasure   treasure text (labelled "Treasure")
-     beats      [{ key, label, note, xp, hope, food, security, rep, terror }]
+     beats      [{ key, label, note, xp, hope, food, security, rep, terror, loot }]
                 — toggles; xp/terror accrue in this console, hope/food/security
-                and rep (both factions) write through to the downtime tracker
+                and rep (both factions) write through to the downtime tracker.
+                loot is a list of item strings; the card lists every ticked
+                beat's loot under "The party receives", so a beat whose reward
+                is cumulative (Myna's Gift) repeats the lower tiers' items
      aside      { title, text }
      influence  [{ key, label, max, note, reveal }] — a +/- tracker (the seance)
 
@@ -253,15 +256,19 @@ const CH8_EVENTS = [
     tone: "gold",
     text: "Tone of the aftermath scales with PC success: extensive destruction → silent, somber town; good containment → defiant, with elders loudly insulting the unseen forces. Tick exactly one rescue tier, plus the mill beat if the mill was lost. Myna Kawaka, owner of Cloud Paper House (W14), visits the next day with gifts (cumulative by lives saved).",
     beats: [
-      { key: "ch8-rescue-3", label: "All 3 civilians rescued", note: "tick exactly one", xp: 120, hope: 3, rep: 1 },
-      { key: "ch8-rescue-2", label: "2 civilians rescued", note: "tick exactly one · +1 reputation with ONE faction, the party's choice — add it by hand in the Fall Downtime Tracker (a beat's rep always writes to both factions)", xp: 80, hope: 1 },
-      { key: "ch8-rescue-1", label: "1 civilian rescued", note: "tick exactly one · no Hope gain or loss", xp: 40 },
+      { key: "ch8-rescue-3", label: "All 3 civilians rescued", note: "tick exactly one", xp: 120, hope: 3, rep: 1,
+        loot: ["Greater smokestick (Myna)", "8 moderate healing potions (Myna)", "Vial of everlasting adhesive (Myna)", "Potion of quickness (Myna)", "Runestone with a resilient armor rune (Myna)"] },
+      { key: "ch8-rescue-2", label: "2 civilians rescued", note: "tick exactly one · +1 reputation with ONE faction, the party's choice — add it by hand in the Fall Downtime Tracker (a beat's rep always writes to both factions)", xp: 80, hope: 1,
+        loot: ["Greater smokestick (Myna)", "8 moderate healing potions (Myna)", "Vial of everlasting adhesive (Myna)"] },
+      { key: "ch8-rescue-1", label: "1 civilian rescued", note: "tick exactly one · no Hope gain or loss", xp: 40,
+        loot: ["Greater smokestick (Myna)", "4 moderate healing potions (Myna)"] },
       { key: "ch8-rescue-0", label: "0 civilians rescued", note: "tick exactly one · lose 2 Hope Points and 1 Reputation Point with each faction", hope: -2, rep: -1 },
       { key: "ch8-mill-collapse", label: "Cloud Paper House collapsed", note: "Collapse only: lose 1 Security Point. Collapsed or merely damaged, the mill can no longer be used as a work site or to purchase paper/paper products. If damaged, spending 4 Security Points repairs it after 2 weeks of work.", security: -1 },
-      { key: "ch8-mr-jelly", label: "Mr. Jelly returned intact", note: "Yu Er's parents give the party a pair of boots of bounding. The book says “recovered intact” — whether a repaired doll counts is your call." },
-      { key: "ch8-waldgeists", label: "Both waldgeists defeated before they vanished", note: "One day later the town elder presents a pair of leather bands of force and a celadon vase decorated with phoenixes worth 150 gp." }
+      { key: "ch8-mr-jelly", label: "Mr. Jelly returned intact", note: "Yu Er's parents give the party a pair of boots of bounding. The book says “recovered intact” — whether a repaired doll counts is your call.",
+        loot: ["Boots of bounding (Yu Er's parents)"] },
+      { key: "ch8-waldgeists", label: "Both waldgeists defeated before they vanished", note: "One day later the town elder presents the reward. If the waldgeists vanished on their own, fears that they may return linger.",
+        loot: ["Leather bands of force (town elder)", "Celadon vase decorated with phoenixes, worth 150 gp (town elder)"] }
     ],
-    treasure: "Myna's Gift (cumulative by lives saved): saved at least 1 → a greater smokestick and four moderate healing potions; saved at least 2 → additionally a vial of everlasting adhesive and four additional moderate healing potions; saved all 3 → a potion of quickness and a runestone bearing a resilient armor rune. Yu Er's Parents' Thanks (if Mr. Jelly was recovered intact): a pair of boots of bounding. Townsfolks' Rewards (if both waldgeists were defeated before they vanished — if allowed to vanish on their own, fears they may return linger): a pair of leather bands of force and a celadon vase decorated with phoenixes worth 150 gp.",
     note: "Shadow-curse follow-up: if the PCs became infested with the familiar shadows' curse and have no curse-removal method, consider having Shinzo deliver a few 4th-rank scrolls of cleanse affliction for free, saying he had a feeling they could use them."
   }
 ];
@@ -2135,6 +2142,12 @@ class WNRApp extends BaseApp {
               ${b.label}${b.xp ? ` <span class="tag">${b.xp} XP</span>` : ""}${b.hope ? ` <span class="tag">${b.hope > 0 ? "+" : ""}${b.hope} Hope</span>` : ""}${b.food ? ` <span class="tag">${b.food > 0 ? "+" : ""}${b.food} Food</span>` : ""}${b.security ? ` <span class="tag">${b.security > 0 ? "+" : ""}${b.security} Security</span>` : ""}${b.rep ? ` <span class="tag">${b.rep > 0 ? "+" : ""}${b.rep} Rep</span>` : ""}${b.terror ? ` <span class="tag warn">${b.terror > 0 ? "+" : ""}${b.terror} Terror</span>` : ""}</label>
             ${b.note ? `<p class="beatnote">${b.note}</p>` : ""}`).join("")}
         </div>` : ""}
+        ${beats.some(b => b.loot) ? (() => {
+          const got = beats.filter(b => b.loot && t.beat(card.key, b.key)).flatMap(b => b.loot);
+          return `<div class="sub gets">
+          <div class="subhead"><i class="fa-solid fa-gift"></i> The party receives</div>
+          ${got.length ? `<ul>${got.map(i => `<li>${i}</li>`).join("")}</ul>` : `<p class="hint">Tick the outcomes above and the items appear here.</p>`}
+        </div>`; })() : ""}
         <div class="btnrow">
           <button type="button" class="${cleared ? "ghost" : "primary"}" data-act="cleared" data-k="${card.key}" ${ro ? "disabled" : ""}>
             ${cleared ? "Reopen" : "Mark done"}
@@ -2270,6 +2283,7 @@ class WNRApp extends BaseApp {
                  border-radius:4px; overflow:hidden; padding:.4rem .5rem .45rem; margin:.5rem 0; }
       .nbt .sub.beats { --sub:var(--moss); }
       .nbt .sub.influence { --sub:var(--plum); }
+      .nbt .sub.gets { --sub:var(--gold); }
       .nbt .subhead { font-size:.66rem; text-transform:uppercase; letter-spacing:.1em; font-weight:700;
                      display:flex; align-items:center; gap:.4rem;
                      background:var(--sub, var(--muted)); color:var(--paper);
@@ -2287,6 +2301,7 @@ class WNRApp extends BaseApp {
       .nbt .primary:hover:not(:disabled) { filter:brightness(1.1); background:var(--tone, var(--ice)); }
       .nbt .ghost { padding:.3rem .7rem; font-size:.76rem; color:var(--muted); }
       .nbt .blocked { font-size:.76rem; color:var(--rust); margin:.2rem 0 .4rem; }
+      .nbt .gets ul { margin:.2rem 0 .3rem; padding-left:1.1rem; font-size:.8rem; line-height:1.5; }
       .nbt .bonus { font-size:.76rem; font-weight:600; color:var(--moss); margin:.3rem 0 0; }
 
       .nbt .topbar { display:flex; align-items:center; gap:.75rem; border:1px solid var(--line);
