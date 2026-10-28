@@ -1512,6 +1512,47 @@ function calEntries(s) {
   }
   return out.sort((a, b) => a.day - b.day || (a.weekly ? 1 : 0) - (b.weekly ? 1 : 0));
 }
+/* --------------------------------------------------------------- the week
+   Winter runs in downtime mode, a week at a time (Chapter 9, "Running the
+   Timeline"): each PC takes one downtime activity a week, the Unexpected
+   Troubles check opens the week, and attrition closes it. Research is the
+   exception — it's a check a day — so a PC whose week is research (or the
+   heron hunt, which takes one day of it) gets a check on every day row. */
+const WEEK_ACTS = {
+  research:  { label: "Research", daily: true,
+               hint: "A check each day, on the day rows above. Mindscape Shift until the party is back from Heh's dream, then Transmigrate." },
+  troubles:  { label: "Minimise Unexpected Troubles", troubles: true,
+               hint: "Only when this week's flat check turned up trouble. Others can Aid. Crit success: nothing lost · success: 1 point · crit failure: twice as much." },
+  aid:       { label: "Aid another PC", free: true },
+  kiln:      { label: "Build the kiln", checks: ["DC 20 Crafting"], sets: "kiln",
+               hint: "A week's work and 25 gp in resources. Free and automatic if Eternal Blaze Ironworks backs the party." },
+  feathers:  { label: "Hunt herons (one day)", checks: ["DC 20 Survival"], sets: "feathers", daily: true,
+               hint: "One day in the hinterlands. Success: feathers for 2 casts · crit success: 6 casts. The other days can still go to research." },
+  slats:     { label: "Put the sakaki slats to soak", nocheck: true,
+               hint: "25 gp of oils (a faction pays if it at least admires the party). No check. Set the pivot day on the calendar — they're ready six weeks later." },
+  tenon:     { label: "Keep Tenon company", nocheck: true,
+               hint: "Every week after a failed A Lonely Home. A week with nobody here, Tenon's despair collapses the house and he dies." },
+  claylight: { label: "Prepare a Claylight hut", checks: ["DC 25 Crafting", "DC 24 Religion"], week: 3,
+               hint: "Week 3 only. Record the festival's result on its card in Chapter 9." },
+  earn:      { label: "Earn Income", free: true },
+  craft:     { label: "Craft", free: true },
+  retrain:   { label: "Retrain", free: true },
+  other:     { label: "Other", free: true }
+};
+/* Research Points per degree. GM Core's research subsystem: crit success 2,
+   success 1, failure 0, crit failure −1. The mode caps (Solo / Brainstorming
+   and the rest) are on the research tabs; this doesn't split them out. */
+const RP_GAIN = { cs: 2, s: 1, f: 0, cf: -1 };
+const TROUBLE_POOL = { 1: "food", 2: "food", 3: "hope", 4: "hope", 5: "security", 6: "security" };
+const TROUBLE_DIE = { food: "1d4", hope: "1d4 + 2", security: "1d4" };
+const TROUBLE_CHECKS = {
+  food: ["DC 24 Nature", "DC 24 Survival"],
+  hope: ["DC 24 Diplomacy", "DC 24 Performance"],
+  security: ["DC 24 Athletics", "DC 24 Crafting"]
+};
+const blankWeek = () => ({ troubles: null, pcs: {}, days: {}, attrition: null });
+const weekDays = (w) => Array.from({ length: 7 }, (_, k) => (w - 1) * 7 + 1 + k);
+
 /* What the GM should be watching for that no date pins down yet. */
 function calPending(s) {
   const A = s.anchors ?? {}, out = [];
@@ -1536,6 +1577,7 @@ function blankState(pcs) {
     influence: {},
     cleared: {},          // card key -> true
     beats: {},            // card key -> { beat key: true }
+    weeks: {},            // week -> { troubles, pcs: { pc -> entry }, days: { day -> { pc -> check } }, attrition }
     xp: 0,
     log: []
   };
@@ -1683,6 +1725,13 @@ class Winter {
 
   /* ----- research ----- */
   setRp(ch, delta) {
+    this.shiftRp(ch, delta);
+    this.log(`${CHAPTERS[ch].act} research: ${this.s.rp[ch]} RP.`);
+    this.touch();
+  }
+  /* Moves the RP and the revelation XP with it; returns the RP actually moved,
+     so a recorded check can be undone exactly. */
+  shiftRp(ch, delta) {
     const R = ch === "ch8" ? CH8_RESEARCH : CH9_RESEARCH;
     const maxRp = Math.max(R.total, ...(R.thresholds ?? []).map(t => t.rp || 0));
     const cur = this.s.rp[ch] ?? 0;
@@ -1695,8 +1744,7 @@ class Winter {
       this.s.xp += d * xp;
       if (d > 0) ui.notifications.info(`Award ${xp} XP.`);
     }
-    this.log(`${CHAPTERS[ch].act} research: ${this.s.rp[ch]} RP.`);
-    this.touch();
+    return this.s.rp[ch] - cur;
   }
   rpAt(ch, rp) { return (this.s.rp[ch] ?? 0) >= rp; }
 
@@ -1758,6 +1806,172 @@ class Winter {
     }
 
     this.log(`${cardKey} — ${beat.label}: ${on ? "undone" : "done"}.`);
+    this.touch();
+  }
+
+  /* ----- the week ----- */
+  wk(w) { this.s.weeks = this.s.weeks ?? {}; return (this.s.weeks[w] ??= blankWeek()); }
+  pcName(i) { return this.s.pcs[i]?.name ?? `PC ${Number(i) + 1}`; }
+  /* Mindscape Shift research until the day they're back from the dream. */
+  researchCh(day) { const b = this.s.anchors?.back; return b && day > b ? "ch9" : "ch8"; }
+  tenonOwed() { return this.beat("ch9-e8-home", "ch9-e8-outcome-failure"); }
+
+  pickAct(w, i, key) {
+    const W = this.wk(w), prev = W.pcs[i];
+    if (prev?.degree) { this.render(); return ui.notifications.warn("Clear the recorded result before changing the activity."); }
+    if (Object.values(W.days).some(D => D[i])) { this.render(); return ui.notifications.warn("Clear this PC's research checks on the day rows before changing the activity."); }
+    const act = WEEK_ACTS[key];
+    W.pcs[i] = key ? { act: key, skill: act?.checks?.[0] ?? "", note: prev?.note ?? "" } : { note: prev?.note ?? "" };
+    this.log(`Week ${w} — ${this.pcName(i)}: ${act?.label ?? "no activity"}.`);
+    this.touch();
+  }
+  setEntry(w, i, field, value) {
+    const e = (this.wk(w).pcs[i] ??= {});
+    e[field] = String(value ?? "").slice(0, 200);
+    this.touch();
+  }
+  /* A week's result. Clicking the recorded degree again clears it, and takes
+     back the component it secured. */
+  weekDegree(w, i, deg) {
+    const e = this.wk(w).pcs[i], act = WEEK_ACTS[e?.act];
+    if (!act) return;
+    if (e.degree === deg) {
+      if (e.secured) this.s.components[e.secured] = false;
+      e.degree = null; e.secured = null;
+      this.log(`Week ${w} — ${this.pcName(i)}: ${act.label} cleared.`);
+    } else {
+      if (e.secured) { this.s.components[e.secured] = false; e.secured = null; }
+      e.degree = deg;
+      if (act.sets && (deg === "s" || deg === "cs") && !this.s.components[act.sets]) {
+        this.s.components[act.sets] = true; e.secured = act.sets;
+      }
+      this.log(`Week ${w} — ${this.pcName(i)}: ${act.label}, ${DEG_LABEL[deg]}${e.secured ? ` (${e.secured} secured)` : ""}.`);
+    }
+    this.touch();
+  }
+  /* One research check on one day. Again on the same degree clears it. */
+  dayCheck(day, i, deg) {
+    const W = this.wk(weekOf(day)), D = (W.days[day] ??= {}), prev = D[i];
+    if (prev) this.shiftRp(prev.ch, -prev.rp);
+    if (prev?.degree === deg) {
+      delete D[i];
+      this.log(`Day ${day} — ${this.pcName(i)}: research check cleared.`);
+    } else {
+      const ch = this.researchCh(day);
+      const rp = this.shiftRp(ch, RP_GAIN[deg]);
+      D[i] = { degree: deg, ch, rp };
+      this.log(`Day ${day} — ${this.pcName(i)}: ${CHAPTERS[ch].act} research, ${DEG_LABEL[deg]} (${rp >= 0 ? "+" : ""}${rp} RP, now ${this.s.rp[ch]}).`);
+    }
+    this.touch();
+  }
+
+  async rollTotal(formula) { return (await new Roll(formula).evaluate()).total; }
+
+  /* Reduces one pool by n, following the depleted-track rules: losing Hope
+     while Food is empty costs 2d6 people instead, while Hope is empty costs 2
+     Reputation with both factions instead; losing Security while it's empty
+     costs 1d6 people instead. Records every change in `out`. */
+  async drain(dt, pool, n, out, empty) {
+    if (n <= 0) return;
+    const add = (k, v) => { out[k] = (out[k] ?? 0) + v; };
+    if (pool === "hope" && (empty.food || empty.hope)) {
+      if (empty.food) { const lost = Math.min(this.s.population, await this.rollTotal("2d6")); this.s.population -= lost; add("population", -lost); }
+      if (empty.hope) {
+        dt.rep = dt.rep ?? { southbank: 0, northridge: 0 };
+        dt.rep.southbank = (dt.rep.southbank ?? 0) - 2; dt.rep.northridge = (dt.rep.northridge ?? 0) - 2;
+        add("rep", -2);
+      }
+      return;
+    }
+    if (pool === "security" && empty.security) {
+      const lost = Math.min(this.s.population, await this.rollTotal("1d6"));
+      this.s.population -= lost; add("population", -lost);
+      return;
+    }
+    const cur = dt.pools[pool] ?? 0, next = Math.max(0, cur - n);
+    dt.pools[pool] = next; add(pool, next - cur);
+  }
+  /* Takes back exactly what a drain recorded. */
+  undoChange(dt, out) {
+    for (const k of ["hope", "food", "security"]) if (out[k]) dt.pools[k] = Math.max(0, (dt.pools[k] ?? 0) - out[k]);
+    if (out.rep) { dt.rep.southbank -= out.rep; dt.rep.northridge -= out.rep; }
+    if (out.population) this.s.population -= out.population;
+  }
+  changeText(out) {
+    const bits = [["hope", "Hope"], ["food", "Food"], ["security", "Security"], ["rep", "Rep (both)"], ["population", "people"]]
+      .filter(([k]) => out?.[k]).map(([k, l]) => `${out[k] > 0 ? "+" : ""}${out[k]} ${l}`);
+    return bits.length ? bits.join(", ") : "no change";
+  }
+  emptyNow(dt) { return { hope: (dt.pools.hope ?? 0) <= 0, food: (dt.pools.food ?? 0) <= 0, security: (dt.pools.security ?? 0) <= 0 }; }
+
+  async rollTroubles(w) {
+    const W = this.wk(w);
+    if (W.troubles?.applied) return ui.notifications.warn("Undo the applied loss before rerolling.");
+    const d20 = await this.rollTotal("1d20");
+    const T = { d20 };
+    if (d20 >= 16) {
+      T.d6 = await this.rollTotal("1d6");
+      T.pool = TROUBLE_POOL[T.d6];
+      T.amount = await this.rollTotal(TROUBLE_DIE[T.pool]);
+    }
+    W.troubles = T;
+    this.log(`Week ${w} — Unexpected Troubles: flat check ${d20}${T.pool ? `, trouble — ${T.amount} ${T.pool}` : ", a quiet week"}.`);
+    this.touch();
+  }
+  clearTroubles(w) {
+    const W = this.wk(w);
+    if (W.troubles?.applied) return ui.notifications.warn("Undo the applied loss first.");
+    W.troubles = null; this.touch();
+  }
+  /* The loss after the best minimising check this week. */
+  troubleLoss(w) {
+    const W = this.wk(w), T = W.troubles;
+    if (!T?.pool) return null;
+    const order = ["cs", "s", "f", "cf"];
+    const best = Object.entries(W.pcs).filter(([, e]) => e?.act === "troubles" && e.degree)
+      .sort(([, a], [, b]) => order.indexOf(a.degree) - order.indexOf(b.degree))[0];
+    const deg = best?.[1].degree;
+    const n = deg === "cs" ? 0 : deg === "s" ? Math.min(1, T.amount) : deg === "cf" ? T.amount * 2 : T.amount;
+    return { n, deg, by: best ? this.pcName(best[0]) : null };
+  }
+  async applyTroubles(w) {
+    const W = this.wk(w), T = W.troubles, dt = this.downtime();
+    if (!T?.pool) return;
+    if (!dt?.pools) return ui.notifications.error("No downtime tracker state found. Run the Fall Downtime Tracker macro once first.");
+    if (T.applied) {
+      this.undoChange(dt, T.applied);
+      this.log(`Week ${w} — Unexpected Troubles loss undone (${this.changeText(T.applied)}).`);
+      T.applied = null;
+    } else {
+      const L = this.troubleLoss(w), out = {};
+      await this.drain(dt, T.pool, L.n, out, this.emptyNow(dt));
+      T.applied = out;
+      this.log(`Week ${w} — Unexpected Troubles: ${this.changeText(out)}.`);
+    }
+    await game.settings.set("world", "sogFallDowntime", dt);
+    this.touch();
+  }
+  /* Week's end: −1d4 Hope, −1 Food, −1 Security, through the depleted-track
+     rules. Which tracks are empty is read once, before any of it lands. Rin's
+     +1 Hope a week rides along once she has moved in. */
+  async applyAttrition(w) {
+    const W = this.wk(w), dt = this.downtime();
+    if (!dt?.pools) return ui.notifications.error("No downtime tracker state found. Run the Fall Downtime Tracker macro once first.");
+    if (W.attrition) {
+      this.undoChange(dt, W.attrition.out);
+      this.log(`Week ${w} — attrition undone (${this.changeText(W.attrition.out)}).`);
+      W.attrition = null;
+    } else {
+      const out = {}, empty = this.emptyNow(dt);
+      const hope = await this.rollTotal("1d4");
+      await this.drain(dt, "hope", hope, out, empty);
+      await this.drain(dt, "food", 1, out, empty);
+      await this.drain(dt, "security", 1, out, empty);
+      if (this.beat("ch9-e7-fox", "ch9-e7-moves-in")) { dt.pools.hope = (dt.pools.hope ?? 0) + 1; out.hope = (out.hope ?? 0) + 1; }
+      W.attrition = { hope, out };
+      this.log(`Week ${w} — attrition (1d4 = ${hope}): ${this.changeText(out)}.`);
+    }
+    await game.settings.set("world", "sogFallDowntime", dt);
     this.touch();
   }
 
@@ -1904,6 +2118,7 @@ class WNRApp extends BaseApp {
         <button type="button" class="qbtn" data-act="pool" data-p="${key}" data-d="1" ${ro || !t.hasDowntime ? "disabled" : ""}>+</button>
       </div>`;
     return `${this.calendarMarkup(ro)}
+      ${this.weekMarkup(ro)}
       <section class="panel" style="--tone:var(--ice)">
         <h3>The winter clock <small>draws down the town's Preparation Points</small></h3>
         ${t.hasDowntime
@@ -1950,19 +2165,31 @@ class WNRApp extends BaseApp {
     const strip = Array.from({ length: weeks }, (_, k) => {
       const w = k + 1, lo = k * 7 + 1, hi = lo + 6;
       const big = all.filter(e => !e.weekly && e.day >= lo && e.day <= hi);
+      const closed = !!s.weeks?.[w]?.attrition;
       return `<button type="button" class="wkcell ${w === s.week ? "now" : ""} ${w === view ? "on" : ""} ${hi < s.day ? "past" : ""}"
-        data-act="calweek" data-w="${w}" title="${esc(big.map(e => `Day ${e.day}: ${e.label}`).join("\n") || `Days ${lo}–${hi}`)}">
-        <b>${w}</b><small>${lo}–${hi}</small>
+        data-act="calweek" data-w="${w}" title="${esc(big.map(e => `Day ${e.day}: ${e.label}`).join("\n") || `Days ${lo}–${hi}`)}${closed ? "\nAttrition applied" : ""}">
+        <b>${w}${closed ? ` <i class="fa-solid fa-check"></i>` : ""}</b><small>${lo}–${hi}</small>
         <span class="dots">${big.map(e => `<i style="background:var(--${e.tone})"></i>`).join("")}</span></button>`;
     }).join("");
     const go = (e) => e.go ? `<button type="button" class="jbtn" data-act="goto" data-tab="${e.go[0]}" data-sub="${e.go[1] ?? ""}" data-card="${e.card ?? ""}" title="Open it">open</button>` : "";
+    const W = s.weeks?.[view];
+    const daily = s.pcs.map((pc, i) => [pc, i]).filter(([, i]) => WEEK_ACTS[W?.pcs?.[i]?.act]?.daily);
+    const short = { cs: "CS", s: "S", f: "F", cf: "CF" };
+    const checks = (d) => daily.length ? `<div class="dchecks">
+      <span class="dclabel">${CHAPTERS[this.t.researchCh(d)].act} research</span>
+      ${daily.map(([pc, i]) => {
+        const c = W.days?.[d]?.[i];
+        return `<span class="dpc"><b>${esc(pc.name)}</b>${DEG.map(g =>
+          `<button type="button" class="dg ${g} ${c?.degree === g ? "on" : ""}" data-act="dcheck" data-day="${d}" data-pc="${i}" data-deg="${g}" title="${DEG_LABEL[g]}" ${ro ? "disabled" : ""}>${short[g]}</button>`).join("")}${c ? `<span class="tag">${c.rp >= 0 ? "+" : ""}${c.rp} RP</span>` : ""}</span>`;
+      }).join("")}</div>` : "";
     const days = Array.from({ length: 7 }, (_, k) => first + k).map(d => {
       const items = all.filter(e => e.day === d);
       return `<div class="calday ${d === s.day ? "today" : ""} ${d < s.day ? "past" : ""}">
         <span class="dnum">Day ${d}${d === s.day ? " · today" : ""}</span>
         <div class="dlist">${items.length ? items.map(e => `
           <div class="ditem ${e.weekly ? "weekly" : ""} ${e.card && s.cleared[e.card] ? "done" : ""}" style="--tone:var(--${e.tone})">
-            <span>${e.label}${e.note ? `<em>${e.note}</em>` : ""}</span>${go(e)}</div>`).join("") : `<div class="ditem quiet">—</div>`}</div>
+            <span>${e.label}${e.note ? `<em>${e.note}</em>` : ""}</span>${go(e)}</div>`).join("") : `<div class="ditem quiet">—</div>`}
+          ${checks(d)}</div>
       </div>`;
     }).join("");
     const pending = calPending(s);
@@ -1990,6 +2217,84 @@ class WNRApp extends BaseApp {
             ${A[a.key] ? `<button type="button" class="qbtn" data-act="anchor" data-k="${a.key}" data-clear="1" title="Clear" ${ro ? "disabled" : ""}>×</button>` : ""}
             <span class="itag">${a.hint}</span></div>`).join("")}
         </div>
+      </section>`;
+  }
+
+  /* ---------------------------------------------------------------- week */
+  weekMarkup(ro) {
+    const t = this.t, s = t.s, w = s.calWeek ?? s.week, W = s.weeks?.[w] ?? blankWeek();
+    const days = weekDays(w), T = W.troubles;
+
+    /* Start of the week: Unexpected Troubles. */
+    let troubles;
+    if (!T) troubles = `<p class="text">DC 16 flat check. On a success, a d6 picks the trouble and its die sets the loss.</p>
+      <div class="btnrow"><button type="button" class="primary" data-act="trroll" data-w="${w}" ${ro ? "disabled" : ""}><i class="fa-solid fa-dice-d20"></i> Roll the flat check</button></div>`;
+    else if (!T.pool) troubles = `<p class="text">Flat check <b>${T.d20}</b> — a quiet week, no trouble.</p>
+      <div class="btnrow"><button type="button" class="ghost" data-act="trclear" data-w="${w}" ${ro ? "disabled" : ""}>Clear</button></div>`;
+    else {
+      const L = t.troubleLoss(w), word = { food: "Food", hope: "Hope", security: "Security" }[T.pool];
+      troubles = `<p class="text">Flat check <b>${T.d20}</b> — trouble. d6 <b>${T.d6}</b>: ${TROUBLE_DIE[T.pool]} ${word} = <b>${T.amount}</b>.
+        Minimise with ${TROUBLE_CHECKS[T.pool].join(" or ")}.</p>
+        <p class="${L.by ? "bonus" : "hint"}">${L.by
+          ? `${esc(L.by)} minimised it (${DEG_LABEL[L.deg]}) — lose ${L.n} ${word}.`
+          : `Nobody is minimising it yet — lose ${L.n} ${word}. Give a PC "Minimise Unexpected Troubles" below.`}</p>
+        <div class="btnrow">
+          <button type="button" class="${T.applied ? "ghost" : "primary"}" data-act="trapply" data-w="${w}" ${ro ? "disabled" : ""}>
+            ${T.applied ? `Undo (${t.changeText(T.applied)})` : "Apply the loss"}</button>
+          ${T.applied ? "" : `<button type="button" class="ghost" data-act="trclear" data-w="${w}" ${ro ? "disabled" : ""}>Clear</button>`}
+        </div>`;
+    }
+
+    /* Each PC's one activity. */
+    const cards = s.pcs.map((pc, i) => {
+      const e = W.pcs?.[i] ?? {}, act = WEEK_ACTS[e.act];
+      const opts = Object.entries(WEEK_ACTS).map(([k, a]) => {
+        const off = a.week && a.week !== w;
+        return `<option value="${k}" ${e.act === k ? "selected" : ""} ${off && e.act !== k ? "disabled" : ""}>${a.label}${off ? ` · week ${a.week} only` : ""}</option>`;
+      }).join("");
+      const skills = act?.troubles ? (T?.pool ? TROUBLE_CHECKS[T.pool] : Object.values(TROUBLE_CHECKS).flat()) : act?.checks ?? [];
+      const dchecks = act?.daily ? Object.values(W.days ?? {}).map(D => D[i]).filter(Boolean) : [];
+      const rp = dchecks.reduce((n, c) => n + c.rp, 0);
+      const status = !act ? "Idle"
+        : e.degree ? DEG_LABEL[e.degree]
+        : act.nocheck ? "Done"
+        : act.daily ? `${dchecks.length} day${dchecks.length === 1 ? "" : "s"}`
+        : act.free ? "Noted" : "Assigned";
+      return `<article class="wpc ${e.degree || act?.nocheck ? "done" : ""} ${act ? "set" : ""}">
+        <div class="wpchead"><img src="${pc.img || "icons/svg/mystery-man.svg"}" alt="" onerror="this.src='icons/svg/mystery-man.svg'">
+          <b>${esc(pc.name)}</b><span class="wstat">${status}</span></div>
+        <select data-act="wact" data-w="${w}" data-pc="${i}" ${ro ? "disabled" : ""}><option value="">— choose —</option>${opts}</select>
+        ${skills.length ? `<div class="skillrow">
+          <select data-act="wskill" data-w="${w}" data-pc="${i}" ${ro ? "disabled" : ""}>${skills.map(c => `<option ${e.skill === c ? "selected" : ""}>${c}</option>`).join("")}</select>
+          <button type="button" class="qbtn" data-act="wpost" data-w="${w}" data-pc="${i}" title="Post the check to chat" ${ro ? "disabled" : ""}><i class="fa-solid fa-dice-d20"></i></button></div>` : ""}
+        ${act && skills.length ? `<div class="degs">${DEG.map(g =>
+          `<button type="button" class="dg ${g} ${e.degree === g ? "on" : ""}" data-act="wdeg" data-w="${w}" data-pc="${i}" data-deg="${g}" ${ro ? "disabled" : ""}>${DEG_LABEL[g]}</button>`).join("")}</div>` : ""}
+        ${act?.daily ? `<p class="bonus">${dchecks.length ? `${dchecks.length} research check${dchecks.length === 1 ? "" : "s"} this week · ${rp >= 0 ? "+" : ""}${rp} RP` : "Record each day's check on the day rows above."}</p>` : ""}
+        ${e.secured ? `<p class="bonus">${e.secured === "kiln" ? "Kiln built" : "Heron feathers gathered"} — ticked on the research tab.</p>` : ""}
+        ${act?.hint ? `<p class="hint">${act.hint}</p>` : ""}
+        ${act ? `<input type="text" data-act="wnote" data-w="${w}" data-pc="${i}" value="${esc(e.note ?? "")}" placeholder="Note — what, where, gp earned…" ${ro ? "disabled" : ""}>` : ""}
+      </article>`;
+    }).join("");
+    const tenon = t.tenonOwed() && !Object.values(W.pcs ?? {}).some(e => e?.act === "tenon")
+      ? `<p class="blocked">Nobody is keeping Tenon company this week. If that stands, his despair collapses the house and he dies.</p>` : "";
+
+    /* End of the week: attrition. */
+    const A = W.attrition, p = t.pools();
+    const empties = p ? ["hope", "food", "security"].filter(k => (p[k] ?? 0) <= 0) : [];
+    const attrition = `
+      <p class="text">${CLOCK.attrition}${t.beat("ch9-e7-fox", "ch9-e7-moves-in") ? " Rin lives in town: +1 Hope rides along." : ""}</p>
+      ${!A && empties.length ? `<p class="blocked">Empty now: ${empties.join(", ")}. The depleted-track costs apply instead and roll the people lost.</p>` : ""}
+      ${A ? `<p class="bonus">Applied — 1d4 Hope rolled ${A.hope}: ${t.changeText(A.out)}.</p>` : ""}
+      <div class="btnrow"><button type="button" class="${A ? "ghost" : "primary"}" data-act="attr" data-w="${w}" ${ro || !t.hasDowntime ? "disabled" : ""}>
+        ${A ? "Undo the attrition" : `Apply week ${w}'s attrition`}</button></div>`;
+
+    return `
+      <section class="panel week" style="--tone:var(--moss)">
+        <h3>Week ${w} downtime <small>Days ${days[0]}–${days[6]} · one activity per PC; events don't use it up</small></h3>
+        <div class="sub" style="--sub:var(--rust)"><div class="subhead"><i class="fa-solid fa-triangle-exclamation"></i> Start of the week — Unexpected Troubles</div>${troubles}</div>
+        <div class="wgrid">${cards}</div>
+        ${tenon}
+        <div class="sub" style="--sub:var(--ice)"><div class="subhead"><i class="fa-solid fa-snowflake"></i> End of the week — Day ${days[6]}</div>${attrition}</div>
       </section>`;
   }
 
@@ -2195,6 +2500,16 @@ class WNRApp extends BaseApp {
       else if (a === "cleared") t.toggleCleared(btn.dataset.k);
       else if (a === "postarea") t.postArea(cardByKey(btn.dataset.k), btn.dataset.ch ?? "");
       else if (a === "postchecks") t.postChecks(cardByKey(btn.dataset.k), btn.dataset.ch ?? "");
+      else if (a === "dcheck") t.dayCheck(Number(btn.dataset.day), btn.dataset.pc, btn.dataset.deg);
+      else if (a === "wdeg") t.weekDegree(Number(btn.dataset.w), btn.dataset.pc, btn.dataset.deg);
+      else if (a === "trroll") t.rollTroubles(Number(btn.dataset.w));
+      else if (a === "trclear") t.clearTroubles(Number(btn.dataset.w));
+      else if (a === "trapply") t.applyTroubles(Number(btn.dataset.w));
+      else if (a === "attr") t.applyAttrition(Number(btn.dataset.w));
+      else if (a === "wpost") {
+        const w = Number(btn.dataset.w), e = t.s.weeks?.[w]?.pcs?.[btn.dataset.pc];
+        if (e?.skill) t.postCard(`Week ${w} downtime`, `${esc(t.pcName(btn.dataset.pc))} — ${WEEK_ACTS[e.act]?.label ?? ""}`, `<p style="margin:0">${linkify(e.skill)}</p>`, "moss");
+      }
       else if (a === "poststatus") t.postStatus();
       else if (a === "reset") t.reset();
     });
@@ -2207,6 +2522,12 @@ class WNRApp extends BaseApp {
         if (beat) t.toggleBeat(el.dataset.k, el.dataset.b, beat);
       } else if (el.dataset.act === "component") {
         t.toggleComponent(el.dataset.k);
+      } else if (el.dataset.act === "wact") {
+        t.pickAct(Number(el.dataset.w), el.dataset.pc, el.value);
+      } else if (el.dataset.act === "wskill") {
+        t.setEntry(Number(el.dataset.w), el.dataset.pc, "skill", el.value);
+      } else if (el.dataset.act === "wnote") {
+        t.setEntry(Number(el.dataset.w), el.dataset.pc, "note", el.value);
       }
     });
   }
@@ -2220,7 +2541,7 @@ class WNRApp extends BaseApp {
       #nbt-console .window-content > * { background:transparent; }
       .nbt { --ink:${p.ink}; --paper:${p.paper}; --card:${p.card}; --line:${p.line}; --rust:${p.rust};
             --ember:${p.ember}; --moss:${p.moss}; --slate:${p.slate}; --plum:${p.plum}; --gold:${p.gold};
-            --ice:${p.ice}; --snow:${p.snow}; --muted:${p.muted}; --stripe:${p.stripe}; --hover:${p.hover};
+            --ice:${p.ice}; --snow:${p.snow}; --muted:${p.muted}; --stripe:${p.stripe}; --hover:${p.hover}; --field:${p.field};
             font-family:"Signika","Roboto",sans-serif; color:var(--ink); background:var(--paper); }
       .nbt * { box-sizing:border-box; }
       .nbt button { font-family:inherit; cursor:pointer; color:var(--ink); background:transparent;
@@ -2374,6 +2695,33 @@ class WNRApp extends BaseApp {
       .nbt .ditem.weekly { font-size:.72rem; color:var(--muted); }
       .nbt .ditem.done > span { text-decoration:line-through; opacity:.6; }
       .nbt .ditem.quiet { border-left-color:transparent; color:var(--muted); }
+      .nbt .dchecks { display:flex; flex-wrap:wrap; align-items:center; gap:.25rem .6rem; margin-top:.15rem;
+                     padding:.2rem .35rem; border-radius:3px; background:var(--stripe); }
+      .nbt .dclabel { font-size:.62rem; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); }
+      .nbt .dpc { display:inline-flex; align-items:center; gap:2px; font-size:.72rem; }
+      .nbt .dpc b { margin-right:.2rem; font-weight:600; }
+      .nbt .dg { font-size:.62rem; padding:1px 5px; color:var(--muted); }
+      .nbt .dg.on.cs, .nbt .dg.on.s { background:var(--moss); border-color:var(--moss); color:var(--paper); }
+      .nbt .dg.on.f { background:var(--ember); border-color:var(--ember); color:var(--paper); }
+      .nbt .dg.on.cf { background:var(--rust); border-color:var(--rust); color:var(--paper); }
+      .nbt .wgrid { display:grid; grid-template-columns:repeat(2, 1fr); gap:.5rem; margin:.5rem 0; }
+      .nbt .wpc { border:1px solid var(--line); border-radius:4px; padding:.45rem .5rem; background:var(--card);
+                 display:flex; flex-direction:column; gap:.3rem; }
+      .nbt .wpc.set { border-left:3px solid var(--moss); }
+      .nbt .wpc.done { background:var(--stripe); }
+      .nbt .wpchead { display:flex; align-items:center; gap:.4rem; }
+      .nbt .wpchead img { width:28px; height:28px; border-radius:50%; border:1px solid var(--line); object-fit:cover; flex:none; }
+      .nbt .wpchead b { font-size:.85rem; color:var(--ink); }
+      .nbt .wstat { margin-left:auto; font-size:.62rem; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); }
+      .nbt .wpc.done .wstat { color:var(--moss); font-weight:700; }
+      .nbt .wpc select, .nbt .wpc input[type="text"] { width:100%; font-size:.76rem; height:auto; padding:.15rem .3rem;
+                 color:var(--ink); background:var(--field); border:1px solid var(--line); border-radius:3px; }
+      .nbt .skillrow { display:flex; gap:.3rem; align-items:center; }
+      .nbt .skillrow select { flex:1; }
+      .nbt .skillrow .qbtn { width:26px; height:24px; }
+      .nbt .degs { display:grid; grid-template-columns:repeat(4, 1fr); gap:2px; }
+      .nbt .degs .dg { font-size:.64rem; padding:.2rem .1rem; }
+      .nbt .wpc .hint, .nbt .wpc .bonus { margin:0; }
       .nbt .floatrow { display:flex; flex-wrap:wrap; gap:.3rem; }
       .nbt .fchip { display:inline-flex; align-items:center; gap:.3rem; font-size:.74rem; padding:1px 2px 1px 7px;
                    border:1px solid var(--line); border-radius:10px; background:var(--card); }
@@ -2404,7 +2752,7 @@ class WNRApp extends BaseApp {
       .nbt .area.done h3 .eid { opacity:.6; }
 
       @media (max-width:800px) {
-        .nbt .poolgrid { grid-template-columns:1fr; }
+        .nbt .poolgrid, .nbt .wgrid { grid-template-columns:1fr; }
         .nbt .tabs, .nbt .subtabs { flex-wrap:wrap; }
       }
     </style>`;

@@ -1,5 +1,34 @@
 # Changelog
 
+## 2026-10-27 22:27
+
+### Added
+- **No Breath to Cry — a weekly downtime panel, like the fall tracker's.** Winter is run in
+  downtime mode, a week at a time, but the console only had a day counter, the attrition and
+  Troubles tables as reference text, and +/− buttons on the pools. So the GM had to roll
+  every week by hand, remember who was doing what, and add up research separately. The Winter
+  tab now has a **Week N downtime** panel for the week the calendar is showing:
+  - **Start of the week:** one button rolls the DC 16 flat check. On trouble it rolls the d6
+    and the loss die, then works out the loss from the best "Minimise Unexpected Troubles"
+    result that week (crit success nothing, success 1, crit failure double). It applies the
+    loss, and can undo it.
+  - **Each PC's activity:** research, Minimise Troubles, Aid, Build the kiln (DC 20 Crafting),
+    Hunt herons (DC 20 Survival), the sakaki slats, Keep Tenon company, a Claylight hut (Week 3
+    only), Earn Income, Craft, Retrain or Other. Each has a skill and DC picker, a
+    post-to-chat button, degree buttons and a note field. A success on the kiln or the herons
+    ticks that component on the research tab, and clearing the result unticks it. A warning
+    shows if A Lonely Home failed and nobody is with Tenon this week.
+  - **Research is daily:** a PC whose week is research (or the heron hunt) gets
+    CS/S/F/CF buttons on every day row of the calendar. Each check moves Mindscape Shift RP
+    until the "back from the dream" day, then Transmigrate RP. The revelation XP moves with
+    it. RP per degree (2/1/0/−1) is GM Core's research subsystem; the mode caps aren't split
+    out.
+  - **End of the week:** one button applies −1d4 Hope, −1 Food and −1 Security. It reads
+    which tracks were already empty first and applies the book's replacements (no Food: 2d6
+    people instead of Hope; no Hope: −2 Rep with both factions; no Security: 1d6 people). It
+    adds Rin's +1 Hope once she has moved in. It can be undone exactly, and the week strip
+    marks a week as closed once attrition is in.
+
 ## 2026-10-27 20:36
 
 ### Changed

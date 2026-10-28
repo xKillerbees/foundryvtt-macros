@@ -905,10 +905,26 @@ globalThis.FIXTURES = {
     },
     "world.sogWinter": {
       tab: "clock",
-      week: 6,
-      population: 208,
-      terror: 4,
-      xp: 540
+      day: 10,
+      week: 2,
+      population: 221,
+      anchors: { cast: 8, back: 8 },
+      rp: { ch8: 8, ch9: 3 },
+      components: { kiln: true, feathers: false, slats: false },
+      weeks: {
+        1: { troubles: { d20: 9 }, pcs: { 0: { act: "research" }, 1: { act: "research" } },
+             days: {}, attrition: { hope: 2, out: { hope: -2, food: -1, security: -1 } } },
+        2: { troubles: { d20: 17, d6: 3, pool: "hope", amount: 5 },
+             pcs: { 0: { act: "research" },
+                    1: { act: "troubles", skill: "DC 24 Diplomacy", degree: "s" },
+                    2: { act: "kiln", skill: "DC 20 Crafting", degree: "s", secured: "kiln" },
+                    3: { act: "research" } },
+             days: { 9: { 0: { degree: "s", ch: "ch9", rp: 1 }, 3: { degree: "cs", ch: "ch9", rp: 2 } },
+                     10: { 0: { degree: "f", ch: "ch9", rp: 0 } } },
+             attrition: null }
+      },
+      terror: 0,
+      xp: 300
     }
   },
 

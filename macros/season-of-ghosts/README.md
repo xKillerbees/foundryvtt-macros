@@ -161,6 +161,14 @@ The whole of Act 3 — winter — in one window: the clock and the three chapter
   Population starts at 225 and is tracked against the book's warning that the final number shapes
   the AP's ending. The weekly attrition (−1d4 Hope, −1 Food, −1 Security), the Unexpected
   Troubles complication roll, and the depleted-track costs all sit on this one tab.
+- **Winter runs a week at a time**, the way the fall tracker does. The calendar lists the
+  viewed week's seven days with everything pinned to them. Below it, the **Week downtime**
+  panel rolls the start-of-week Troubles check, gives each PC one activity for the week
+  (research, minimising the trouble, the kiln, the heron hunt, the slats, Tenon, Claylight,
+  Earn Income and the rest), and applies the end-of-week attrition through the
+  depleted-track rules. Research is a check a day, so a PC on research gets degree buttons on
+  every day row, and each one moves the right ritual's RP. Every roll and pool change can be
+  undone exactly.
 - **Chapter 8 — Oblivion of Truth**: the three fights of *Red Smoke, Gold Eyes* at the Cloud Paper
   House (every trapped NPC, hazard, and rescue reward), the *Mindscape Shift* research, and Heh
   Shan-Bao's mindscape — the ill omens, the five-obstacle chase, the *Know and Despair* reveal
