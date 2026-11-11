@@ -163,7 +163,8 @@ The whole of Act 3 — winter — in one window: the clock and the three chapter
   Troubles complication roll, and the depleted-track costs all sit on this one tab.
 - **Winter runs a week at a time**, the way the fall tracker does. The calendar lists the
   viewed week's seven days with everything pinned to them. Below it, the **Week downtime**
-  panel rolls the start-of-week Troubles check, gives each PC one activity for the week
+  panel rolls the start-of-week Troubles check (or records one rolled at the table — which
+  trouble, the loss die, and whether the party avoided it), gives each PC one activity for the week
   (research, minimising the trouble, the kiln, the heron hunt, the slats, Tenon, Claylight,
   Earn Income and the rest), and applies the end-of-week attrition through the
   depleted-track rules. Research is a check a day, so a PC on research gets degree buttons on

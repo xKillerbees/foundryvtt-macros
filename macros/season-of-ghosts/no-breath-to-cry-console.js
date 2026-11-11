@@ -1545,6 +1545,11 @@ const WEEK_ACTS = {
 const RP_GAIN = { cs: 2, s: 1, f: 0, cf: -1 };
 const TROUBLE_POOL = { 1: "food", 2: "food", 3: "hope", 4: "hope", 5: "security", 6: "security" };
 const TROUBLE_DIE = { food: "1d4", hope: "1d4 + 2", security: "1d4" };
+/* The faces each loss die can show, for recording a roll made at the table. */
+const TROUBLE_RANGE = { food: [1, 2, 3, 4], hope: [3, 4, 5, 6], security: [1, 2, 3, 4] };
+const TROUBLE_WORD = { food: "Food", hope: "Hope", security: "Security" };
+/* The GM's call on the minimising check, in plain words. */
+const TROUBLE_OUTCOME = { cs: "Avoided — nothing lost", s: "Mostly avoided — 1 point", f: "Not avoided — full loss", cf: "Made worse — double" };
 const TROUBLE_CHECKS = {
   food: ["DC 24 Nature", "DC 24 Survival"],
   hope: ["DC 24 Diplomacy", "DC 24 Performance"],
@@ -1918,6 +1923,39 @@ class Winter {
     this.log(`Week ${w} — Unexpected Troubles: flat check ${d20}${T.pool ? `, trouble — ${T.amount} ${T.pool}` : ", a quiet week"}.`);
     this.touch();
   }
+  /* Record a trouble rolled at the table, or change the one rolled here.
+     "quiet" records a week with no trouble. Changing the trouble drops the
+     d6 (it no longer matches) and keeps the amount only if the new die can
+     show it. */
+  setTrouble(w, pool) {
+    const W = this.wk(w);
+    if (W.troubles?.applied) return ui.notifications.warn("Undo the applied loss first.");
+    const old = W.troubles ?? {};
+    if (pool === "quiet") W.troubles = { manual: true, pool: null };
+    else {
+      const T = { ...old, pool };
+      if (old.pool !== pool) { T.manual = true; delete T.d6; }
+      if (!TROUBLE_RANGE[pool].includes(T.amount)) T.amount = null;
+      W.troubles = T;
+    }
+    this.log(`Week ${w} — Unexpected Troubles set by the GM: ${pool === "quiet" ? "a quiet week" : TROUBLE_WORD[pool]}.`);
+    this.touch();
+  }
+  setTroubleAmount(w, n) {
+    const W = this.wk(w), T = W.troubles;
+    if (!T?.pool) return;
+    if (T.applied) return ui.notifications.warn("Undo the applied loss first.");
+    T.amount = n; this.touch();
+  }
+  /* The GM's verdict on whether the party avoided it. Overrides the PC cards;
+     clicking the same verdict again hands it back to them. */
+  setTroubleOutcome(w, deg) {
+    const W = this.wk(w), T = W.troubles;
+    if (!T?.pool) return;
+    if (T.applied) return ui.notifications.warn("Undo the applied loss first.");
+    T.outcome = T.outcome === deg ? null : deg;
+    this.touch();
+  }
   clearTroubles(w) {
     const W = this.wk(w);
     if (W.troubles?.applied) return ui.notifications.warn("Undo the applied loss first.");
@@ -1927,11 +1965,16 @@ class Winter {
   troubleLoss(w) {
     const W = this.wk(w), T = W.troubles;
     if (!T?.pool) return null;
+    const amt = T.amount ?? 0;
+    if (T.outcome) {
+      const d = T.outcome;
+      return { n: d === "cs" ? 0 : d === "s" ? Math.min(1, amt) : d === "cf" ? amt * 2 : amt, deg: d, by: null, gm: true };
+    }
     const order = ["cs", "s", "f", "cf"];
     const best = Object.entries(W.pcs).filter(([, e]) => e?.act === "troubles" && e.degree)
       .sort(([, a], [, b]) => order.indexOf(a.degree) - order.indexOf(b.degree))[0];
     const deg = best?.[1].degree;
-    const n = deg === "cs" ? 0 : deg === "s" ? Math.min(1, T.amount) : deg === "cf" ? T.amount * 2 : T.amount;
+    const n = deg === "cs" ? 0 : deg === "s" ? Math.min(1, amt) : deg === "cf" ? amt * 2 : amt;
     return { n, deg, by: best ? this.pcName(best[0]) : null };
   }
   async applyTroubles(w) {
@@ -1943,6 +1986,7 @@ class Winter {
       this.log(`Week ${w} — Unexpected Troubles loss undone (${this.changeText(T.applied)}).`);
       T.applied = null;
     } else {
+      if (T.amount == null) return ui.notifications.warn("Pick how much the loss die rolled first.");
       const L = this.troubleLoss(w), out = {};
       await this.drain(dt, T.pool, L.n, out, this.emptyNow(dt));
       T.applied = out;
@@ -2225,21 +2269,36 @@ class WNRApp extends BaseApp {
     const t = this.t, s = t.s, w = s.calWeek ?? s.week, W = s.weeks?.[w] ?? blankWeek();
     const days = weekDays(w), T = W.troubles;
 
-    /* Start of the week: Unexpected Troubles. */
+    /* Start of the week: Unexpected Troubles. Roll it here, or record what
+       was rolled at the table and whether the party avoided it. */
+    const lock = ro || T?.applied ? "disabled" : "";
+    const pickRow = `<div class="trpick"><span class="trlab">Trouble</span>
+      ${[["quiet", "Quiet week"], ["food", "Food"], ["hope", "Hope"], ["security", "Security"]].map(([k, l]) =>
+        `<button type="button" class="dg ${(k === "quiet" ? T && !T.pool : T?.pool === k) ? "on s" : ""}" data-act="trset" data-w="${w}" data-k="${k}" ${lock}>${l}</button>`).join("")}</div>`;
     let troubles;
     if (!T) troubles = `<p class="text">DC 16 flat check. On a success, a d6 picks the trouble and its die sets the loss.</p>
-      <div class="btnrow"><button type="button" class="primary" data-act="trroll" data-w="${w}" ${ro ? "disabled" : ""}><i class="fa-solid fa-dice-d20"></i> Roll the flat check</button></div>`;
-    else if (!T.pool) troubles = `<p class="text">Flat check <b>${T.d20}</b> — a quiet week, no trouble.</p>
+      <div class="btnrow"><button type="button" class="primary" data-act="trroll" data-w="${w}" ${ro ? "disabled" : ""}><i class="fa-solid fa-dice-d20"></i> Roll the flat check</button></div>
+      <p class="hint">Rolled it at the table? Record it instead:</p>${pickRow}`;
+    else if (!T.pool) troubles = `<p class="text">${T.manual ? "Recorded" : `Flat check <b>${T.d20}</b>`} — a quiet week, no trouble.</p>
+      ${pickRow}
       <div class="btnrow"><button type="button" class="ghost" data-act="trclear" data-w="${w}" ${ro ? "disabled" : ""}>Clear</button></div>`;
     else {
-      const L = t.troubleLoss(w), word = { food: "Food", hope: "Hope", security: "Security" }[T.pool];
-      troubles = `<p class="text">Flat check <b>${T.d20}</b> — trouble. d6 <b>${T.d6}</b>: ${TROUBLE_DIE[T.pool]} ${word} = <b>${T.amount}</b>.
-        Minimise with ${TROUBLE_CHECKS[T.pool].join(" or ")}.</p>
-        <p class="${L.by ? "bonus" : "hint"}">${L.by
-          ? `${esc(L.by)} minimised it (${DEG_LABEL[L.deg]}) — lose ${L.n} ${word}.`
-          : `Nobody is minimising it yet — lose ${L.n} ${word}. Give a PC "Minimise Unexpected Troubles" below.`}</p>
+      const L = t.troubleLoss(w), word = TROUBLE_WORD[T.pool];
+      const head = T.manual ? `Recorded: <b>${word}</b> trouble (${TROUBLE_DIE[T.pool]}).`
+        : `Flat check <b>${T.d20}</b> — trouble. d6 <b>${T.d6}</b>: ${TROUBLE_DIE[T.pool]} ${word} = <b>${T.amount}</b>.`;
+      const amtRow = `<div class="trpick"><span class="trlab">Loss die</span>
+        ${TROUBLE_RANGE[T.pool].map(n =>
+          `<button type="button" class="dg ${T.amount === n ? "on s" : ""}" data-act="tramt" data-w="${w}" data-n="${n}" ${lock}>${n}</button>`).join("")}</div>`;
+      const outRow = `<div class="trpick"><span class="trlab">Avoided?</span>
+        ${DEG.map(g => `<button type="button" class="dg ${g} ${T.outcome === g ? "on" : ""}" data-act="trout" data-w="${w}" data-deg="${g}" title="${DEG_LABEL[g]}" ${lock}>${TROUBLE_OUTCOME[g]}</button>`).join("")}</div>`;
+      const verdict = T.amount == null ? `<p class="hint">Pick what the loss die rolled.</p>`
+        : L.gm ? `<p class="bonus">Result set by the GM (${DEG_LABEL[L.deg]}) — lose ${L.n} ${word}.</p>`
+        : L.by ? `<p class="bonus">${esc(L.by)} minimised it (${DEG_LABEL[L.deg]}) — lose ${L.n} ${word}.</p>`
+        : `<p class="hint">Nobody is minimising it yet — lose ${L.n} ${word}. Give a PC "Minimise Unexpected Troubles" below, or set the result here.</p>`;
+      troubles = `<p class="text">${head} Minimise with ${TROUBLE_CHECKS[T.pool].join(" or ")}.</p>
+        ${pickRow}${amtRow}${outRow}${verdict}
         <div class="btnrow">
-          <button type="button" class="${T.applied ? "ghost" : "primary"}" data-act="trapply" data-w="${w}" ${ro ? "disabled" : ""}>
+          <button type="button" class="${T.applied ? "ghost" : "primary"}" data-act="trapply" data-w="${w}" ${ro || T.amount == null ? "disabled" : ""}>
             ${T.applied ? `Undo (${t.changeText(T.applied)})` : "Apply the loss"}</button>
           ${T.applied ? "" : `<button type="button" class="ghost" data-act="trclear" data-w="${w}" ${ro ? "disabled" : ""}>Clear</button>`}
         </div>`;
@@ -2504,6 +2563,9 @@ class WNRApp extends BaseApp {
       else if (a === "wdeg") t.weekDegree(Number(btn.dataset.w), btn.dataset.pc, btn.dataset.deg);
       else if (a === "trroll") t.rollTroubles(Number(btn.dataset.w));
       else if (a === "trclear") t.clearTroubles(Number(btn.dataset.w));
+      else if (a === "trset") t.setTrouble(Number(btn.dataset.w), btn.dataset.k);
+      else if (a === "tramt") t.setTroubleAmount(Number(btn.dataset.w), Number(btn.dataset.n));
+      else if (a === "trout") t.setTroubleOutcome(Number(btn.dataset.w), btn.dataset.deg);
       else if (a === "trapply") t.applyTroubles(Number(btn.dataset.w));
       else if (a === "attr") t.applyAttrition(Number(btn.dataset.w));
       else if (a === "wpost") {
@@ -2717,6 +2779,9 @@ class WNRApp extends BaseApp {
       .nbt .wpc select, .nbt .wpc input[type="text"] { width:100%; font-size:.76rem; height:auto; padding:.15rem .3rem;
                  color:var(--ink); background:var(--field); border:1px solid var(--line); border-radius:3px; }
       .nbt .skillrow { display:flex; gap:.3rem; align-items:center; }
+      .nbt .trpick { display:flex; gap:.3rem; align-items:center; flex-wrap:wrap; margin:.3rem 0; }
+      .nbt .trpick .trlab { font-size:.62rem; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); min-width:4.6rem; }
+      .nbt .trpick .dg { font-size:.66rem; padding:.15rem .45rem; }
       .nbt .skillrow select { flex:1; }
       .nbt .skillrow .qbtn { width:26px; height:24px; }
       .nbt .degs { display:grid; grid-template-columns:repeat(4, 1fr); gap:2px; }

@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-11-10 19:42
+
+### Added
+- **No Breath to Cry — record the week's Unexpected Trouble by hand, and whether the party
+  avoided it.** The Troubles section of the Week downtime panel could only roll the flat check
+  itself, and the only way to say how the minimising went was to give a PC the "Minimise
+  Unexpected Troubles" activity and mark their degree. A GM who rolls at the table, or who
+  settled the trouble in play some other way, had no way to get the result in. The section
+  now has three rows of buttons, under a rolled result or on their own: **Trouble** (Quiet
+  week, Food, Hope, Security), **Loss die** (1–4 for Food and Security, 3–6 for Hope), and
+  **Avoided?** (nothing lost / 1 point / full loss / double — the book's crit success,
+  success, failure and crit failure). A GM verdict overrides the PC cards; clicking it again
+  hands the result back to them. Changing the trouble on a rolled week drops the d6, which no
+  longer matches. Everything locks while the loss is applied, and Apply stays disabled until
+  the loss die is set, so the undo always takes back exactly what went in.
+
 ## 2026-10-27 22:27
 
 ### Added
