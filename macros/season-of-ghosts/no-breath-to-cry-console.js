@@ -255,10 +255,14 @@ const CH8_EVENTS = [
     name: "Wrapping Up",
     tone: "gold",
     text: "Tone of the aftermath scales with PC success: extensive destruction → silent, somber town; good containment → defiant, with elders loudly insulting the unseen forces. Tick exactly one rescue tier, plus the mill beat if the mill was lost. Myna Kawaka, owner of Cloud Paper House (W14), visits the next day with gifts (cumulative by lives saved).",
+    track: [
+      { key: "rescue2-rep", label: "2 rescued — +1 Reputation with the faction the party picks", rep1: 1, pick: "faction", once: true },
+      { key: "mill-repair", label: "Repair the damaged mill — 2 weeks' work", fx: { security: -4 }, once: true, note: "Damaged only; a collapsed mill can't be repaired." }
+    ],
     beats: [
       { key: "ch8-rescue-3", label: "All 3 civilians rescued", note: "tick exactly one", xp: 120, hope: 3, rep: 1,
         loot: ["Greater smokestick (Myna)", "8 moderate healing potions (Myna)", "Vial of everlasting adhesive (Myna)", "Potion of quickness (Myna)", "Runestone with a resilient armor rune (Myna)"] },
-      { key: "ch8-rescue-2", label: "2 civilians rescued", note: "tick exactly one · +1 reputation with ONE faction, the party's choice — add it by hand in the Fall Downtime Tracker (a beat's rep always writes to both factions)", xp: 80, hope: 1,
+      { key: "ch8-rescue-2", label: "2 civilians rescued", note: "tick exactly one · +1 Reputation with ONE faction, the party's choice — record it under Tracked changes", xp: 80, hope: 1,
         loot: ["Greater smokestick (Myna)", "8 moderate healing potions (Myna)", "Vial of everlasting adhesive (Myna)"] },
       { key: "ch8-rescue-1", label: "1 civilian rescued", note: "tick exactly one · no Hope gain or loss", xp: 40,
         loot: ["Greater smokestick (Myna)", "4 moderate healing potions (Myna)"] },
@@ -603,10 +607,17 @@ const CH9_TIMELINE = [
       "DC 20 Diplomacy (Spreading the News — credit Heh with the ritual to minimize the Security loss)"
     ],
     treasure: "Shinzo's Gifts — four functional replicas of famous magical items once owned by notables from the distant past (names on the Heroic Legacies handout).",
+    track: [
+      { key: "dead-full", label: "The town is dead — not minimised", fx: { hope: "-2d6" }, group: "dead" },
+      { key: "dead-min", label: "The town is dead — minimised with news of Heh's ritual", fx: { hope: -2 }, group: "dead" },
+      { key: "blame-full", label: "Blaming Heh — not credited", fx: { security: "-(1d4+2)" }, group: "blame" },
+      { key: "blame-min", label: "Blaming Heh — DC 20 Diplomacy credited him with the ritual", fx: { security: -1 }, group: "blame" },
+      { key: "leak", label: "A hidden truth leaks out", fx: { rep: -2 }, repeat: true, note: "Every time a significant truth the party sat on is made public." }
+    ],
     beats: [
       { key: "ch9-e4-reveal", label: "The 115 loops revealed — the plan and Mago Kai", xp: 120, note: "120 XP for discovering the 115-cycle repetition and learning of Mago Kai." },
-      { key: "ch9-e4-news-dead", label: "Spreading the News: the town is dead", hope: -2, note: "−2d6 Hope Points, minimized to −2 if the PCs also spread the word that a ritual (from Governor Heh) may bring everyone back to life." },
-      { key: "ch9-e4-news-blame", label: "Spreading the News: blaming Heh", security: -1, note: "−1d4 + 2 Security Points, reduced to −1 with a DC 20 Diplomacy check crediting Heh with the ritual. Sitting on big truths that later leak: −2 Reputation Points with each faction every time a significant hidden truth is made public." }
+      { key: "ch9-e4-news-dead", label: "Spreading the News: the town is dead", was: { hope: -2 }, note: "−2d6 Hope Points, minimized to −2 if the PCs also spread the word that a ritual (from Governor Heh) may bring everyone back to life. Record the Hope under Tracked changes." },
+      { key: "ch9-e4-news-blame", label: "Spreading the News: blaming Heh", was: { security: -1 }, note: "−1d4 + 2 Security Points, reduced to −1 with a DC 20 Diplomacy check crediting Heh with the ritual — record it under Tracked changes. Sitting on big truths that later leak: −2 Reputation Points with each faction every time a significant hidden truth is made public." }
     ]
   },
   {
@@ -629,9 +640,21 @@ const CH9_TIMELINE = [
       "All Reputation lost to this event is restored if no townsfolk were murdered; each murder lowers the restored total by 2.",
       "40 XP if no townsfolk were murdered; −10 XP per murdered local."
     ],
+    track: [
+      { key: "accuse", label: "Accusation not defused (DC 20 Diplomacy failed)", rep1: -1, pick: "faction", repeat: true, e5loss: true },
+      { key: "incident", label: "Another incident", rep1: -1, pick: "faction", repeat: true, e5loss: true,
+        note: "Every 1d4 days. The book doesn't name a faction for incidents — pick one, as with the accusation." },
+      { key: "prank5", label: "The 5th prank — a minor NPC dies", rep1: -1, pick: "faction", fx: { population: -1 }, once: true, e5loss: true },
+      { key: "murder", label: "A murder", fx: { rep: -3, population: -1, xp: -10 }, repeat: true, e5loss: true,
+        note: "Every prank after the 5th. 3 Rep from both factions; the 10 XP comes off the reveal award." },
+      { key: "reveal-clean", label: "Revealed publicly — no murders", fx: { hope: -1 }, group: "reveal" },
+      { key: "reveal-murder", label: "Revealed publicly — after a murder", fx: { hope: "-1d6" }, group: "reveal" },
+      { key: "restore", label: "Resolved — Reputation lost to this event comes back", calc: "e5restore", once: true,
+        note: "All of it if nobody was murdered; each murder lowers the restored total by 2 (applied to each faction — the book doesn't split it)." }
+    ],
     beats: [
-      { key: "ch9-e5-reveal", label: "Impersonators publicly revealed", hope: -1, xp: 40, note: "−1 Hope (or −1d6 if ≥1 murder); 40 XP if no townsfolk were murdered, −10 XP per murdered local (adjust the XP tick accordingly)." },
-      { key: "ch9-e5-rep", label: "Reputation fallout resolved", note: "Each incident cost −1 Reputation Point; the 5th prank killed a minor NPC (population −1); each murder cost 3 Reputation Points from both factions. On resolution, all Reputation lost to this event is restored if no one was murdered — each murder lowers the restored total by 2." }
+      { key: "ch9-e5-reveal", label: "Impersonators publicly revealed", xp: 40, was: { hope: -1 }, note: "40 XP if no townsfolk were murdered; each murder recorded below takes 10 off it. The Hope cost (−1, or −1d6 after a murder) is under Tracked changes." },
+      { key: "ch9-e5-rep", label: "Reputation fallout resolved", note: "Record each incident, the 5th prank and every murder under Tracked changes as they happen; the restore button there works out what comes back (all of it, less 2 per murder)." }
     ]
   },
   {
@@ -670,9 +693,12 @@ const CH9_TIMELINE = [
       "DC 28 Survival (track her via singe marks)"
     ],
     treasure: "Rin's Gift — if her attitude becomes friendly, she offers a flat stone that floats and ignites, then cools into a flaming weapon runestone (once only).",
+    track: [
+      { key: "moves-in", label: "Rin moves into Willowshore", fx: { hope: "-1d4" }, once: true, note: "Her +1 Hope a week rides along with the attrition from then on." }
+    ],
     beats: [
       { key: "ch9-e7-friendly", label: "Rin's friendship won", xp: 120, note: "120 XP if her attitude becomes friendly." },
-      { key: "ch9-e7-moves-in", label: "Rin comes to live in Willowshore", hope: -1, note: "−1d4 Hope Points initially; then +1 Hope Point at the start of each following week (attrition calculation) as locals warm to her." }
+      { key: "ch9-e7-moves-in", label: "Rin comes to live in Willowshore", was: { hope: -1 }, note: "−1d4 Hope Points initially (Tracked changes); then +1 Hope Point at the start of each following week (attrition calculation) as locals warm to her." }
     ]
   },
   {
@@ -697,11 +723,18 @@ const CH9_TIMELINE = [
       "Critical failure: a grief-stricken local volunteers out of obligation; grief and Tenon compel them to burn the house down with themselves inside — population −1 and −1d4 + 1 Hope Points."
     ],
     treasure: "Floorboards — befriending Tenon reveals his mother's +1 thundering shortbow hidden below a floorboard; Kawaka gifts it to the PCs.",
+    track: [
+      { key: "crit", label: "Critical success", fx: { hope: "1d4+1" }, group: "outcome" },
+      { key: "success-sec", label: "Success — the town pays 2 Security instead of 400 gp", fx: { security: -2 }, once: true },
+      { key: "critfail", label: "Critical failure — the house burns with a volunteer inside", fx: { hope: "-(1d4+1)", population: -1 }, group: "outcome" },
+      { key: "tenon-dies", label: "A week with nobody at Tenon's — the house collapses on him", fx: { population: -1 }, once: true,
+        note: "The book says he dies permanently; counting him off the population is an inference." }
+    ],
     beats: [
-      { key: "ch9-e8-outcome-crit", label: "Tenon's problem solved — critical success", xp: 120, hope: 1, note: "Tick exactly one outcome. 1d4 + 1 Hope Points; house shored up for free." },
-      { key: "ch9-e8-outcome-success", label: "Tenon's problem solved — success", xp: 80, hope: 1, note: "Tick exactly one outcome. Costs 400 gp or 2 Security Points." },
+      { key: "ch9-e8-outcome-crit", label: "Tenon's problem solved — critical success", xp: 120, was: { hope: 1 }, note: "Tick exactly one outcome. 1d4 + 1 Hope Points (Tracked changes); house shored up for free." },
+      { key: "ch9-e8-outcome-success", label: "Tenon's problem solved — success", xp: 80, hope: 1, note: "Tick exactly one outcome. Costs 400 gp or 2 Security Points — the Security option is under Tracked changes." },
       { key: "ch9-e8-outcome-failure", label: "Tenon's problem solved — failure", xp: 40, hope: -1, note: "Tick exactly one outcome. A PC must keep Tenon company weekly as downtime, or his despair collapses the house (he dies permanently)." },
-      { key: "ch9-e8-outcome-critfail", label: "Tenon's problem solved — critical failure", hope: -1, note: "Tick exactly one outcome. −1d4 + 1 Hope Points; population −1 (a grief-stricken local burns the house down with themselves inside)." }
+      { key: "ch9-e8-outcome-critfail", label: "Tenon's problem solved — critical failure", was: { hope: -1 }, note: "Tick exactly one outcome. −1d4 + 1 Hope Points and population −1 under Tracked changes (a grief-stricken local burns the house down with themselves inside)." }
     ]
   },
   {
@@ -722,10 +755,13 @@ const CH9_TIMELINE = [
       "2–4 Victory Points: 60 XP and −1 Hope Point.",
       "1 or fewer Victory Points: no XP and −1d4 + 1 Hope Points."
     ],
+    track: [
+      { key: "vp1", label: "1 or fewer Victory Points", fx: { hope: "-(1d4+1)" }, once: true }
+    ],
     beats: [
       { key: "ch9-e9-vp5", label: "Crane-wife resolved — 5+ Victory Points", xp: 120, note: "Tick exactly one outcome." },
       { key: "ch9-e9-vp2", label: "Crane-wife resolved — 2–4 Victory Points", xp: 60, hope: -1, note: "Tick exactly one outcome." },
-      { key: "ch9-e9-vp1", label: "Crane-wife resolved — 1 or fewer Victory Points", hope: -1, note: "Tick exactly one outcome. No XP; −1d4 + 1 Hope Points." }
+      { key: "ch9-e9-vp1", label: "Crane-wife resolved — 1 or fewer Victory Points", was: { hope: -1 }, note: "Tick exactly one outcome. No XP; −1d4 + 1 Hope Points (Tracked changes)." }
     ]
   },
   {
@@ -747,9 +783,18 @@ const CH9_TIMELINE = [
       "No PC takes part: the festival fails — −1d4 Hope Points."
     ],
     treasure: "Front Porch — for each PC who succeeded, a moderate healing potion (max 4) appears anonymously on the Cerulean Teahouse's front porch the next morning.",
+    track: [
+      { key: "one", label: "Festival — at least one PC succeeded", fx: { hope: 1 }, group: "fest" },
+      { key: "all", label: "Festival — every PC took part and one succeeded", fx: { hope: 2, xp: 40 }, group: "fest", note: "The extra 40 XP brings the beat's 80 up to 120." },
+      { key: "none", label: "Festival — no PC took part, it fails", fx: { hope: "-1d4" }, group: "fest" },
+      { key: "sol-cs", label: "Sweetest Solstice — critical success", fx: { food: 4 }, group: "sol" },
+      { key: "sol-s", label: "Sweetest Solstice — success", fx: { food: 1 }, group: "sol" },
+      { key: "sol-cf", label: "Sweetest Solstice — critical failure, the town is poisoned", prep: "2d6", pick: "pool", group: "sol",
+        note: "Rolls 2d6: half (rounded up) comes off Hope, the rest off the pool the PCs choose." }
+    ],
     beats: [
-      { key: "ch9-e10-fest", label: "Claylight Festival held", hope: 1, xp: 80, note: "+1 Hope and 80 XP if ≥1 PC succeeds; +2 Hope and 120 XP if all PCs took part and ≥1 succeeded; −1d4 Hope if no PC took part." },
-      { key: "ch9-e10-solstice", label: "Sweetest Solstice ritual", food: 1, note: "Critical success: +4 Food. Success: +1 Food. Critical failure: −2d6 Preparation Points (at least half from Hope, remainder from Hope/Food/Security at the PCs' choice)." }
+      { key: "ch9-e10-fest", label: "Claylight Festival held — at least one PC succeeded", xp: 80, was: { hope: 1 }, note: "80 XP. The Hope (+1, or +2 and 40 more XP if every PC took part; −1d4 if nobody did) is under Tracked changes." },
+      { key: "ch9-e10-solstice", label: "Sweetest Solstice ritual", was: { food: 1 }, note: "Record the result under Tracked changes. Critical success: +4 Food. Success: +1 Food. Critical failure: −2d6 Preparation Points (at least half from Hope, remainder from Hope/Food/Security at the PCs' choice)." }
     ]
   },
   {
@@ -775,6 +820,9 @@ const CH9_TIMELINE = [
       "6+ successes: as 4–5, plus they offer later aid — \"take the time to purify themselves at any shrine of Pharasma they might encounter… in the living world\" (a reference to area C9 of Karahai in Chapter 10)."
     ],
     treasure: "Nosois' Payment (4+ successes) — a gallows tooth, a jade bauble, a silver and sapphire ring worth 800 gp, and a frost weapon runestone.",
+    track: [
+      { key: "partial", label: "Only 1–3 successes — 60 XP, not 120", fx: { xp: -60 }, once: true }
+    ],
     beats: [
       { key: "ch9-e11-xp", label: "Brunch resolved", xp: 120, note: "120 XP at 4+ successes; 60 XP for 1–3 successes (adjust the XP tick accordingly)." }
     ]
@@ -826,8 +874,11 @@ const CH9_TIMELINE = [
     creatures: "Kugaptee's centipede (1)",
     quote: "“Meat… flesh… bones… fingers… hair… skin… eyes…” — “You must pay! Kugaptee will rise! Time to die!”",
     text: "Kugaptee's Centipede — a bright orange centipede nearly a hundred feet long, formed from the dead fiend's thoughts — attacks PCs in the hinterlands or the town's outskirts. If it attacks the town it scuttles toward the PCs; if the party is too slow or flees, Security Points are reduced by 1d4.",
+    track: [
+      { key: "town", label: "Too slow, or the party fled — the centipede hits the town", fx: { security: "-1d4" }, once: true }
+    ],
     beats: [
-      { key: "ch9-e15-town", label: "The centipede attacks the town", security: -1, note: "−1d4 Security Points if the party is too slow or flees; award XP as if the creature were defeated in combat (book-fixed award — GM grants per creature XP)." }
+      { key: "ch9-e15-town", label: "The centipede attacks the town", was: { security: -1 }, note: "−1d4 Security Points if the party is too slow or flees (Tracked changes); award XP as if the creature were defeated in combat (book-fixed award — GM grants per creature XP)." }
     ]
   },
   {
@@ -929,10 +980,13 @@ const CH9_PIECES = [
       { key: "ch9-seance-fenfang", label: "Pan Fenfang — the nervous exorcist", max: 4, note: "Discovery DC 21 Occultism / DC 23 Perception / DC 25 Religion. Influence DC 21 Deception / DC 23 Intimidation / DC 25 Religion. Weakness: she secretly joined a cult of nindoru followers — a projection of Kugaptee answered her prayers, posing as the spirit of Tan Sui-Jing. Mentioning nindorus reduces all her Discovery/Influence DCs by 1; mentioning Kugaptee reduces them by 2.", reveal: "She is unknowingly influenced by nindorus — the crimson butterflies glimpsed in her mind — leading to the nindoru corruption at C14 (Chapter 10)." },
       { key: "ch9-seance-guanghao", label: "Sha \"Shagua\" Guanghao — the brash apprentice", max: 4, note: "Discovery DC 20 Occultism / DC 24 Perception / DC 22 Religion. Influence DC 20 Deception / DC 22 Religion / DC 24 Diplomacy. Influence 4: \"Lord Mago will come in here with his magic bell ringer and banish you away! Like this—hwahhh!\" (slapped by Fenfang: \"That's not how it works! Did you even read the codex scroll like I told you?\")", reveal: "He is the magic bell ringer — the one who rings Mago Kai's bell at C13 (Chapter 10)." }
     ],
+    track: [
+      { key: "news", label: "The townsfolk's questions went badly (DC 24 Diplomacy failed)", fx: { hope: "-1d4" }, once: true }
+    ],
     beats: [
       { key: "ch9-seance-xp80", label: "Seance resolved — 4+ Influence with at least one exorcist", xp: 80, note: "Tick exactly one XP beat." },
       { key: "ch9-seance-xp120", label: "Seance resolved — all 12 Influence Points among all three exorcists", xp: 120, note: "Tick exactly one XP beat; includes the 80 XP tier." },
-      { key: "ch9-seance-news", label: "Answering the townsfolk's questions", hope: -1, note: "DC 24 Diplomacy; on failure the townsfolk fear they'll be next — −1d4 Hope Points." },
+      { key: "ch9-seance-news", label: "Answering the townsfolk's questions", was: { hope: -1 }, note: "DC 24 Diplomacy; on failure the townsfolk fear they'll be next — −1d4 Hope Points (Tracked changes)." },
       { key: "ch9-seance-rework1", label: "Rework seed: a woman in crimson silks", note: "Two Weavers rework — ADD, optional, not in the printed book. Somewhere in the priests' chatter, one exorcist mutters about a woman in crimson silks who visited Mago Kai's camp and left him terrified. Drop it as an aside the party can chase or ignore — the first whisper of the rival jorogumo who drives the Act 4 rework. Don't name her or explain; the unease is the point." }
     ]
   },
@@ -977,8 +1031,12 @@ const CH9_PIECES = [
     influence: [
       { key: "ch9-ren-meili", label: "Ren Mei Li — Influence Points (silver collars at 12)", max: 12, note: "Discovery DC 20 Jorogumo Lore / DC 22 Diplomacy / DC 24 Society / DC 26 Perception. Influence DC 22 Performance / DC 24 Diplomacy / DC 26 Occultism / DC 28 Deception / DC 30 Intimidation. Below 6 Influence Points (or any attack) → Parting Ways, Extreme 9, against a level-13 creature. Thresholds: 4 — annoyed (DC 24 Diplomacy or Outcast's Curse); 8 — her decrees, one non-tithe stipulation negotiable; 12 — the Tan Sugi and a messenger's ring, a second stipulation negotiable; 16 — four doses of dust of corpse animation, a third stipulation negotiable (tithe is never negotiable).", reveal: "12+: she leaves peacefully and the Hardwood Chest appears — six moonstones (25 gp each), a greater persona mask, a desolation locket, and four silver collars (50 gp each, sell for full price)." }
     ],
+    track: [
+      { key: "mock", label: "Fewer than 6 Security — she mocks the town", fx: { hope: -1 }, once: true },
+      { key: "peace", label: "She leaves without a fight", fx: { hope: "1d4" }, once: true }
+    ],
     beats: [
-      { key: "ch9-spider-peace", label: "Lady Ren leaves without a fight", xp: 160, hope: 1, note: "160 XP and 1d4 Hope Points for a peaceful exit." },
+      { key: "ch9-spider-peace", label: "Lady Ren leaves without a fight", xp: 160, was: { hope: 1 }, note: "160 XP; the 1d4 Hope Points are under Tracked changes." },
       { key: "ch9-spider-parting", label: "Parting Ways — the fight", note: "Extreme 9 against a level 13 creature; triggered below 6 Influence Points or on any attack. Flees at 45 or fewer Hit Points; if slain, the chest is nowhere to be found." },
       { key: "ch9-spider-rework2", label: "Rework seed: the crimson warning", note: "Two Weavers rework — ADD, optional, not in the printed book. As she takes her leave, Ren Mei Li drops her first warning, verbatim: \"Should a woman in crimson ever offer you anything, little ghosts, decline. She and I are owed a quarrel.\" One line seeds both the Act 4 alliance (Ren Mei Li becomes the party's patron) and the rival in a single breath; if the party heeds it, the crimson roses at the Silkwasp camp (Act 4, Chapter 11) land all the harder. Never name Hong Zhinü, the Crimson Weaver — the payoff is Act 4." }
     ]
@@ -1121,6 +1179,9 @@ const CH10_AREAS = [
     text: "The shimmerthief is a lizard-like magical beast captured in the Willowshore ruins, chained into its stall (several iron chains — immobilized) and muzzled tightly: muzzled means it can't cast innate spells, can't use its Unnerving Shriek, and can't talk. Its gleam theft aura keeps the area around it quite dark. It is intelligent and speaks only Draconic — nobody in the fortress speaks it, so its attempts to communicate were mistaken for weird monster sounds. It starts unfriendly but is extremely innocent in nature, closer to a puppy than a wary human. Cao Chen keeps it alive on a pet theory that its light-eating could be retuned to consume undead energy — the more people scoff, the more convinced he becomes. Check the party sheets: if no one has Draconic, the whole encounter changes shape. The war horses are combat-trained but only ridden for speedy messengers or emergencies (now rarely — the shrine maidens' Sending made them redundant); they are very skittish, unnerved by the occupant of the farthest stall, and not a threat.",
     hazard: "The chains: Hardness 5, HP 20 (BT 10). Free the shimmerthief with Chen's key, four DC 25 Thievery checks to Pick the Lock, a DC 25 Athletics check to Force Open, or by destroying the chains. Freeing it automatically adjusts its attitude up one step toward helpful.",
     note: "If freed without communication it flees, but may return to help later at your discretion. If attacked, it fights back if it can and flees the region if reduced to fewer than 40 HP. Canny PCs can make excellent use of its darkness aura in the C11 bell chamber.",
+    track: [
+      { key: "skulk", label: "Another hour of the shimmerthief's torment", fx: { terror: 1 }, repeat: true, note: "The beat covers the first hour; up to 4 in all." }
+    ],
     beats: [
       { key: "ch10-c4-xp", label: "Released and recruited the shimmerthief", xp: 80 },
       { key: "ch10-c4-skulk", label: "Shimmerthief skulks and torments the fortress", terror: 1, note: "1 point per hour for the next 4 hours; it is then discovered and chased off or slain" }
@@ -1184,6 +1245,9 @@ const CH10_AREAS = [
     checks: ["DC 10 Religion", "DC 29 Stealth"],
     text: "DC 10 Religion (Recall Knowledge): the scroll depicts Pharasma on her throne in the Boneyard; on a critical success, the PC knows the basin purifies hands by ladling water onto them. Ablutions are a 1-minute activity; regardless of outcome, once per week performing them causes a sense of foreboding over the fortress's inhabitants — +1 Terror Point. Conditional hazard — Nosois' Vengeance: if the PCs seriously offended the visiting nosois during Event 11 (Nosois' Brunch), the vengeful nosois use their contacts and the shrine's sacred nature to create this hazard — Moderate 9: 4 vanths summoned by the vengeful psychopomps. A PC can avoid being noticed by it for 1 round by Sneaking with a successful DC 29 Stealth check. Conditional treasure — Psychopomp's Boon: if the PCs pleased the nosois during Event 11 by achieving at least six successes, a PC who spends 1 minute performing ablutions using water from the basin before the scroll hears sparrows singing, then receives in freshly washed hands one of the following: a moderate elixir of life, a pouch containing a greater potency crystal, a moderate spiritual warhorn, or a scroll of a useful 5th-rank spell from that PC's magical tradition.",
     note: "If no trap awaits because the PCs did well appeasing the nosois, grant XP as if they'd defeated the summoned vanths in combat.",
+    track: [
+      { key: "ablution", label: "Ablutions again in a later week", fx: { terror: 1 }, repeat: true, note: "Once per week; the beat covers the first." }
+    ],
     beats: [
       { key: "ch10-c9-ablutions", label: "Performed the ablutions at the basin", terror: 1, note: "Once per week; a sense of foreboding settles over the fortress" },
       { key: "ch10-c9-boon", label: "Psychopomp's Boon granted (nosois appeased)", note: "Grant XP as if the 4 summoned vanths were defeated in combat" }
@@ -1555,6 +1619,21 @@ const TROUBLE_CHECKS = {
   hope: ["DC 24 Diplomacy", "DC 24 Performance"],
   security: ["DC 24 Athletics", "DC 24 Crafting"]
 };
+/* Tracked changes: the points an event moves that a single tick can't —
+   rolled amounts, a faction of the party's choice, things that repeat. Each
+   press is a ledger entry holding exactly what it changed, so it undoes
+   exactly. A value is a number or a dice formula; "-…" rolls and subtracts. */
+const FACTIONS = [["southbank", "Southbank"], ["northridge", "Northridge"]];
+const POOLS3 = [["hope", "Hope"], ["food", "Food"], ["security", "Security"]];
+function fxText(it) {
+  const sig = (v) => typeof v === "number" ? `${v > 0 ? "+" : "−"}${Math.abs(v)}` : v.startsWith("-") ? `−${v.slice(1).replace(/[()]/g, "")}` : `+${v}`;
+  const bits = [];
+  for (const [k, l] of [["hope", "Hope"], ["food", "Food"], ["security", "Security"], ["rep", "Rep (both)"], ["population", "people"], ["xp", "XP"], ["terror", "Terror"]])
+    if (it.fx?.[k] != null) bits.push(`${sig(it.fx[k])} ${l}`);
+  if (it.rep1) bits.unshift(`${sig(it.rep1)} Rep (one faction)`);
+  if (it.prep) bits.push(`−${it.prep} Preparation`);
+  return bits.join(" · ");
+}
 const blankWeek = () => ({ troubles: null, pcs: {}, days: {}, attrition: null });
 const weekDays = (w) => Array.from({ length: 7 }, (_, k) => (w - 1) * 7 + 1 + k);
 
@@ -1582,6 +1661,7 @@ function blankState(pcs) {
     influence: {},
     cleared: {},          // card key -> true
     beats: {},            // card key -> { beat key: true }
+    ledger: {},           // card key -> [{ id, item, choice, day, out }] — tracked changes
     weeks: {},            // week -> { troubles, pcs: { pc -> entry }, days: { day -> { pc -> check } }, attrition }
     xp: 0,
     log: []
@@ -1788,7 +1868,11 @@ class Winter {
   async toggleBeat(cardKey, beatKey, beat) {
     const bucket = this.s.beats[cardKey] ?? (this.s.beats[cardKey] = {});
     const on = !!bucket[beatKey];
-    bucket[beatKey] = !on;
+    /* A beat ticked before its points moved to Tracked changes (stored as
+       `true`) still carries them; undo those with the old values. New ticks
+       are stored as 1 and carry only what the beat lists now. */
+    if (on && bucket[beatKey] === true && beat.was) beat = { ...beat, ...beat.was };
+    bucket[beatKey] = on ? false : 1;
     const d = on ? -1 : 1;
 
     if (beat.xp) { this.s.xp += d * beat.xp; if (!on) ui.notifications.info(`Award ${beat.xp} XP.`); }
@@ -1811,6 +1895,86 @@ class Winter {
     }
 
     this.log(`${cardKey} — ${beat.label}: ${on ? "undone" : "done"}.`);
+    this.touch();
+  }
+
+  /* ----- tracked changes ----- */
+  ledger(cardKey) { this.s.ledger = this.s.ledger ?? {}; return (this.s.ledger[cardKey] ??= []); }
+  async rollFx(v) {
+    if (typeof v === "number") return v;
+    const neg = v.startsWith("-");
+    const n = await this.rollTotal(neg ? v.slice(1) : v);
+    return neg ? -n : n;
+  }
+  /* What resolving Faceless Evil gives back, per faction: everything lost to
+     it, less 2 for each murder. */
+  e5Restore(cardKey, card) {
+    const loss = new Set(card.track.filter(i => i.e5loss).map(i => i.key));
+    const L = this.ledger(cardKey).filter(e => loss.has(e.item));
+    const murders = L.filter(e => e.item === "murder").length;
+    const lost = Object.fromEntries(FACTIONS.map(([f]) => [f, -L.reduce((n, e) => n + Math.min(0, e.out[f] ?? 0) + Math.min(0, e.out.rep ?? 0), 0)]));
+    const back = Object.fromEntries(FACTIONS.map(([f]) => [f, Math.max(0, lost[f] - 2 * murders)]));
+    return { lost, murders, back };
+  }
+  async track(card, itemKey, choice) {
+    const it = card.track?.find(i => i.key === itemKey);
+    if (!it) return;
+    const L = this.ledger(card.key);
+    if (it.once && L.some(e => e.item === it.key)) return ui.notifications.warn("Already recorded — undo it first.");
+    if (it.group && L.some(e => card.track.find(i => i.key === e.item)?.group === it.group))
+      return ui.notifications.warn("Another result for this is already recorded — undo it first.");
+    const needsDt = it.rep1 || it.prep || it.calc || ["hope", "food", "security", "rep"].some(k => it.fx?.[k] != null);
+    const dt = this.downtime();
+    if (needsDt && !dt?.pools) return ui.notifications.error("No downtime tracker state found. Run the Fall Downtime Tracker macro once first.");
+    if (dt) dt.rep = dt.rep ?? { southbank: 0, northridge: 0 };
+    const out = {}, add = (k, v) => { if (v) out[k] = (out[k] ?? 0) + v; };
+    const empty = dt?.pools ? this.emptyNow(dt) : null;
+    /* Pool losses go through the depleted-track rules, like attrition. */
+    const pool = async (k, v) => {
+      if (v < 0) await this.drain(dt, k, -v, out, empty);
+      else if (v > 0) { dt.pools[k] = (dt.pools[k] ?? 0) + v; add(k, v); }
+    };
+    for (const k of ["hope", "food", "security"]) if (it.fx?.[k] != null) await pool(k, await this.rollFx(it.fx[k]));
+    if (it.fx?.rep != null) { const v = await this.rollFx(it.fx.rep); for (const [f] of FACTIONS) dt.rep[f] = (dt.rep[f] ?? 0) + v; add("rep", v); }
+    if (it.rep1) { dt.rep[choice] = (dt.rep[choice] ?? 0) + it.rep1; add(choice, it.rep1); }
+    if (it.fx?.population != null) {
+      const v = await this.rollFx(it.fx.population), next = Math.max(0, this.s.population + v);
+      add("population", next - this.s.population); this.s.population = next;
+    }
+    if (it.fx?.xp != null) { const v = await this.rollFx(it.fx.xp); this.s.xp += v; add("xp", v); }
+    if (it.fx?.terror != null) {
+      const v = await this.rollFx(it.fx.terror), next = Math.min(8, Math.max(0, this.s.terror + v));
+      add("terror", next - this.s.terror); this.s.terror = next;
+    }
+    let rolled = null;
+    if (it.prep) {
+      rolled = await this.rollTotal(it.prep);
+      const half = Math.ceil(rolled / 2);
+      await this.drain(dt, "hope", half, out, empty);
+      await this.drain(dt, choice, rolled - half, out, empty);
+    }
+    if (it.calc === "e5restore") {
+      const R = this.e5Restore(card.key, card);
+      for (const [f] of FACTIONS) if (R.back[f]) { dt.rep[f] = (dt.rep[f] ?? 0) + R.back[f]; add(f, R.back[f]); }
+    }
+    L.push({ id: foundry.utils.randomID(), item: it.key, choice: choice ?? null, day: this.s.day, rolled, out });
+    if (needsDt) await game.settings.set("world", "sogFallDowntime", dt);
+    this.log(`${card.name} — ${it.label}${choice ? ` (${choice})` : ""}: ${this.changeText(out)}.`);
+    this.touch();
+  }
+  async untrack(card, id) {
+    const L = this.ledger(card.key), e = L.find(x => x.id === id);
+    if (!e) return;
+    const it = card.track?.find(i => i.key === e.item);
+    if (!it?.calc && L.some(x => card.track?.find(i => i.key === x.item)?.calc))
+      return ui.notifications.warn("Undo the resolution first — it was worked out from these.");
+    const dt = this.downtime();
+    const touchesDt = ["hope", "food", "security", "rep", "southbank", "northridge"].some(k => e.out[k]);
+    if (touchesDt && !dt?.pools) return ui.notifications.error("No downtime tracker state found.");
+    this.undoChange(dt ?? {}, e.out);
+    if (touchesDt) await game.settings.set("world", "sogFallDowntime", dt);
+    L.splice(L.indexOf(e), 1);
+    this.log(`${card.name} — ${it?.label ?? e.item} undone (${this.changeText(e.out)}).`);
     this.touch();
   }
 
@@ -1900,10 +2064,13 @@ class Winter {
   undoChange(dt, out) {
     for (const k of ["hope", "food", "security"]) if (out[k]) dt.pools[k] = Math.max(0, (dt.pools[k] ?? 0) - out[k]);
     if (out.rep) { dt.rep.southbank -= out.rep; dt.rep.northridge -= out.rep; }
+    for (const [f] of FACTIONS) if (out[f]) dt.rep[f] = (dt.rep[f] ?? 0) - out[f];
     if (out.population) this.s.population -= out.population;
+    if (out.xp) this.s.xp -= out.xp;
+    if (out.terror) this.s.terror = Math.min(8, Math.max(0, this.s.terror - out.terror));
   }
   changeText(out) {
-    const bits = [["hope", "Hope"], ["food", "Food"], ["security", "Security"], ["rep", "Rep (both)"], ["population", "people"]]
+    const bits = [["hope", "Hope"], ["food", "Food"], ["security", "Security"], ["rep", "Rep (both)"], ["southbank", "Rep Southbank"], ["northridge", "Rep Northridge"], ["population", "people"], ["xp", "XP"], ["terror", "Terror"]]
       .filter(([k]) => out?.[k]).map(([k, l]) => `${out[k] > 0 ? "+" : ""}${out[k]} ${l}`);
     return bits.length ? bits.join(", ") : "no change";
   }
@@ -2512,12 +2679,43 @@ class WNRApp extends BaseApp {
           <div class="subhead"><i class="fa-solid fa-gift"></i> The party receives</div>
           ${got.length ? `<ul>${got.map(i => `<li>${i}</li>`).join("")}</ul>` : `<p class="hint">Tick the outcomes above and the items appear here.</p>`}
         </div>`; })() : ""}
+        ${card.track?.length ? this.trackMarkup(card, ro) : ""}
         <div class="btnrow">
           <button type="button" class="${cleared ? "ghost" : "primary"}" data-act="cleared" data-k="${card.key}" ${ro ? "disabled" : ""}>
             ${cleared ? "Reopen" : "Mark done"}
           </button>
         </div>
       </section>`;
+  }
+
+  /* Tracked changes: a row per thing that can move the numbers, then the
+     ledger of what has, each with its own undo. */
+  trackMarkup(card, ro) {
+    const t = this.t, L = t.ledger(card.key);
+    const byKey = Object.fromEntries(card.track.map(i => [i.key, i]));
+    const groupTaken = (g) => g && L.some(e => byKey[e.item]?.group === g);
+    const rows = card.track.map(it => {
+      const n = L.filter(e => e.item === it.key).length;
+      const off = ro || (it.once && n) || (!n && groupTaken(it.group)) || (it.group && n) ? "disabled" : "";
+      let tag = fxText(it);
+      if (it.calc === "e5restore") {
+        const R = t.e5Restore(card.key, card);
+        tag = `${FACTIONS.map(([f, l]) => `+${R.back[f]} ${l}`).join(" · ")} — lost ${FACTIONS.map(([f, l]) => `${R.lost[f]} ${l}`).join(", ")}, ${R.murders} murder${R.murders === 1 ? "" : "s"}`;
+      }
+      const btn = (choice, label) => `<button type="button" class="dg" data-act="trk" data-k="${card.key}" data-i="${it.key}" ${choice ? `data-c="${choice}"` : ""} ${off}>${label}</button>`;
+      const btns = it.pick === "faction" ? FACTIONS.map(([f, l]) => btn(f, l)).join("")
+        : it.pick === "pool" ? POOLS3.map(([p, l]) => btn(p, `Rest from ${l}`)).join("")
+        : btn(null, it.repeat ? "Add" : "Record");
+      return `<div class="trk"><span class="tlabel">${it.label}${tag ? ` <span class="tag">${tag}</span>` : ""}${it.repeat && n ? ` <span class="tag warn">×${n}</span>` : ""}</span>
+        <span class="tbtns">${btns}</span></div>${it.note ? `<p class="beatnote">${it.note}</p>` : ""}`;
+    }).join("");
+    const log = L.map(e => `<li><span>Day ${e.day} · ${byKey[e.item]?.label ?? e.item}${e.choice ? ` (${[...FACTIONS, ...POOLS3].find(([k]) => k === e.choice)?.[1] ?? e.choice})` : ""}${e.rolled != null ? ` · rolled ${e.rolled}` : ""} — <b>${t.changeText(e.out)}</b></span>
+      <button type="button" class="qbtn" data-act="untrk" data-k="${card.key}" data-id="${e.id}" title="Undo exactly this" ${ro ? "disabled" : ""}>×</button></li>`).join("");
+    return `<div class="sub tracked">
+      <div class="subhead"><i class="fa-solid fa-scale-unbalanced"></i> Tracked changes <span>${L.length} recorded</span></div>
+      ${rows}
+      ${log ? `<ul class="tlog">${log}</ul>` : `<p class="hint">Press a button as it happens — dice are rolled for you and the pools, Reputation and population update. Each entry undoes exactly.</p>`}
+    </div>`;
   }
 
   /* ---------------------------------------------------------- listeners */
@@ -2562,6 +2760,8 @@ class WNRApp extends BaseApp {
       else if (a === "dcheck") t.dayCheck(Number(btn.dataset.day), btn.dataset.pc, btn.dataset.deg);
       else if (a === "wdeg") t.weekDegree(Number(btn.dataset.w), btn.dataset.pc, btn.dataset.deg);
       else if (a === "trroll") t.rollTroubles(Number(btn.dataset.w));
+      else if (a === "trk") { const c = cardByKey(btn.dataset.k); if (c) t.track(c, btn.dataset.i, btn.dataset.c); }
+      else if (a === "untrk") { const c = cardByKey(btn.dataset.k); if (c) t.untrack(c, btn.dataset.id); }
       else if (a === "trclear") t.clearTroubles(Number(btn.dataset.w));
       else if (a === "trset") t.setTrouble(Number(btn.dataset.w), btn.dataset.k);
       else if (a === "tramt") t.setTroubleAmount(Number(btn.dataset.w), Number(btn.dataset.n));
@@ -2779,6 +2979,12 @@ class WNRApp extends BaseApp {
       .nbt .wpc select, .nbt .wpc input[type="text"] { width:100%; font-size:.76rem; height:auto; padding:.15rem .3rem;
                  color:var(--ink); background:var(--field); border:1px solid var(--line); border-radius:3px; }
       .nbt .skillrow { display:flex; gap:.3rem; align-items:center; }
+      .nbt .sub.tracked { --sub:var(--rust); }
+      .nbt .trk { display:flex; gap:.5rem; align-items:center; justify-content:space-between; margin:.25rem 0 .1rem; font-size:.8rem; }
+      .nbt .trk .tbtns { display:flex; gap:.25rem; flex:none; }
+      .nbt .trk .dg { font-size:.66rem; padding:.15rem .45rem; }
+      .nbt .tlog { list-style:none; margin:.45rem 0 0; padding:.35rem 0 0; border-top:1px dashed var(--line); font-size:.76rem; }
+      .nbt .tlog li { display:flex; gap:.4rem; align-items:center; justify-content:space-between; padding:.1rem 0; }
       .nbt .trpick { display:flex; gap:.3rem; align-items:center; flex-wrap:wrap; margin:.3rem 0; }
       .nbt .trpick .trlab { font-size:.62rem; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); min-width:4.6rem; }
       .nbt .trpick .dg { font-size:.66rem; padding:.15rem .45rem; }

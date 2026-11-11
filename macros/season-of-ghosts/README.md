@@ -170,6 +170,15 @@ The whole of Act 3 — winter — in one window: the clock and the three chapter
   depleted-track rules. Research is a check a day, so a PC on research gets degree buttons on
   every day row, and each one moves the right ritual's RP. Every roll and pool change can be
   undone exactly.
+- **Tracked changes on every event that moves the numbers.** Where the book's change is rolled,
+  repeats, or hits one faction of the party's choice, the card has a *Tracked changes* panel
+  instead of a fixed tick: Faceless Evil's accusations, incidents, 5th-prank death and murders
+  (with a restore button that works out what Reputation comes back), Spreading the News, Rin
+  moving in, Tenon's outcomes, the Crane-Wife, the Claylight Festival and the Sweetest Solstice,
+  Reprisal, the seance's aftermath, Lady Ren, the two-rescue Reputation, the mill repair, and the
+  repeatable Terror in C4 and C9. Each press rolls the dice, writes Hope, Food, Security,
+  Reputation, population, XP or Terror through, goes into a dated ledger on the card, and undoes
+  exactly. Pool losses follow the depleted-track rules, like attrition.
 - **Chapter 8 — Oblivion of Truth**: the three fights of *Red Smoke, Gold Eyes* at the Cloud Paper
   House (every trapped NPC, hazard, and rescue reward), the *Mindscape Shift* research, and Heh
   Shan-Bao's mindscape — the ill omens, the five-obstacle chase, the *Know and Despair* reveal

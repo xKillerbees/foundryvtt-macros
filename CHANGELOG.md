@@ -1,5 +1,35 @@
 # Changelog
 
+## 2026-11-10 20:32
+
+### Added
+- **No Breath to Cry — a Tracked changes panel on every event whose points the book rolls,
+  repeats, or splits by faction.** The event cards only had "What can happen here" ticks, and
+  a tick can only add or remove one fixed number. So Event 5's Reputation loss (−1 per incident
+  from one faction, −3 from both per murder, and the partial restore at the end) couldn't be
+  tracked in the macro at all. Neither could the one-faction Reputation for rescuing two
+  civilians, and every rolled loss was recorded as a flat 1 (−2d6 Hope, −1d4 + 2 Security,
+  −1d4 + 1 Hope and the rest). The panel has a button per thing that can happen. Faction and
+  pool choices get their own buttons, and repeatable items keep a count. Each press rolls the
+  dice and writes Hope, Food, Security, Reputation, population, XP or Terror through to the
+  Fall Downtime Tracker and the console. It then lands as a dated entry on the card with an
+  exact undo. Pool losses go through the depleted-track rules, like attrition. Alternatives
+  (the festival's three results, Tenon's crit and crit fail, the two reveal costs) lock each
+  other out. It covers Faceless Evil (accusation, incident, 5th prank, murder, the two reveals,
+  and a restore button that works out the Reputation coming back: everything lost, less 2 per
+  murder, applied to each faction — the book doesn't say how to split it), Spreading the News
+  (full or minimised, and the repeatable hidden-truth leak), Rin moving in, A Lonely Home
+  (including the 2-Security payment and Tenon's death; counting him off the population is an
+  inference), the Crane-Wife, the Claylight Festival and Sweetest Solstice (the crit-fail 2d6
+  takes half from Hope and the rest from the pool the PCs pick), Nosois' Brunch's partial XP,
+  Reprisal, the seance's questions, Lady Ren's mockery and peaceful exit, the mill repair, and
+  the repeatable Terror in C4 and C9.
+
+### Changed
+- **No Breath to Cry — beats with rolled amounts no longer move the pools themselves.** Their
+  points moved into Tracked changes so they aren't counted twice. A beat ticked before this
+  change still remembers its old fixed amount and takes exactly that back when unticked.
+
 ## 2026-11-10 19:42
 
 ### Added
