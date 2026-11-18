@@ -1519,10 +1519,15 @@ const CLOCK = {
    Mindscape Shift cast, the return from Heh's dream, the slats going in to
    soak, and the first Transmigrate. Chapter 9's events wait for the return. */
 const weekOf = (d) => Math.max(1, Math.ceil(d / 7));
+/* The book's soak is "about six weeks", and it tells the GM to shorten it if
+   the slats went in late so Chapter 10 still gets a few weeks. */
+const SOAK_MIN = 3, SOAK_MAX = 6;
+const soakWeeks = (s) => Math.min(SOAK_MAX, Math.max(SOAK_MIN, s.soakWeeks ?? SOAK_MAX));
+const soakDays = (s) => soakWeeks(s) * 7;
 const ANCHORS = [
   { key: "cast", label: "Mindscape Shift cast", hint: "the visit to Heh's dream" },
   { key: "back", label: "Back from the dream", hint: "Chapter 9 opens the next day" },
-  { key: "slats", label: "Slats put to soak", hint: "ready six weeks later" },
+  { key: "slats", label: "Slats put to soak", hint: "ready after the soak" },
   { key: "ritual", label: "First Transmigrate cast", hint: "4th rank — Chapter 10 for one month" }
 ];
 const CAL_FIXED = [
@@ -1547,7 +1552,7 @@ const CAL_FLOATING = [
 
 function calHorizon(s) {
   const A = s.anchors ?? {};
-  return Math.max(72, s.day + 7, A.ritual ? A.ritual + 30 : 0, A.slats ? A.slats + 42 : 0);
+  return Math.max(72, s.day + 7, A.ritual ? A.ritual + 30 : 0, A.slats ? A.slats + soakDays(s) : 0);
 }
 function calEntries(s) {
   const A = s.anchors ?? {}, end = calHorizon(s);
@@ -1569,7 +1574,7 @@ function calEntries(s) {
     add(d + 21, { label: "The severe winter storm and heavy fog Shinzo foretold", tone: "ice", go: ["clock"] });
     for (let v = d + 14; v <= end; v += 14) add(v, { label: "Shinzo returns — trade, advice, Consulting Experts (Occultism)", tone: "muted", go: ["ch9", "research"] });
   }
-  if (A.slats) add(A.slats + 42, { label: "Sakaki slats ready — six weeks after they went to soak", tone: "ember", go: ["ch9", "research"] });
+  if (A.slats) add(A.slats + soakDays(s), { label: `Sakaki slats ready — ${soakWeeks(s)} weeks after they went to soak${soakWeeks(s) < SOAK_MAX ? " (soak shortened)" : ""}`, tone: "ember", go: ["ch9", "research"] });
   if (A.ritual) {
     add(A.ritual, { label: "4th-rank Transmigrate — Between Life and Death, then Chapter 10", tone: "slate", go: ["ch9", "pieces"], card: "ch9-blad" });
     add(A.ritual + 30, { label: "The 4th-rank ritual runs out — the PCs fade back to the mindscape if not done", note: "Attrition keeps running while they're away.", tone: "plum", go: ["ch10", "terror"] });
@@ -1593,7 +1598,7 @@ const WEEK_ACTS = {
   feathers:  { label: "Hunt herons (one day)", checks: ["DC 20 Survival"], sets: "feathers", daily: true,
                hint: "One day in the hinterlands. Success: feathers for 2 casts · crit success: 6 casts. The other days can still go to research." },
   slats:     { label: "Put the sakaki slats to soak", nocheck: true,
-               hint: "25 gp of oils (a faction pays if it at least admires the party). No check. Set the pivot day on the calendar — they're ready six weeks later." },
+               hint: "25 gp of oils (a faction pays if it at least admires the party). No check. Set the pivot day on the calendar — they're ready six weeks later, or sooner if you shorten the soak there." },
   tenon:     { label: "Keep Tenon company", nocheck: true,
                hint: "Every week after a failed A Lonely Home. A week with nobody here, Tenon's despair collapses the house and he dies." },
   claylight: { label: "Prepare a Claylight hut", checks: ["DC 25 Crafting", "DC 24 Religion"], week: 3,
@@ -1797,6 +1802,14 @@ class Winter {
     /* Moving forward reports everything passed on the way, not only the landing day. */
     const passed = delta > 0 ? calEntries(this.s).filter(e => e.day > from && e.day <= this.s.day && !e.weekly) : [];
     if (passed.length) ui.notifications.info(passed.map(e => `Day ${e.day}: ${e.label}`).join(" · "));
+    this.touch();
+  }
+  setSoak(delta) {
+    const from = soakWeeks(this.s);
+    this.s.soakWeeks = Math.min(SOAK_MAX, Math.max(SOAK_MIN, from + delta));
+    if (this.s.soakWeeks === from) return;
+    const A = this.s.anchors ?? {};
+    this.log(`Slat soak set to ${this.s.soakWeeks} weeks${A.slats ? ` — ready Day ${A.slats + soakDays(this.s)}` : ""}.`);
     this.touch();
   }
   setAnchor(key, clear) {
@@ -2426,7 +2439,13 @@ class WNRApp extends BaseApp {
             <span class="ilabel">${a.label}</span><b>${A[a.key] ? `Day ${A[a.key]}` : "—"}</b>
             <button type="button" class="ghost" data-act="anchor" data-k="${a.key}" ${ro ? "disabled" : ""}>Today</button>
             ${A[a.key] ? `<button type="button" class="qbtn" data-act="anchor" data-k="${a.key}" data-clear="1" title="Clear" ${ro ? "disabled" : ""}>×</button>` : ""}
-            <span class="itag">${a.hint}</span></div>`).join("")}
+            <span class="itag">${a.key === "slats" ? (A.slats ? `ready Day ${A.slats + soakDays(s)}` : "ready after the soak") : a.hint}</span></div>
+            ${a.key === "slats" ? `<div class="inflrow">
+            <span class="ilabel">Soak length</span>
+            <button type="button" class="qbtn" data-act="soak" data-d="-1" ${ro || soakWeeks(s) <= SOAK_MIN ? "disabled" : ""}>−</button>
+            <b>${soakWeeks(s)} weeks</b>
+            <button type="button" class="qbtn" data-act="soak" data-d="1" ${ro || soakWeeks(s) >= SOAK_MAX ? "disabled" : ""}>+</button>
+            <span class="itag">book: six · shorten if the slats went in late, so Chapter 10 gets a few weeks</span></div>` : ""}`).join("")}
         </div>
       </section>`;
   }
@@ -2743,6 +2762,7 @@ class WNRApp extends BaseApp {
       else if (a === "week") t.setWeek(Number(btn.dataset.d));
       else if (a === "day") t.setDay(Number(btn.dataset.d));
       else if (a === "anchor") t.setAnchor(btn.dataset.k, btn.dataset.clear === "1");
+      else if (a === "soak") t.setSoak(Number(btn.dataset.d));
       else if (a === "calweek") { t.s.calWeek = Number(btn.dataset.w) || null; t.render(); }
       else if (a === "goto") {
         t.s.tab = btn.dataset.tab;
