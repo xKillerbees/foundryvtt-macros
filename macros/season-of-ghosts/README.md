@@ -162,7 +162,10 @@ The whole of Act 3 — winter — in one window: the clock and the three chapter
   the AP's ending. The weekly attrition (−1d4 Hope, −1 Food, −1 Security), the Unexpected
   Troubles complication roll, and the depleted-track costs all sit on this one tab.
 - **Winter runs a week at a time**, the way the fall tracker does. The calendar lists the
-  viewed week's seven days with everything pinned to them. Below it, the **Week downtime**
+  viewed week's seven days with everything pinned to them. The events the book leaves
+  floating (the Brunch, the Seance, the optional 14–16) are pencilled in at a suggested day
+  after the return — a pacing pick, not the book's — which **Any day now** nudges with −/+;
+  marking one done records the day, so it stays on the calendar where it actually ran. Below it, the **Week downtime**
   panel rolls the start-of-week Troubles check (or records one rolled at the table — which
   trouble, the loss die, and whether the party avoided it), gives each PC one activity for the week
   (research, minimising the trouble, the kiln, the heron hunt, the slats, Tenon, Claylight,

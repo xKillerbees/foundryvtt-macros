@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-11-23 14:45
+
+### Fixed
+- **No Breath to Cry — the calendar now shows the floating events on a day.** The Brunch, the
+  Seance and the optional Events 14–16 only ever appeared in the "Any day now" strip, and once
+  one was marked done it vanished from the calendar altogether. So a Seance run on Day 38 left
+  Day 38 blank, while the printed run-sheet timeline had it there. Each floating event is now
+  pencilled in at a suggested day after the return (Brunch +17, Seance +23 inside the fog,
+  Trees +26, Reprisal +31, One Kind Favor +34 — a pacing pick, not printed in the book; Events
+  7 and 9 start unplanned). "Any day now" gets −/+ to move each one and × to take it off the
+  calendar. Marking an event done records the day it was done on and pins it there, struck
+  through; events marked done before this change sit on their planned day. Marking the
+  Seance's pointer card on the Timeline tab done counts as well as the set-piece card.
+
 ## 2026-11-10 20:32
 
 ### Added

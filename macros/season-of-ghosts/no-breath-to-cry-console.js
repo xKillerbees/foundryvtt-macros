@@ -1539,16 +1539,37 @@ const CAL_FIXED = [
   { day: 71, label: "Event 13 — Interview with a Spider", note: "Shinzo's prophecy in Event 4 says she comes on the winter solstice; the Winter Timeline puts her on Day 71. Pick one.", tone: "plum", go: ["ch9", "pieces"], card: "ch9-spider" },
   { day: 72, label: "New Year's Day — the 5th-rank Transmigrate, once the Eternal Lantern is relit", tone: "gold", go: ["ch10", "after"] }
 ];
-/* Unscheduled events: any day after the return. */
+/* Unscheduled events: any day after the return. The book pins none of these
+   to a day, so the calendar pencils each in at a suggested day after the
+   return (the 4th field, days after "Back from the dream") — NOT printed in
+   the book, just a pacing pick: the Brunch two days after Shinzo's second
+   visit, the Seance inside the fog after the storm, the optional three spread
+   over the quiet weeks before the slats are ready. The GM nudges each with
+   −/+, and marking one done records the day, so the calendar keeps showing
+   it where it happened. The 5th field is a pointer card on the Timeline tab
+   whose "Mark done" counts too. */
 const CAL_FLOATING = [
-  ["ch9-e7-fox", "Event 7 — The Fox Ghost", ["ch9", "timeline"]],
-  ["ch9-e9-crane", "Event 9 — The Crane-Wife", ["ch9", "timeline"]],
-  ["ch9-e11-nosois", "Event 11 — Nosois' Brunch", ["ch9", "timeline"]],
-  ["ch9-seance", "Event 12 — The Seance (before the first Transmigrate)", ["ch9", "pieces"]],
-  ["ch9-e14-trees", "Event 14 — The Trees Live (optional)", ["ch9", "timeline"]],
-  ["ch9-e15-reprisal", "Event 15 — Reprisal (optional)", ["ch9", "timeline"]],
-  ["ch9-e16-favor", "Event 16 — One Kind Favor (optional)", ["ch9", "timeline"]]
+  ["ch9-e7-fox", "Event 7 — The Fox Ghost", ["ch9", "timeline"], null],
+  ["ch9-e9-crane", "Event 9 — The Crane-Wife", ["ch9", "timeline"], null],
+  ["ch9-e11-nosois", "Event 11 — Nosois' Brunch", ["ch9", "timeline"], 17],
+  ["ch9-seance", "Event 12 — The Seance (before the first Transmigrate)", ["ch9", "pieces"], 23, "ch9-e12-seance-pointer"],
+  ["ch9-e14-trees", "Event 14 — The Trees Live (optional)", ["ch9", "timeline"], 26],
+  ["ch9-e15-reprisal", "Event 15 — Reprisal (optional)", ["ch9", "timeline"], 31],
+  ["ch9-e16-favor", "Event 16 — One Kind Favor (optional)", ["ch9", "timeline"], 34]
 ];
+const floatDone = (s, f) => !!(s.cleared[f[0]] || (f[4] && s.cleared[f[4]]));
+/* The planned day: the GM's nudge, else the suggestion. null = not planned. */
+function floatPlan(s, f) {
+  const A = s.anchors ?? {}, p = s.floatPlan?.[f[0]];
+  if (p != null) return p > 0 ? p : null;
+  return A.back && f[3] != null ? A.back + f[3] : null;
+}
+/* Where a floating event sits on the calendar: the day it was marked done,
+   else (done before days were recorded) its planned day. */
+function floatDay(s, f) {
+  if (floatDone(s, f)) return s.clearedDay?.[f[0]] ?? s.clearedDay?.[f[4]] ?? floatPlan(s, f);
+  return floatPlan(s, f);
+}
 
 function calHorizon(s) {
   const A = s.anchors ?? {};
@@ -1573,6 +1594,11 @@ function calEntries(s) {
     add(d, { label: "Event 5 — Faceless Evil begins (an incident every 1d4 days)", tone: "slate", go: ["ch9", "timeline"], card: "ch9-e5-faceless" });
     add(d + 21, { label: "The severe winter storm and heavy fog Shinzo foretold", tone: "ice", go: ["clock"] });
     for (let v = d + 14; v <= end; v += 14) add(v, { label: "Shinzo returns — trade, advice, Consulting Experts (Occultism)", tone: "muted", go: ["ch9", "research"] });
+    for (const f of CAL_FLOATING) {
+      const day = floatDay(s, f), done = floatDone(s, f);
+      if (day) add(day, { label: done ? f[1] : `${f[1]} · planned`, tone: f[0] === "ch9-seance" ? "plum" : f[1].includes("optional") ? "moss" : "gold",
+        go: f[2], card: f[0], done, float: !done });
+    }
   }
   if (A.slats) add(A.slats + soakDays(s), { label: `Sakaki slats ready — ${soakWeeks(s)} weeks after they went to soak${soakWeeks(s) < SOAK_MAX ? " (soak shortened)" : ""}`, tone: "ember", go: ["ch9", "research"] });
   if (A.ritual) {
@@ -1650,7 +1676,7 @@ function calPending(s) {
     : "Mindscape Shift hasn't been cast. The book expects the dream in the first week; Chapter 9's events wait for the return." });
   else if (!A.back) out.push({ warn: false, text: `In Heh's dream since Day ${A.cast}. Record the day they come back.` });
   if (A.back && !A.slats) out.push({ warn: s.day > A.back + 7, text: "The sakaki slats aren't soaking yet — they take six weeks and can't be hurried." });
-  if (A.back && !A.ritual && !s.cleared["ch9-seance"] && s.day >= 25) out.push({ warn: true, text: "The Seance must run before the first Transmigrate (around Day 30)." });
+  if (A.back && !A.ritual && !floatDone(s, CAL_FLOATING.find(f => f[0] === "ch9-seance")) && s.day >= 25) out.push({ warn: true, text: "The Seance must run before the first Transmigrate (around Day 30)." });
   return out;
 }
 
@@ -1665,6 +1691,8 @@ function blankState(pcs) {
     terror: 0,
     influence: {},
     cleared: {},          // card key -> true
+    clearedDay: {},       // card key -> the day it was marked done
+    floatPlan: {},        // floating event key -> planned day (0 = unplanned)
     beats: {},            // card key -> { beat key: true }
     ledger: {},           // card key -> [{ id, item, choice, day, out }] — tracked changes
     weeks: {},            // week -> { troubles, pcs: { pc -> entry }, days: { day -> { pc -> check } }, attrition }
@@ -1872,7 +1900,21 @@ class Winter {
   toggleCleared(key) {
     const on = !!this.s.cleared[key];
     this.s.cleared[key] = !on;
+    /* Remember the day, so the calendar shows a floating event where it ran. */
+    const cd = this.s.clearedDay ?? (this.s.clearedDay = {});
+    if (on) delete cd[key]; else cd[key] = this.s.day;
     this.log(`${key}: ${on ? "reopened" : "cleared"}.`);
+    this.touch();
+  }
+
+  /* Nudge a floating event's planned day; 0 takes it off the calendar. */
+  planFloating(key, delta) {
+    const f = CAL_FLOATING.find(x => x[0] === key);
+    if (!f) return;
+    const plans = this.s.floatPlan ?? (this.s.floatPlan = {});
+    if (!delta) plans[key] = 0;
+    else plans[key] = Math.max(1, (floatPlan(this.s, f) ?? this.s.day) + delta);
+    this.log(`${key}: planned ${plans[key] ? `Day ${plans[key]}` : "for no day"}.`);
     this.touch();
   }
 
@@ -2411,13 +2453,13 @@ class WNRApp extends BaseApp {
       return `<div class="calday ${d === s.day ? "today" : ""} ${d < s.day ? "past" : ""}">
         <span class="dnum">Day ${d}${d === s.day ? " · today" : ""}</span>
         <div class="dlist">${items.length ? items.map(e => `
-          <div class="ditem ${e.weekly ? "weekly" : ""} ${e.card && s.cleared[e.card] ? "done" : ""}" style="--tone:var(--${e.tone})">
+          <div class="ditem ${e.weekly ? "weekly" : ""} ${e.float ? "planned" : ""} ${e.done || (e.card && s.cleared[e.card]) ? "done" : ""}" style="--tone:var(--${e.tone})">
             <span>${e.label}${e.note ? `<em>${e.note}</em>` : ""}</span>${go(e)}</div>`).join("") : `<div class="ditem quiet">—</div>`}
           ${checks(d)}</div>
       </div>`;
     }).join("");
     const pending = calPending(s);
-    const floating = A.back ? CAL_FLOATING.filter(([k]) => !s.cleared[k]) : [];
+    const floating = A.back ? CAL_FLOATING.filter(f => !floatDone(s, f)) : [];
     return `
       <section class="panel cal" style="--tone:var(--moss)">
         <h3>Winter calendar <small>Day ${s.day} · Week ${s.week}</small></h3>
@@ -2433,7 +2475,15 @@ class WNRApp extends BaseApp {
         ${pending.map(p => `<p class="${p.warn ? "blocked" : "hint"}">${p.text}</p>`).join("")}
         <div class="caldays">${days}</div>
         ${floating.length ? `<div class="sub"><div class="subhead"><i class="fa-solid fa-shuffle"></i> Any day now <span>${floating.length} open</span></div>
-          <div class="floatrow">${floating.map(([k, label, g]) => `<span class="fchip">${label}${go({ go: g, card: k })}</span>`).join("")}</div></div>` : ""}
+          <div class="floatrow">${floating.map(f => {
+            const p = floatPlan(s, f);
+            return `<span class="fchip">${f[1]}
+              <button type="button" class="qbtn" data-act="fplan" data-k="${f[0]}" data-d="-1" title="Plan it a day earlier" ${ro ? "disabled" : ""}>−</button>
+              <b class="fday">${p ? `Day ${p}` : "unplanned"}</b>
+              <button type="button" class="qbtn" data-act="fplan" data-k="${f[0]}" data-d="1" title="Plan it a day later" ${ro ? "disabled" : ""}>+</button>
+              ${p ? `<button type="button" class="qbtn" data-act="fplan" data-k="${f[0]}" data-d="0" title="Take it off the calendar" ${ro ? "disabled" : ""}>×</button>` : ""}
+              ${go({ go: f[2], card: f[0] })}</span>`;
+          }).join("")}</div></div>` : ""}
         <div class="sub"><div class="subhead"><i class="fa-solid fa-thumbtack"></i> Pivot days <span>set to today as they happen</span></div>
           ${ANCHORS.map(a => `<div class="inflrow">
             <span class="ilabel">${a.label}</span><b>${A[a.key] ? `Day ${A[a.key]}` : "—"}</b>
@@ -2775,6 +2825,7 @@ class WNRApp extends BaseApp {
       else if (a === "terror") t.setTerror(Number(btn.dataset.d));
       else if (a === "infl") t.setInfluence(btn.dataset.k, Number(btn.dataset.d), Number(btn.dataset.max));
       else if (a === "cleared") t.toggleCleared(btn.dataset.k);
+      else if (a === "fplan") t.planFloating(btn.dataset.k, Number(btn.dataset.d));
       else if (a === "postarea") t.postArea(cardByKey(btn.dataset.k), btn.dataset.ch ?? "");
       else if (a === "postchecks") t.postChecks(cardByKey(btn.dataset.k), btn.dataset.ch ?? "");
       else if (a === "dcheck") t.dayCheck(Number(btn.dataset.day), btn.dataset.pc, btn.dataset.deg);
@@ -2976,6 +3027,8 @@ class WNRApp extends BaseApp {
       .nbt .ditem em { display:block; font-size:.72rem; color:var(--muted); }
       .nbt .ditem.weekly { font-size:.72rem; color:var(--muted); }
       .nbt .ditem.done > span { text-decoration:line-through; opacity:.6; }
+      .nbt .ditem.planned { border-left-style:dashed; }
+      .nbt .fchip .fday { font-size:.72rem; white-space:nowrap; }
       .nbt .ditem.quiet { border-left-color:transparent; color:var(--muted); }
       .nbt .dchecks { display:flex; flex-wrap:wrap; align-items:center; gap:.25rem .6rem; margin-top:.15rem;
                      padding:.2rem .35rem; border-radius:3px; background:var(--stripe); }
