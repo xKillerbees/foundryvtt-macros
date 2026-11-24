@@ -2862,9 +2862,14 @@ async function confirmReset() {
   {
     if (globalThis.__sogDowntimeHook) Hooks.off("updateSetting", globalThis.__sogDowntimeHook);
     globalThis.__sogDowntimeHook = Hooks.on("updateSetting", (setting, changes, opts, userId) => {
-      if (setting.key !== SETTING_ID || userId === game.user.id) return;
+      /* Adopt the pools whenever they differ from memory — including writes from
+         this same client by the winter, summer, monastery and duel consoles, which
+         all draw on these pools. Skipping same-client writes left this window
+         stale, and its next save put the old pools back. Our own saves compare
+         equal and are skipped. */
+      if (setting.key !== SETTING_ID) return;
       const fresh = typeof setting.value === "string" ? JSON.parse(setting.value) : setting.value;
-      if (!fresh) return;
+      if (!fresh || JSON.stringify(fresh) === JSON.stringify(tracker.state)) return;
       tracker.state = fresh;
       tracker.render();
     });

@@ -2482,11 +2482,21 @@ if (AppV2) {
   const summer = new Summer(state);
   const app = new SummerApp(summer);
 
-  if (!globalThis.__smrHook) {
+  /* Re-registered on every run: the hook closes over this run's window, so
+     keeping the first run's hook would leave a reopened window deaf to updates. */
+  {
+    if (globalThis.__smrHook) Hooks.off("updateSetting", globalThis.__smrHook);
     globalThis.__smrHook = Hooks.on("updateSetting", (setting, changes, opts, userId) => {
-      if ((setting.key !== SMR_ID && setting.key !== DOWNTIME_ID) || userId === game.user.id) return;
+      /* The downtime pools are read live, so a write there only needs a repaint
+         (adopting it as our state would replace this console's state with the
+         downtime tracker's). */
+      if (setting.key === DOWNTIME_ID) return summer.render();
+      /* Adopt our setting whenever it differs from memory — including a write
+         from this same client by the campaign tracker, which shares toggles with
+         this console. Our own saves compare equal and are skipped. */
+      if (setting.key !== SMR_ID) return;
       const fresh = typeof setting.value === "string" ? JSON.parse(setting.value) : setting.value;
-      if (fresh) { summer.state = fresh; summer.render(); }
+      if (fresh && JSON.stringify(fresh) !== JSON.stringify(summer.state)) { summer.state = fresh; summer.render(); }
     });
   }
   app.render(true);

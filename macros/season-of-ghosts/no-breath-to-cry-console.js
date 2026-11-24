@@ -268,6 +268,7 @@ const CH8_EVENTS = [
         loot: ["Greater smokestick (Myna)", "4 moderate healing potions (Myna)"] },
       { key: "ch8-rescue-0", label: "0 civilians rescued", note: "tick exactly one · lose 2 Hope Points and 1 Reputation Point with each faction", hope: -2, rep: -1 },
       { key: "ch8-mill-collapse", label: "Cloud Paper House collapsed", note: "Collapse only: lose 1 Security Point. Collapsed or merely damaged, the mill can no longer be used as a work site or to purchase paper/paper products. If damaged, spending 4 Security Points repairs it after 2 weeks of work.", security: -1 },
+      { key: "ch8-mill-damaged", label: "Cloud Paper House damaged, not collapsed", note: "No Security cost by itself — but, like a collapse, the mill can no longer be used as a work site or to buy paper. Record the 4-Security repair under Tracked changes when the party pays for it. Tick this or the collapse, not both; leave both clear if the mill came through whole." },
       { key: "ch8-mr-jelly", label: "Mr. Jelly returned intact", note: "Yu Er's parents give the party a pair of boots of bounding. The book says “recovered intact” — whether a repaired doll counts is your call.",
         loot: ["Boots of bounding (Yu Er's parents)"] },
       { key: "ch8-waldgeists", label: "Both waldgeists defeated before they vanished", note: "One day later the town elder presents the reward. If the waldgeists vanished on their own, fears that they may return linger.",
@@ -530,6 +531,9 @@ const CH8_DREAM = [
       ["The Monsters and Hauntings", "“Kugaptee might have killed you, but he's still dead and imprisoned, his tongue lolling hungrily toward your blood. He thinks of nothing but consuming those he has tasted. Those faceless dolls and hissing creatures that plague our town are his first step. When you rashly came here, Kugaptee pulled a tiny piece of your soul away with his teeth and turned it into a servitor. Even now, your doubles hammer at the doors to this manor, eager to take your faces for their own. That's who waits for you when you leave this place. That's what fate has in store for you. You see... ghosts like us can die, too...”"],
       ["“We came from a different mindscape than yours”", "“Nonsense. You've been here all along. Death does things to the mind, you know. It's okay. I understand.” — Nothing the PCs say can convince him in the short time they have."],
       ["“What do we do now?”", "“Why would you ask me? It is too late for forgiveness. We're all dead. In the end, I couldn't protect anything. I failed as a governor. I failed as a savior. I failed as a human being. Were you hoping I could somehow save you? That my magic could bring you back to life? Or do you want to have it out?”"]
+    ],
+    beats: [
+      { key: "ch8-jorogumo-warning", label: "His warning heard — he hid Kugaptee to keep the jorogumo from finding him", note: "From his answer to Kugaptee's Awakening. It pays off in Act 4, when a jorogumo is drawn to the grave." }
     ]
   },
   {
@@ -1117,7 +1121,8 @@ const CH10_AREAS = [
     text: "Terror cap: acts here do not increase Terror past threshold 2 — the villagers have cried wolf too often; scares must happen inside the fortress to push past 2. At Terror 2+, the two exorcists from C1 are dispatched to patrol the village; they are here to quell villagers' fears and don't expect a real haunting, patrol a little over an hour, then return to C1. If they spot the PCs they attack to banish the ghosts; if one is reduced below 40 HP, both flee back to the barracks (C5).",
     note: "The party steps off the southern side of Dawnstep Bridge into the real Willowshore — ruins for over a century — as temporary constructs of ectoplasm: phantom, not undead, gear intact.",
     beats: [
-      { key: "ch10-village-scare", label: "Villager panic in the village", terror: 1, note: "Announce on screams of “ghosts!”; village acts cap at Terror 2" }
+      { key: "ch10-village-scare", label: "Villager panic in the village", terror: 1, note: "Announce on screams of “ghosts!”; village acts cap at Terror 2" },
+      { key: "ch10-village-uglycute", label: "Ugly Cute's remains found on the road out", note: "Mago Kai killed them before the campaign began. Don't comment on it — describe the fragments and move on." }
     ],
     aside: {
       title: "Ugly Cute",
@@ -1464,7 +1469,11 @@ const CH10_AFTER = [
     when: "Aftermath",
     tone: "ember",
     text: "Anyone who touches the ringer feels an urge to return it to the Eternal Lantern. Placed inside the Eternal Lantern in the living-world ruins, the ringer instantly reverts to a receptacle and flares into light — no offerings of coins needed. The lantern had stayed dark and the party trapped in the mindscape until the ringer was recovered from Kai; this is the point where it finally relights.",
-    note: "Gain the temple bell ringer from Mago Kai — he carries it; the codex in C20 explains the disarming method (eight strikes in succession)."
+    note: "Gain the temple bell ringer from Mago Kai — he carries it; the codex in C20 explains the disarming method (eight strikes in succession).",
+    beats: [
+      { key: "ch10-after-ringer", label: "The bell ringer taken from Mago Kai", note: "He carries it himself. Without it the warding bell can't be disarmed or destroyed." },
+      { key: "ch10-after-relit", label: "The ringer placed in the Eternal Lantern — the lantern relit", note: "In the living-world ruins. It reverts to a receptacle and flares into light; no coin offerings needed." }
+    ]
   },
   {
     key: "ch10-after-clock",
@@ -3126,11 +3135,20 @@ if (AppV2) {
   const winter = new Winter(state);
   const app = new WNRApp(winter);
 
-  if (!globalThis.__nbtHook) {
+  /* Re-registered on every run: the hook closes over this run's window, so
+     keeping the first run's hook would leave a reopened window deaf to updates. */
+  {
+    if (globalThis.__nbtHook) Hooks.off("updateSetting", globalThis.__nbtHook);
     globalThis.__nbtHook = Hooks.on("updateSetting", (setting, changes, opts, userId) => {
-      if ((setting.key !== WNR_ID && setting.key !== DOWNTIME_ID) || userId === game.user.id) return;
+      /* The pools are read live, so a downtime write only needs a repaint. Our
+         own setting is adopted whenever it differs from what's in memory — which
+         includes a write from this same client by another macro (the campaign
+         tracker shares toggles with this one). Our own saves compare equal and
+         are skipped; a stale window would otherwise save over the change. */
+      if (setting.key === DOWNTIME_ID) return winter.render();
+      if (setting.key !== WNR_ID) return;
       const fresh = typeof setting.value === "string" ? JSON.parse(setting.value) : setting.value;
-      if (fresh) { winter.state = fresh; winter.render(); }
+      if (fresh && JSON.stringify(fresh) !== JSON.stringify(winter.state)) { winter.state = fresh; winter.render(); }
     });
   }
   app.render(true);

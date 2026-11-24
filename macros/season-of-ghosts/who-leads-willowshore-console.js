@@ -1405,11 +1405,21 @@ if (AppV2) {
   const whoLeads = new WhoLeads(state);
   const app = new WLRApp(whoLeads);
 
-  if (!globalThis.__wlwHook) {
+  /* Re-registered on every run: the hook closes over this run's window, so
+     keeping the first run's hook would leave a reopened window deaf to updates. */
+  {
+    if (globalThis.__wlwHook) Hooks.off("updateSetting", globalThis.__wlwHook);
     globalThis.__wlwHook = Hooks.on("updateSetting", (setting, changes, opts, userId) => {
-      if ((setting.key !== WLR_ID && setting.key !== DOWNTIME_ID) || userId === game.user.id) return;
+      /* The downtime pools are read live, so a write there only needs a repaint
+         (adopting it as our state would replace this console's state with the
+         downtime tracker's). */
+      if (setting.key === DOWNTIME_ID) return whoLeads.render();
+      /* Adopt our setting whenever it differs from memory — including a write
+         from this same client by the campaign tracker, which shares toggles with
+         this console. Our own saves compare equal and are skipped. */
+      if (setting.key !== WLR_ID) return;
       const fresh = typeof setting.value === "string" ? JSON.parse(setting.value) : setting.value;
-      if (fresh) { whoLeads.state = fresh; whoLeads.render(); }
+      if (fresh && JSON.stringify(fresh) !== JSON.stringify(whoLeads.state)) { whoLeads.state = fresh; whoLeads.render(); }
     });
   }
   app.render(true);

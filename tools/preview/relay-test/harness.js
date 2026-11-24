@@ -47,7 +47,9 @@ globalThis.foundry = {
     }
   },
   applications: {
-    api: { ApplicationV2: class { constructor() {} async render() { return this; } } },
+    /* Every window built is kept on globalThis.__apps, so a test can reach the
+       engine a macro's app was built around (most keep it on `app.t`). */
+    api: { ApplicationV2: class { constructor() { (globalThis.__apps ??= []).push(this); } async render() { return this; } close() {} } },
     ux: { TextEditor: { implementation: { getDragEventData: () => null } } }
   }
 };
@@ -151,13 +153,25 @@ function buildGame(userId) {
     users,
     actors: actorCollection,
     socket: { on: () => {}, emit: () => {} },
+    /* No adventure journals out here — lookups fall through to "not found". */
+    journal: Object.assign([], { get: () => null, getName: () => null }),
+    packs: [],
+    playlists: Object.assign([], { get: () => null, getName: () => null }),
     system: { id: "pf2e" },
     modules: { get: () => ({ active: false }) },
     settings: {
       settings: settingDefs,
       register: (ns, key, def) => settingDefs.set(`${ns}.${key}`, def),
-      get: (ns, key) => settingStore.get(`${ns}.${key}`) ?? null,
-      set: async (ns, key, value) => { settingStore.set(`${ns}.${key}`, value); return value; }
+      /* As Foundry does it: a world setting is stored as JSON, every get parses
+         a fresh copy, and every set fires updateSetting on this client too, with
+         the writer's user id. Macros that share a setting depend on all three. */
+      get: (ns, key) => { const v = settingStore.get(`${ns}.${key}`); return v == null ? null : JSON.parse(v); },
+      set: async (ns, key, value) => {
+        const json = JSON.stringify(value ?? null);
+        settingStore.set(`${ns}.${key}`, json);
+        globalThis.Hooks.call("updateSetting", { key: `${ns}.${key}`, value: json }, { value: json }, {}, globalThis.game.user.id);
+        return value;
+      }
     }
   };
 }

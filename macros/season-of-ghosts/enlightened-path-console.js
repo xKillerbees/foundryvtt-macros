@@ -801,11 +801,17 @@ if (AppV2) {
   const tracker = new PathTracker(state);
   const app = new EPApp(tracker);
 
-  if (!globalThis.__epHook) {
+  /* Re-registered on every run: the hook closes over this run's window, so
+     keeping the first run's hook would leave a reopened window deaf to updates. */
+  {
+    if (globalThis.__epHook) Hooks.off("updateSetting", globalThis.__epHook);
     globalThis.__epHook = Hooks.on("updateSetting", (setting, changes, opts, userId) => {
-      if (setting.key !== EP_ID || userId === game.user.id) return;
+      /* Adopt our setting whenever it differs from memory — including a write
+         from this same client by the campaign tracker, which shares toggles with
+         this console. Our own saves compare equal and are skipped. */
+      if (setting.key !== EP_ID) return;
       const fresh = typeof setting.value === "string" ? JSON.parse(setting.value) : setting.value;
-      if (fresh) { tracker.state = fresh; tracker.render(); }
+      if (fresh && JSON.stringify(fresh) !== JSON.stringify(tracker.state)) { tracker.state = fresh; tracker.render(); }
     });
   }
   app.render(true);

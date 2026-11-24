@@ -8,9 +8,8 @@
    and items that outlive it; anything with a downstream payoff also appears on
    the Threads tab, which turns red once the party reaches the chapter that
    needs it. Reads the chapter consoles' saved state for a live rollup, and
-   shares a handful of toggles with them — the lantern, the ringleaders, the
-   named leader, and the shrine lights — as ONE value, settable from here or
-   from that chapter's own console.
+   every checklist item a console also tracks is the SAME value as that
+   console's — tick it here or there, never both. See BRIDGE below.
 
    Starts at Chapter 1 with nothing ticked. Click a chapter's status button to
    move the table forward; everything else keys off wherever it says you are.
@@ -30,20 +29,93 @@ const CONSOLES = {
   downtime: "world.sogFallDowntime",
   festival: "world.sogFirstLongNight",
   path: "world.sogEnlightenedPath",
-  ruins: "world.sogRuinsOfWisdom"
+  ruins: "world.sogRuinsOfWisdom",
+  winter: "world.sogWinter"
 };
+const CONSOLE_NAMES = {
+  summer: "Summer", duel: "Who Leads Willowshore", downtime: "Fall Downtime Tracker",
+  festival: "First Long Night", path: "Enlightened Path", ruins: "Ruins of Wisdom",
+  winter: "No Breath to Cry"
+};
+const DOWNTIME_KEY = "sogFallDowntime";
 
 /* --------------------------------------------------------- shared toggles
-   Some checklist items are the SAME value the individual chapter console
-   stores — the lantern, the ringleaders, the named leader, the three shrine
-   lights. Rather than keep a second copy here, the tracker reads and writes
-   the console's own setting field, so ticking a box here is the same toggle
-   the console shows, and vice versa. That is what lets you skip Act 1 (never
-   run the Summer console) yet still mark the lantern as lit from here.
+   A checklist item that a chapter console also tracks is the SAME value the
+   console stores. Rather than keep a second copy here, the tracker reads and
+   writes the console's own setting field, so ticking a box here is the same
+   toggle the console shows, and vice versa. That is what lets you skip Act 1
+   (never run the Summer console) yet still mark the lantern as lit from here.
 
    Keyed by the tracker's own flag id (`"<chapter>.<itemKey>"`, see flagId).
-   `setting` is a key into CONSOLES; `get`/`set` read/write that console's
-   state object; `chip` is how the rollup strip renders the toggleable element. */
+   `setting` is a key into CONSOLES; `get(s)` reads that console's state and
+   `set(s, v, ctx)` writes it. A console beat that grants points grants them
+   from here too, exactly as the console's own checkbox would — XP into that
+   console's tally, Hope / Food / Security / Reputation into the Fall Downtime
+   Tracker's pools through `ctx.dt()` — so unticking it in either place takes
+   back exactly what was given. `set` returns a string to refuse.
+
+   `readOnly` items are worked out from a console's numbers (Research Points,
+   an Influence total, a rolled ledger) and can only be changed there. While
+   that console has never been run they fall back to an ordinary tick here.
+
+   `chip` puts the item on the rollup strip as a toggle button. */
+const dtOf = (ctx) => { const dt = ctx?.dt?.(); return dt?.pools ? dt : null; };
+function applyFx(s, fx, d, ctx) {
+  if (!fx) return;
+  if (fx.xp) s.xp = (s.xp ?? 0) + d * fx.xp;
+  if (fx.terror) s.terror = Math.min(8, Math.max(0, (s.terror ?? 0) + d * fx.terror));
+  if (fx.hope || fx.food || fx.security || fx.rep || fx.repS || fx.repN) {
+    const dt = dtOf(ctx);
+    if (!dt) return;           // the consoles skip the pools too when there's no downtime state
+    ctx.dtDirty = true;
+    for (const k of ["hope", "food", "security"]) if (fx[k]) dt.pools[k] = (dt.pools[k] ?? 0) + d * fx[k];
+    dt.rep = dt.rep ?? { southbank: 0, northridge: 0 };
+    const S = (fx.rep ?? 0) + (fx.repS ?? 0), N = (fx.rep ?? 0) + (fx.repN ?? 0);
+    if (S) dt.rep.southbank = (dt.rep.southbank ?? 0) + d * S;
+    if (N) dt.rep.northridge = (dt.rep.northridge ?? 0) + d * N;
+  }
+}
+/* A beat checkbox on one of a console's cards: `s.beats[card][beat]`. `mark` is
+   what the console stores for a tick (the winter console stores 1, the others
+   true). `excl` lists the card's other "tick exactly one" beats. */
+function beatBridge(setting, card, beat, { fx = null, mark = true, excl = null } = {}) {
+  return { setting,
+    get: s => !!s.beats?.[card]?.[beat],
+    set: (s, v, ctx) => {
+      const B = ((s.beats ??= {})[card] ??= {});
+      if (!!B[beat] === v) return;
+      if (v && excl?.some(k => B[k])) return "Another result on that card is already ticked in the console — untick it there first.";
+      B[beat] = v ? mark : false;
+      applyFx(s, fx, v ? 1 : -1, ctx);
+    } };
+}
+/* An event or area marked done: `s.cleared[card]`. The winter console also
+   remembers the day, so the calendar shows the event where it ran. */
+function clearedBridge(setting, card, { day = false } = {}) {
+  return { setting,
+    get: s => !!s.cleared?.[card],
+    set: (s, v) => {
+      (s.cleared ??= {})[card] = v;
+      if (day) { const cd = (s.clearedDay ??= {}); if (v) cd[card] = s.day ?? 1; else delete cd[card]; }
+    } };
+}
+const readOnly = (setting, get) => ({ setting, readOnly: true, get });
+const winterBeat = (card, beat, o = {}) => beatBridge("winter", card, beat, { mark: 1, ...o });
+const ledgerHas = (s, card, test) => (s.ledger?.[card] ?? []).some(e => test(e.item));
+
+/* The Enlightened Path's shrines: enlightenment is all of a shrine's
+   conditions, and reaching it (or losing it) moves the console's 40 XP. */
+const SHRINE_CONDS = { d1: ["cleared", "slept"], d2: ["incense", "slept"], d3: ["iogaka", "bathe", "slept"] };
+const SHRINE_XP = 40;
+const lit = (s, d) => SHRINE_CONDS[d].every(k => s.shrines?.[d]?.[k]);
+function setShrine(s, d, keys, v) {
+  const was = lit(s, d);
+  const st = ((s.shrines ??= {})[d] ??= {});
+  for (const k of keys) st[k] = v;
+  const now = lit(s, d);
+  if (now !== was) s.xp = (s.xp ?? 0) + (now ? SHRINE_XP : -SHRINE_XP);
+}
+
 const BRIDGE = {
   "1.lantern": { setting: "summer",
     get: s => !!s.lantern,
@@ -70,19 +142,99 @@ const BRIDGE = {
 
   "6.bridge": { setting: "path",
     get: s => !!(s.shrines?.d1?.cleared && s.shrines?.d1?.slept),
-    set: (s, v) => { if (!s.shrines) s.shrines = {}; if (!s.shrines.d1) s.shrines.d1 = {}; s.shrines.d1.cleared = v; s.shrines.d1.slept = v; },
+    set: (s, v) => setShrine(s, "d1", SHRINE_CONDS.d1, v),
     chip: { label: "Bridge Shrine", on: "lit", off: "dark", tone: "gold" } },
 
   "6.garden": { setting: "path",
     get: s => !!(s.shrines?.d2?.incense && s.shrines?.d2?.slept),
-    set: (s, v) => { if (!s.shrines) s.shrines = {}; if (!s.shrines.d2) s.shrines.d2 = {}; s.shrines.d2.incense = v; s.shrines.d2.slept = v; },
+    set: (s, v) => setShrine(s, "d2", SHRINE_CONDS.d2, v),
     chip: { label: "Garden Shrine", on: "lit", off: "dark", tone: "gold" } },
 
   "6.mountain": { setting: "path",
     get: s => !!(s.shrines?.d3?.iogaka && s.shrines?.d3?.bathe && s.shrines?.d3?.slept),
-    set: (s, v) => { if (!s.shrines) s.shrines = {}; if (!s.shrines.d3) s.shrines.d3 = {}; s.shrines.d3.iogaka = v; s.shrines.d3.bathe = v; s.shrines.d3.slept = v; },
-    chip: { label: "Mountain Shrine", on: "lit", off: "dark", tone: "gold" } }
+    set: (s, v) => setShrine(s, "d3", SHRINE_CONDS.d3, v),
+    chip: { label: "Mountain Shrine", on: "lit", off: "dark", tone: "gold" } },
+
+  /* ---- Act 1, the Summer console ---- */
+  "1.elders": readOnly("summer", s => !!(s.beats?.["ch1-meeting-matsuki"]?.["ch1-contact-matsuki"]
+                                      && s.beats?.["ch1-meeting-granny-hu"]?.["ch1-contact-granny-hu"])),
+  "2.prison": beatBridge("summer", "ch2-b4", "ch2-b4-rescue", { fx: { xp: 40, repN: 1 } }),
+  "3.willow": beatBridge("summer", "ch3-mists-gw-visit", "gw-friendly"),
+  "3.teahouse": beatBridge("summer", "ch3-opp-teahouse", "teahouse-claimed", { fx: { xp: 40 } }),
+  "3.teafarm": beatBridge("summer", "ch3-opp-teafarm", "blight-scoured", { fx: { xp: 20 } }),
+  "3.expansion": beatBridge("summer", "ch3-opp-expansion", "expansion-secured", { fx: { xp: 20, repS: 1 } }),
+  "4.advance": beatBridge("summer", "ch4-advance-knowledge", "ch4-adv-map"),
+  "4.gift": readOnly("summer", s => !!(s.beats?.["ch4-merchant-returns"]?.["ch4-merchant-revenge"]
+                                    || s.beats?.["ch4-merchant-returns"]?.["ch4-merchant-subtlety"])),
+  "4.bargain": readOnly("summer", s => !!(s.beats?.["ch4-e14"]?.["ch4-e14-bargain"] || s.beats?.["ch4-e16"]?.["ch4-e16-deal"])),
+  "4.pledge": beatBridge("summer", "ch4-zoudous-rite", "ch4-rite-exchange", { excl: ["ch4-rite-refusal", "ch4-rite-combat"] }),
+  "4.abductees": beatBridge("summer", "ch4-concluding-act1", "ch4-conclude-abductees", { fx: { rep: 3 } }),
+
+  /* ---- Act 2: the downtime tracker, the Path, the monastery ---- */
+  "5.research": readOnly("downtime", s => Object.values(s.research ?? {}).reduce((a, b) => a + b, 0) >= 10),
+  "5.restored": readOnly("downtime", s => (s.pools?.restoration ?? 0) >= 5),
+  "5.yami": readOnly("downtime", s => !!s.yami?.bonded),
+  "5.feast": readOnly("downtime", s => !!s.feast?.ceremony),
+  "6.seed": readOnly("path", s => s.ritual?.cast === "success"),
+  "6.iogaka": { setting: "path", get: s => !!s.shrines?.d3?.iogaka, set: (s, v) => setShrine(s, "d3", ["iogaka"], v) },
+  "6.enko": { setting: "path", get: s => !!s.days?.d1?.B2,
+    set: (s, v) => { const d = ((s.days ??= {}).d1 ??= {}); if (!!d.B2 === v) return; d.B2 = v; s.xp = (s.xp ?? 0) + (v ? 40 : -40); } },
+  "6.bracelet": beatBridge("ruins", "e2", "charm"),
+  "6.gifts": readOnly("path", s => ["d1", "d2", "d3"].every(d => lit(s, d))),
+  "7.statues": readOnly("ruins", s => (s.order?.length ?? 0) >= 4),
+  "7.yenrui": beatBridge("ruins", "e11", "yenrui", { fx: { xp: 120 } }),
+  "7.watchers": beatBridge("ruins", "e11", "gifts"),
+  "7.head": beatBridge("ruins", "e13", "head"),
+  "7.tea": beatBridge("ruins", "e6", "served"),
+  "7.yuni": beatBridge("ruins", "e2", "given"),
+  "7.xinyue": clearedBridge("ruins", "e16"),
+  "7.truth": readOnly("ruins", s => !!s.ledger?.told),
+
+  /* ---- Act 3, the No Breath to Cry console ---- */
+  "8.clock": readOnly("winter", s => (s.day ?? 1) > 1 || Object.values(s.weeks ?? {}).some(w => w?.attrition)),
+  "8.rescue": winterBeat("ch8-wrapping-up", "ch8-rescue-3", { fx: { xp: 120, hope: 3, rep: 1 },
+    excl: ["ch8-rescue-2", "ch8-rescue-1", "ch8-rescue-0"] }),
+  "8.jelly": winterBeat("ch8-wrapping-up", "ch8-mr-jelly"),
+  "8.mill": readOnly("winter", s => {
+    const B = s.beats?.["ch8-wrapping-up"] ?? {};
+    const fought = ["ch8-rescue-3", "ch8-rescue-2", "ch8-rescue-1", "ch8-rescue-0"].some(k => B[k]);
+    return fought && !B["ch8-mill-collapse"] && !B["ch8-mill-damaged"];
+  }),
+  "8.shift": readOnly("winter", s => (s.rp?.ch8 ?? 0) >= 8),
+  "8.talked": winterBeat("ch8-end-of-dream", "ch8-end-help-xp"),
+  "8.journal": winterBeat("ch8-end-of-dream", "ch8-end-xp", { fx: { xp: 120 } }),
+  "8.jorogumo": winterBeat("ch8-know-despair", "ch8-jorogumo-warning"),
+  "9.answers": clearedBridge("winter", "ch9-e4-shinzo", { day: true }),
+  "9.told": readOnly("winter", s => ledgerHas(s, "ch9-e4-shinzo", k => k.startsWith("dead-"))
+                                && ledgerHas(s, "ch9-e4-shinzo", k => k.startsWith("blame-"))),
+  "9.faceless": readOnly("winter", s => !!s.beats?.["ch9-e5-faceless"]?.["ch9-e5-reveal"]
+                                     && !ledgerHas(s, "ch9-e5-faceless", k => k === "prank5" || k === "murder")),
+  "9.chen": readOnly("winter", s => (s.influence?.["ch9-seance-chen"] ?? 0) >= 4),
+  "9.fenfang": readOnly("winter", s => (s.influence?.["ch9-seance-fenfang"] ?? 0) >= 4),
+  "9.guanghao": readOnly("winter", s => (s.influence?.["ch9-seance-guanghao"] ?? 0) >= 4),
+  "9.renmeili": readOnly("winter", s => (s.influence?.["ch9-ren-meili"] ?? 0) >= 12),
+  "9.seed1": winterBeat("ch9-seance", "ch9-seance-rework1"),
+  "9.seed2": winterBeat("ch9-spider", "ch9-spider-rework2"),
+  "9.transres": readOnly("winter", s => (s.rp?.ch9 ?? 0) >= 8),
+  "9.kiln": { setting: "winter", get: s => !!s.components?.kiln, set: (s, v) => { (s.components ??= {}).kiln = v; } },
+  "9.feathers": { setting: "winter", get: s => !!s.components?.feathers, set: (s, v) => { (s.components ??= {}).feathers = v; } },
+  "9.slats": { setting: "winter", get: s => !!s.components?.slats, set: (s, v) => { (s.components ??= {}).slats = v; } },
+  "9.emotions": winterBeat("ch9-blad", "ch9-blad-feelings"),
+  "9.between": winterBeat("ch9-blad", "ch9-blad-step", { fx: { xp: 80 } }),
+  "10.shrine": clearedBridge("winter", "ch10-c11", { day: true }),
+  "10.ringer": winterBeat("ch10-after-lantern", "ch10-after-ringer"),
+  "10.relit": winterBeat("ch10-after-lantern", "ch10-after-relit"),
+  "10.peace": winterBeat("ch10-c22", "ch10-c22-peace"),
+  "10.bell": winterBeat("ch10-after-bell", "ch10-after-bell-spared", { excl: ["ch10-after-bell-destroyed"] }),
+  "10.uglycute": winterBeat("ch10-village", "ch10-village-uglycute"),
+  /* The cash-out happens at the casting, so both items are that one beat. */
+  "10.transmigrate": winterBeat("ch10-after-ch11", "ch10-after-cast"),
+  "10.cashout": winterBeat("ch10-after-ch11", "ch10-after-cast")
 };
+/* The bridges that existed before every console item was shared. Their old
+   tracker ticks were carried into the consoles long ago; the rest are
+   reconciled by the one-time check at boot. */
+const BRIDGE_V1 = new Set(["1.lantern", "2.butcher", "2.douqiu", "3.duel", "6.bridge", "6.garden", "6.mountain"]);
 
 const bridgeFor = (n, key) => BRIDGE[`${n}.${key}`] ?? null;
 
@@ -335,7 +487,7 @@ const STATUS_ORDER = ["todo", "active", "done"];
    which is what makes the Threads tab able to warn. `hard` marks the ones the
    next chapter genuinely cannot proceed without. */
 const CHAPTERS = [
-  { n: 1, act: 1, title: "To Light the Night", level: 1, console: null,
+  { n: 1, act: 1, title: "To Light the Night", level: 1, console: "summer",
     spine: "The party wakes in the woods after the festival to a monster-held Willowshore. Ends with Gurglegut dead and the Eternal Lantern relit.",
     note: "The one chapter with no encounter-by-encounter breakdown here — the items below are reconstructed from what later chapters refer back to.",
     items: [
@@ -347,7 +499,7 @@ const CHAPTERS = [
       { key: "returning", label: "Returning Home encounter run (a PC lived downtown)" }
     ] },
 
-  { n: 2, act: 1, title: "Reclaiming Willowshore", level: 1, console: null,
+  { n: 2, act: 1, title: "Reclaiming Willowshore", level: 1, console: "summer",
     spine: "Urban clearance downtown, ending with Gray Butcher and Mo Douqiu dead. Runs on Reputation only — but nearly every room swings Northridge or Southbank.",
     items: [
       { key: "butcher", label: "Gray Butcher dead — the roaming pacing valve" },
@@ -359,7 +511,7 @@ const CHAPTERS = [
         note: "Helping them run costs Southbank Rep and turns Nadoya unfriendly." }
     ] },
 
-  { n: 3, act: 1, title: "The Willowshore Curse", level: 2, console: null,
+  { n: 3, act: 1, title: "The Willowshore Curse", level: 2, console: "summer",
     spine: "The sandbox chapter. Three investigations plus an Opportunities menu fill the summer, ending with the leadership duel.",
     items: [
       { key: "governor", label: "Missing Governor thread closed at Canary Inn", note: "A dead end by design — say so through fiction." },
@@ -378,7 +530,7 @@ const CHAPTERS = [
       { key: "lesson1", label: "Unfinished Lesson seed 1 — Zhi Hui's name at the Great Willow", pays: "Ch 7 · Lotus", at: 7 }
     ] },
 
-  { n: 4, act: 1, title: "The Wall of Ghosts", level: 3, console: null,
+  { n: 4, act: 1, title: "The Wall of Ghosts", level: 3, console: "summer",
     spine: "The act's dungeon. Two noppera-bo factions in the lumber camp, then the Ritual Site and the first look at Kugaptee's reach.",
     items: [
       { key: "ledger", label: "Zoudou's ledger recovered", hard: true, danger: true,
@@ -456,7 +608,7 @@ const CHAPTERS = [
       { key: "lesson", label: "Lotus's question asked of Zhi Hui", note: "Save it for the third or fourth purification, when she can stay long enough to answer." }
     ] },
 
-  { n: 8, act: 3, title: "Oblivion of Truth", level: 7, console: null,
+  { n: 8, act: 3, title: "Oblivion of Truth", level: 7, console: "winter",
     spine: "Winter day one. Three fights ten minutes apart, research toward Mindscape Shift, and Heh Shan-Bao's softened-death mindscape.",
     note: "The winter clock starts: −1d4 Hope, −1 Food, −1 Security every week. Willowshore starts at 225 people — track the number.",
     items: [
@@ -473,7 +625,7 @@ const CHAPTERS = [
       { key: "jorogumo", label: "His warning heard — a jorogumo will be drawn to the grave", pays: "Act 4", at: 11 }
     ] },
 
-  { n: 9, act: 3, title: "Face-to-Face with Death", level: 8, console: null, rework: true,
+  { n: 9, act: 3, title: "Face-to-Face with Death", level: 8, console: "winter", rework: true,
     spine: "Seventy-two in-game days, the longest chapter in the AP. Shinzo's answers, the winter events, and the ritual that kills the party on purpose.",
     items: [
       { key: "answers", label: "Event 4 — Shinzo's Answers run as questions, not a monologue",
@@ -504,7 +656,7 @@ const CHAPTERS = [
       { key: "between", label: "Between Life and Death survived — at least one PC stepped through" }
     ] },
 
-  { n: 10, act: 3, title: "This Place Is Ours", level: 9, console: null,
+  { n: 10, act: 3, title: "This Place Is Ours", level: 9, console: "winter",
     spine: "The party arrives in the real world 115 years later as phantoms on a one-month timer. For once, they are the ghost story.",
     note: "Foundry: the Terror in Karahai macro handles token positioning by terror level. Learn it before session.",
     items: [
@@ -892,7 +1044,17 @@ const OUR_MACROS = {
     { name: "Ruins of Wisdom Console", file: "ruins-of-wisdom-console.js",
       what: "the four statue purifications, Zhi Hui's manifestations, the per-area beats, and the aftermath ledger back into the downtime tracker" }
   ],
+  8: [
+    { name: "No Breath to Cry", file: "no-breath-to-cry-console.js",
+      what: "the whole of winter — the attrition clock on the downtime pools, Red Smoke's three fights, the Mindscape Shift research, and Heh Shan-Bao's dream" }
+  ],
+  9: [
+    { name: "No Breath to Cry", file: "no-breath-to-cry-console.js",
+      what: "Act 3's console — the seventy-two-day calendar, each PC's week, the transmigrate research and components, the Seance and Interview with a Spider" }
+  ],
   10: [
+    { name: "No Breath to Cry", file: "no-breath-to-cry-console.js",
+      what: "Act 3's console — the Terror engine, the Karahai village and fortress, and the aftermath: the bell, the lantern, and the casting" },
     { name: "Fall Downtime Tracker", file: "fall-downtime-tracker.js",
       what: "still worth opening — the pools it banked are the Preparation Points counted when Transmigrate fires" }
   ]
@@ -1364,15 +1526,26 @@ class Campaign {
 
   /* ----- flags ----- */
   flagId(n, key) { return `${n}.${key}`; }
+  /* A bridged item reads the console — unless it's worked out from numbers a
+     console that has never been run doesn't have yet, when it's a plain tick. */
+  bridgeLive(b) { return !!b && (!b.readOnly || !!this.consoleState(b.setting)); }
   flag(n, key) {
     const b = bridgeFor(n, key);
-    if (b) return b.get(this.consoleState(b.setting) ?? {});
+    if (this.bridgeLive(b)) return b.get(this.consoleState(b.setting) ?? {});
     return !!this.s.flags[this.flagId(n, key)];
   }
   toggleFlag(n, key) {
     const b = bridgeFor(n, key);
     const item = chapter(n)?.items.find(i => i.key === key);
-    if (b) { this.toggleConsole(b, item?.label ?? key); return; }
+    if (this.bridgeLive(b)) {
+      if (b.readOnly) {
+        ui.notifications.info(`Worked out from the ${CONSOLE_NAMES[b.setting]} macro — change it there.`);
+        this.render();
+        return;
+      }
+      this.toggleConsole(b, item?.label ?? key);
+      return;
+    }
     const id = this.flagId(n, key);
     const on = !!this.s.flags[id];
     if (on) delete this.s.flags[id]; else this.s.flags[id] = true;
@@ -1529,18 +1702,27 @@ class Campaign {
      setting is still null the console has never been run (and can't be open),
      so a minimal seed is safe: that console's boot merges blankState over it. */
   async toggleConsole(b, label) {
+    if (!this.editable) return;
     const ckey = CONSOLES[b.setting].split(".")[1];
     const st = game.settings.get("world", ckey) ?? {};
     const on = !b.get(st);
-    b.set(st, on);
-    if (this.editable) await game.settings.set("world", ckey, st);
-    this.log(`${b.chip.label} — ${on ? b.chip.on : b.chip.off}.`);
+    /* Points a console beat grants land in the downtime pools, read and
+       written back whole in the same way. */
+    let dt;
+    const ctx = { dtDirty: false, dt: () => (dt !== undefined ? dt : (dt = foundry.utils.deepClone(game.settings.get("world", DOWNTIME_KEY) ?? null))) };
+    const refused = b.set(st, on, ctx);
+    if (typeof refused === "string") { ui.notifications.warn(refused); this.render(); return; }
+    const said = b.chip ? `${b.chip.label} — ${on ? b.chip.on : b.chip.off}` : `${label} — ${on ? "done" : "undone"}`;
+    if (Array.isArray(st.log)) { st.log.unshift(`${said} (from the campaign tracker).`); st.log = st.log.slice(0, 60); }
+    await game.settings.set("world", ckey, st);
+    if (ctx.dtDirty && dt) await game.settings.set("world", DOWNTIME_KEY, dt);
+    this.log(`${said}.`);
     this.touch();
   }
   toggleConsoleByKey(id) {
     const b = BRIDGE[id];
     if (!b) return;
-    this.toggleConsole(b, b.chip.label);
+    this.toggleConsole(b, b.chip?.label ?? id);
   }
 
   get rollup() {
@@ -1552,6 +1734,7 @@ class Campaign {
        Act 1's Summer console) can still be marked here. Each reads and writes
        the same setting field the individual console uses. */
     for (const [id, b] of Object.entries(BRIDGE)) {
+      if (!b.chip) continue;
       const on = b.get(this.consoleState(b.setting) ?? {});
       out.push({ key: id, label: b.chip.label, value: on ? b.chip.on : b.chip.off,
         tone: b.chip.tone, on, toggle: true });
@@ -1568,6 +1751,12 @@ class Campaign {
       out.push({ label: "Week", value: `${dt.week} of 12`, tone: "gold" });
     }
     if (ruins?.order) out.push({ label: "Statues", value: `${ruins.order.length} of 4`, tone: "plum" });
+    const winter = this.consoleState("winter");
+    if (winter?.day) {
+      out.push({ label: "Winter", value: `Day ${winter.day} · week ${winter.week ?? Math.ceil(winter.day / 7)}`, tone: "slate" });
+      out.push({ label: "Population", value: winter.population ?? 225, tone: "rust" });
+      if (winter.terror) out.push({ label: "Terror", value: winter.terror, tone: "plum" });
+    }
     return out;
   }
 
@@ -1831,7 +2020,7 @@ class CSApp extends BaseApp {
           ${roll.map(r => r.toggle ? `
             <button type="button" class="meter ${r.on ? "on" : ""}" style="--tone:var(--${r.tone})"
               data-act="console" data-k="${r.key}" ${ro ? "disabled" : ""}
-              title="Shared with the ${r.label} toggle in its own chapter console">
+              title="The same value as the ${r.label} toggle in its own chapter console">
               <span>${r.label}</span><b>${r.value}</b></button>` : `
             <div class="meter" style="--tone:var(--${r.tone})">
               <span>${r.label}</span><b>${r.value}</b></div>`).join("")}
@@ -1988,7 +2177,7 @@ class CSApp extends BaseApp {
           <span class="lvl">Level ${c.level}</span>
           ${this.journalBtn({ desc: journalOf(c.n) }, "Open this chapter's journal")}
           ${c.rework ? `<span class="tag web">Two Weavers</span>` : ""}
-          ${c.console ? `<span class="tag">${c.console} console</span>` : ""}
+          ${c.console ? `<span class="tag">${CONSOLE_NAMES[c.console] ?? c.console} macro</span>` : ""}
           <button type="button" class="statbtn ${st}" data-act="cycle" data-n="${c.n}" ${ro ? "disabled" : ""}
             title="Click to advance status">${STATUS[st].label}</button>
         </h3>
@@ -2008,7 +2197,9 @@ class CSApp extends BaseApp {
             return `
               <div class="itemrow">
                 <label class="check ${on ? "on" : ""} ${st === "overdue" ? "overdue" : ""} ${st === "skipped" ? "skipped" : ""}">
-                  <input type="checkbox" data-act="flag" data-n="${c.n}" data-k="${i.key}" ${on ? "checked" : ""} ${ro ? "disabled" : ""}${shared ? ` title="Shared with the ${shared.chip.label} toggle in its chapter console"` : ""}>
+                  <input type="checkbox" data-act="flag" data-n="${c.n}" data-k="${i.key}" ${on ? "checked" : ""} ${ro || (shared?.readOnly && t.bridgeLive(shared)) ? "disabled" : ""}${shared ? ` title="${shared.readOnly
+                ? (t.bridgeLive(shared) ? `Worked out from the ${CONSOLE_NAMES[shared.setting]} macro — change it there` : `Worked out from the ${CONSOLE_NAMES[shared.setting]} macro once it's run; a plain tick until then`)
+                : `The same value as the ${CONSOLE_NAMES[shared.setting]} macro — tick it here or there`}"` : ""}>
                   <span class="lbl">${i.label}
                     ${i.hard ? `<span class="pip hard" title="A later chapter depends on this">required</span>` : ""}
                     ${i.danger ? `<span class="pip danger" title="Permanent or costly consequence">consequence</span>` : ""}
@@ -2532,7 +2723,7 @@ if (AppV2) {
      bridged items switch to reading the console's value. */
   if (game.user.isGM) {
     let changed = false;
-    for (const id of Object.keys(BRIDGE)) {
+    for (const id of BRIDGE_V1) {
       if (!state.flags?.[id]) continue;
       const b = BRIDGE[id];
       const ckey = CONSOLES[b.setting].split(".")[1];
@@ -2541,19 +2732,46 @@ if (AppV2) {
       delete state.flags[id];
       changed = true;
     }
+    /* Every other console item became shared later. A tick the tracker held
+       privately is NOT pushed into the console — that would grant the beat's
+       XP and pool points a second time if they were already applied by hand.
+       Where the console agrees the private tick is dropped; where it doesn't,
+       the GM gets one whispered list of items to tick in the console. */
+    const disagree = [];
+    for (const [id, b] of Object.entries(BRIDGE)) {
+      if (BRIDGE_V1.has(id) || !state.flags?.[id]) continue;
+      const cs = game.settings.get("world", CONSOLES[b.setting].split(".")[1]);
+      if (b.readOnly && !cs) continue;      // still a plain tick until that console runs
+      if (!b.get(cs ?? {})) {
+        const [n, key] = id.split(".");
+        disagree.push(`Ch ${n} — ${chapter(n)?.items.find(i => i.key === key)?.label ?? key} <i>(${CONSOLE_NAMES[b.setting]})</i>`);
+      }
+      delete state.flags[id];
+      changed = true;
+    }
     if (changed) await game.settings.set(CS_NS, CS_KEY, state);
+    if (disagree.length) ChatMessage.create({
+      whisper: game.users.filter(u => u.isGM).map(u => u.id),
+      speaker: { alias: "Season of Ghosts" },
+      content: `<p><b>Campaign tracker:</b> these items now share one value with their chapter console. The tracker had them ticked but the console doesn't — tick each one once, in either place. A tick moves that beat's XP and points exactly as the console's own checkbox does, so if you already applied them by hand, take them back off the pool afterwards.</p><ul>${disagree.map(x => `<li>${x}</li>`).join("")}</ul>`
+    });
   }
 
   const campaign = new Campaign(state);
   const app = new CSApp(campaign);
 
-  if (!globalThis.__cstHook) {
+  /* Re-registered on every run: the hook closes over this run's window, so
+     keeping the first run's hook would leave a reopened window deaf to updates. */
+  {
+    if (globalThis.__cstHook) Hooks.off("updateSetting", globalThis.__cstHook);
     const consoleIds = new Set(Object.values(CONSOLES));
     globalThis.__cstHook = Hooks.on("updateSetting", (setting, changes, opts, userId) => {
-      if (userId === game.user.id) return;
+      /* A console written from this same client (the winter console open beside
+         the tracker) has to repaint the tracker too, so only our own setting
+         skips same-content writes. */
       if (setting.key === CS_ID) {
         const fresh = typeof setting.value === "string" ? JSON.parse(setting.value) : setting.value;
-        if (fresh) { campaign.state = fresh; campaign.render(); }
+        if (fresh && JSON.stringify(fresh) !== JSON.stringify(campaign.state)) { campaign.state = fresh; campaign.render(); }
       } else if (consoleIds.has(setting.key)) {
         campaign.render();
       }
@@ -2563,7 +2781,9 @@ if (AppV2) {
   /* Playback state lives on the playlist, not in this console's state, so the
      play buttons only look right if something repaints them when a sound
      starts or stops — including when it was started from the sidebar. */
-  if (!globalThis.__cstSoundHook) {
+  {
+    if (globalThis.__cstSoundHook) Hooks.off("updatePlaylistSound", globalThis.__cstSoundHook);
+    if (globalThis.__cstPlaylistHook) Hooks.off("updatePlaylist", globalThis.__cstPlaylistHook);
     globalThis.__cstSoundHook = Hooks.on("updatePlaylistSound", () => campaign.render());
     globalThis.__cstPlaylistHook = Hooks.on("updatePlaylist", () => campaign.render());
   }

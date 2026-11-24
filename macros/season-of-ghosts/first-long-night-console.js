@@ -1211,11 +1211,17 @@ if (AppV2) {
   const fest = new Festival(state);
   const app = new FLNApp(fest);
 
-  if (!globalThis.__flnHook) {
+  /* Re-registered on every run: the hook closes over this run's window, so
+     keeping the first run's hook would leave a reopened window deaf to updates. */
+  {
+    if (globalThis.__flnHook) Hooks.off("updateSetting", globalThis.__flnHook);
     globalThis.__flnHook = Hooks.on("updateSetting", (setting, changes, opts, userId) => {
-      if (setting.key !== FLN_ID || userId === game.user.id) return;
+      /* Adopt our setting whenever it differs from memory — including a write
+         from this same client by the campaign tracker, which shares toggles with
+         this console. Our own saves compare equal and are skipped. */
+      if (setting.key !== FLN_ID) return;
       const fresh = typeof setting.value === "string" ? JSON.parse(setting.value) : setting.value;
-      if (fresh) { fest.state = fresh; fest.render(); }
+      if (fresh && JSON.stringify(fresh) !== JSON.stringify(fest.state)) { fest.state = fresh; fest.render(); }
     });
   }
 

@@ -1173,11 +1173,17 @@ if (AppV2) {
   const monastery = new Monastery(state);
   const app = new RWApp(monastery);
 
-  if (!globalThis.__rwHook) {
+  /* Re-registered on every run: the hook closes over this run's window, so
+     keeping the first run's hook would leave a reopened window deaf to updates. */
+  {
+    if (globalThis.__rwHook) Hooks.off("updateSetting", globalThis.__rwHook);
     globalThis.__rwHook = Hooks.on("updateSetting", (setting, changes, opts, userId) => {
-      if (setting.key !== RW_ID || userId === game.user.id) return;
+      /* Adopt our setting whenever it differs from memory — including a write
+         from this same client by the campaign tracker, which shares toggles with
+         this console. Our own saves compare equal and are skipped. */
+      if (setting.key !== RW_ID) return;
       const fresh = typeof setting.value === "string" ? JSON.parse(setting.value) : setting.value;
-      if (fresh) { monastery.state = fresh; monastery.render(); }
+      if (fresh && JSON.stringify(fresh) !== JSON.stringify(monastery.state)) { monastery.state = fresh; monastery.render(); }
     });
   }
   app.render(true);

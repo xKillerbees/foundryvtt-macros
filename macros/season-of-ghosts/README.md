@@ -159,7 +159,8 @@ The whole of Act 3 — winter — in one window: the clock and the three chapter
   Hope / Food / Security pools live, so winter's attrition draws down the same pools the rest of
   the act banked in — one source of truth, and the campaign tracker's rollup stays correct.
   Population starts at 225 and is tracked against the book's warning that the final number shapes
-  the AP's ending. The weekly attrition (−1d4 Hope, −1 Food, −1 Security), the Unexpected
+  the AP's ending. Its Act 3 beats are the same values as the Campaign Status Tracker's Chapter 8–10
+  checklist, so nothing has to be ticked twice. The weekly attrition (−1d4 Hope, −1 Food, −1 Security), the Unexpected
   Troubles complication roll, and the depleted-track costs all sit on this one tab.
 - **Winter runs a week at a time**, the way the fall tracker does. The calendar lists the
   viewed week's seven days with everything pinned to them. The events the book leaves
@@ -338,10 +339,21 @@ produced them.
   in a finished chapter is the shape the campaign took, not a warning
 - A live rollup strip read from the chapter consoles' saved state — the Act 1 lantern and
   ringleader toggles, the named leader, the downtime pools and week, the shrine enlightenments,
-  and the statues purified — so the campaign view doesn't need re-typing. The boolean elements
-  (lantern, ringleaders, leader, shrines) are **toggle buttons** that share one value with the
-  console that owns them: tick the lantern here or in the Summer console and it's the same
-  setting, so you can skip Act 1 yet still light the lantern from the tracker
+  and the statues purified, plus the winter day, population and Terror — so the campaign view
+  doesn't need re-typing. The boolean elements (lantern, ringleaders, leader, shrines) are
+  **toggle buttons** that share one value with the console that owns them: tick the lantern
+  here or in the Summer console and it's the same setting, so you can skip Act 1 yet still
+  light the lantern from the tracker
+- **Every checklist item a console also tracks is that console's value** — about sixty of
+  them across all seven macros, from the Chapter 2 prison rescue to the Chapter 10 casting.
+  Tick it in either place and both show it. A beat that grants points grants them from the
+  tracker exactly as the console's own checkbox would (XP into that console's tally, Hope,
+  Food, Security and Reputation into the downtime pools), so unticking it in either place
+  takes back exactly what was given, and "tick exactly one" cards refuse a second tier.
+  Items worked out from a console's numbers — 8 RP banked, Cao Chen at Influence 4, Ren Mei
+  Li at 12, all four statues — are greyed out here and follow the console; until that
+  console has been run they're an ordinary tick. Hover an item to see which macro it shares
+  with
 - The party panel reads the **First Long Night** console too: the titles and keepsakes each PC
   won at the games, so *Iron-Gut* and the gourd flask are still on the table's mind in Act 4.
   Clicking a name opens that character's sheet

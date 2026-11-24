@@ -1,5 +1,54 @@
 # Changelog
 
+## 2026-11-24 17:48
+
+### Added
+- **Campaign Status Tracker — every checklist item a console also tracks is now that console's
+  value.** Before, only seven items were shared (the lantern, two ringleaders, the leader, the
+  three shrines). Everything else was a private second copy, and the whole of Act 3 had no link to
+  the No Breath to Cry console at all — tick "All three saved in the Structural Collapse" in winter
+  and the tracker still showed it undone. About sixty items are now bridged across the Summer,
+  Fall Downtime, Enlightened Path, Ruins of Wisdom and No Breath to Cry macros. A beat that grants
+  points grants them from the tracker exactly as the console's own checkbox does (XP into that
+  console's tally; Hope, Food, Security and Reputation into the downtime pools), so unticking in
+  either place takes back exactly what was given, and "tick exactly one" cards refuse a second
+  tier. Items worked out from a console's numbers (Research Points, Influence totals, the rolled
+  Spreading the News ledger, the statue count) are greyed out and follow the console; until that
+  console has been run they stay an ordinary tick. Chapters 1–4 and 8–10 now name their macro,
+  Chapters 8–10 list No Breath to Cry under the macros for the chapter, and the rollup strip shows
+  the winter day, population and Terror.
+- **Campaign Status Tracker — a one-time check of ticks the tracker held privately.** They are
+  not pushed into the console, because that would grant a beat's XP and pool points a second time
+  if they had been applied by hand. Ticks the console agrees with are dropped quietly; the rest
+  are whispered to the GM as a list to tick once, in either place.
+- **No Breath to Cry — beats for things the tracker asked about and the console couldn't record:**
+  the Cloud Paper House damaged but not collapsed, Heh Shan-Bao's jorogumo warning (on Know and
+  Despair), Ugly Cute's remains on the road out of Karahai, the bell ringer taken from Mago Kai,
+  and the lantern relit with it. None of them carries points; the book gives none.
+- **A Node regression test, `tools/preview/relay-test/test-sog-shared-values.js`,** that loads the
+  real macros side by side and checks both directions, the points, the stale-window case below and
+  the reconciliation. The relay harness's settings now behave like Foundry's (JSON storage, a fresh
+  copy per get, `updateSetting` fired on the writing client too), and it stubs `game.journal`.
+
+### Fixed
+- **All eight Season of Ghosts macros — a window could save stale state over another macro's
+  change.** Each macro ignored `updateSetting` when the write came from its own client, assuming
+  that meant its own save. But a GM runs these side by side in one client: the tracker writing
+  `world.sogWinter`, or the winter console moving the downtime pools, went unseen by the other open
+  window, whose next save put the old values back. That is the case that let a tick in one macro
+  fail to show in another. Each macro now adopts its setting whenever the content differs from what
+  it holds (its own saves compare equal and are skipped), and the tracker repaints on any console
+  write.
+- **Summer, Who Leads Willowshore and No Breath to Cry — a downtime write replaced the console's
+  whole state.** Their hook listened for the downtime setting too, then assigned that value as the
+  console's own state. It now only repaints.
+- **Every Season of Ghosts macro — running a macro a second time left the new window deaf.** The
+  update hook was registered on the first run only and closed over that run's window. It is now
+  re-registered on every run.
+- **Campaign Status Tracker — the shrine toggles now move the Enlightened Path's 40 XP.** Lighting a
+  shrine from the tracker set its conditions without awarding the enlightenment XP, so undoing it in
+  the console then took away 40 XP that had never been given.
+
 ## 2026-11-23 14:45
 
 ### Fixed
