@@ -1808,6 +1808,7 @@ function refreshPCs(pcs) {
   });
 }
 function registerSettings() {
+  sogRegisterShared();
   if (!game.settings.settings.has(SMR_ID)) {
     game.settings.register(SMR_NS, SMR_KEY, { scope: "world", config: false, type: Object, default: null });
   }
@@ -1874,6 +1875,228 @@ async function openJournal(ch, ref) {
   const page = journalPage(entry, meta, ref);
   entry.sheet.render(true, page ? { pageId: page.id } : {});
 }
+
+/* ------------------------------------------------- treasure and media
+   Where this macro's rewards and the module's audio and macros sit. Keys:
+   `card:<card>` on a card, `chapter:<ch>` (or another named panel) at the top
+   of a view, `landing` for the beds and submacros that belong to no one
+   scene. SOG_SPLIT gives a card one toggle per reward instead of one for
+   its whole treasure line; SOG_SKIP is treasure that's a shop or a pointer,
+   not something to hand over. The ids are shared with the Campaign Status
+   Tracker's Treasure tab, so don't rename a key without moving it there. */
+const SOG_PREFIX = "summer";
+const SOG_ACT = 1;
+const SOG_SPLIT = {
+  "ch4-e16": [{ key: "baton", label: "Battle medic's baton — Mugirou's" },
+              { key: "eyepiece", label: "Crafter's eyepiece — from the rescued farmers" }]
+};
+const SOG_SKIP = new Set(["ch3-merchant-shinzo", "ch3-opp-teahouse"]);
+const SOG_MEDIA = {
+  landing: { tracks: ["01 Season of Ghosts Loop"],
+    audio: [{ pl: "act.amb", sounds: ["Indoors", "Woods", "Willowshore", "Willowshore Hinterlands"] },
+      { pl: "a1.amb", sounds: ["Mist Urban", "Mist Nature"] },
+      { pl: "act.amb", sounds: ["Dense Fog"] },
+      { pl: "act.loop", sounds: ["River"] }],
+    macros: [{ name: "Change Season", folder: "Submacros" },
+      { name: "Change Dynamic Ring and Turn Marker", folder: "Submacros" },
+      { name: "Landing Picker", folder: "Submacros" },
+      { name: "Roof Control", folder: "Submacros" },
+      { name: "Toggle Party Platter (4 Characters)", folder: "Submacros" },
+      { name: "Toggle Party Platter (6 Characters)", folder: "Submacros" }] },
+  "chapter:ch1": { tracks: ["02 The Summer That Never Was Loop", "03 Relight the Eternal Lantern Loop"],
+    audio: [{ pl: "a1.amb", sounds: ["Occupied Willowshore"] }, { pl: "a1.loop", sounds: ["Eternal Lantern"] }] },
+  "card:ch1-maze-of-mist": { macros: [{ name: "Enable Blood Moon", folder: "Act 1" }, { name: "Enable Rain", folder: "Act 1" }] },
+  "card:ch1-relighting-lantern": { audio: [{ pl: "a1.sfx", sounds: ["Lighting The Eternal Lantern"] }],
+    macros: [{ name: "Light Eternal Lantern", folder: "Act 1" }] },
+  "chapter:ch2": { tracks: ["04 Town of Willowshore Loop"],
+    audio: [{ pl: "a1.amb", sounds: ["Occupied Willowshore"] },
+            { pl: "a1.loop", sounds: ["Eternal Lantern"], note: "the bed for every downtown scene" },
+            { pl: "a1.loop", sounds: ["Rowdy Celebration"] }, { pl: "a1.sfx", sounds: ["Rowdy Celebration 1"] }] },
+  "chapter:ch3": { tracks: ["06 The Hinterlands Loop"],
+    audio: [{ pl: "a1.amb", sounds: ["Wind"] }],
+    macros: [{ name: "Enable Rain", folder: "Act 1", note: "the rainy summer" },
+             { name: "Hinterlands Control", folder: "Act 1", note: "every tile on the Willowshore Hinterlands scene" }] },
+  "card:ch3-merchant-shinzo": { tracks: ["05 The Mysterious Merchant Loop"] },
+  "card:ch3-mindscape-border": { macros: [{ name: "Toggle Mindscape Border Visibility", folder: "Act 1" }] },
+  "card:ch3-d4": { audio: [{ pl: "a1.amb", sounds: ["Canary Inn"] }, { pl: "a1.loop", sounds: ["Singing"], note: "the approach" }] },
+  "card:ch3-gov-inn": { audio: [{ pl: "a1.amb", sounds: ["Canary Inn"] }, { pl: "a1.loop", sounds: ["Singing"], note: "the approach" }] },
+  "chapter:ch4": { tracks: ["07 The Wall of Ghosts Loop"], audio: [{ pl: "a1.amb", sounds: ["The Lumber Camp"] }] },
+  "card:ch4-ritual-site": { audio: [{ pl: "a1.loop", sounds: ["Ritual Chanting"], note: "underneath the approach" }] },
+  "card:ch4-interrupting-ritual": { audio: [{ pl: "a1.sfx", sounds: ["Interrupting The Ritual"], note: "cut the chant the instant it breaks" }],
+    macros: [{ name: "Stop Chanting", folder: "Act 1" }] },
+  "card:ch4-horror-from-beyond": { tracks: ["08 Horror From Beyond Loop"] },
+  "card:ch4-concluding-act1": { macros: [{ name: "Change Season", folder: "Submacros", note: "summer to fall, on both Willowshore scenes" }] }
+};
+
+/* ------------------------------------------ shared across Season of Ghosts
+   This block is the same in every Season of Ghosts chapter macro; only the
+   SOG_* tables above it differ.
+
+   TREASURE. One world setting, `world.sogTreasure`, records what has been
+   handed out: `{ "<macro>:<card>[:<item>]": true }`. Each card's treasure
+   gets a toggle, and the Campaign Status Tracker's Treasure tab shows the
+   same row — it's one value, so ticking either ticks both. Nothing rides on
+   it but the reminder, so it toggles freely.
+
+   MEDIA. The Season of Ghosts module's own playlists and macros, placed on
+   the card or chapter that wants them. A play button starts and stops that
+   sound in the module's playlist (and repaints when it's started from the
+   sidebar instead); a macro button runs the module's macro. Ids are the
+   module's own, and a name match is the fallback.
+
+   Both are GM-only: nothing here reaches a player board. */
+const SOG_TREASURE_KEY = "sogTreasure";
+const SOG_TREASURE_ID = `world.${SOG_TREASURE_KEY}`;
+function sogRegisterShared() {
+  if (!game.settings.settings.has(SOG_TREASURE_ID))
+    game.settings.register("world", SOG_TREASURE_KEY, { scope: "world", config: false, type: Object, default: null });
+}
+const sogLedger = () => game.settings.get("world", SOG_TREASURE_KEY) ?? {};
+const sogHanded = (id) => !!sogLedger()[id];
+async function sogToggleHanded(id) {
+  if (!game.user.isGM || !id) return;
+  const L = sogLedger();
+  if (L[id]) delete L[id]; else L[id] = true;
+  await game.settings.set("world", SOG_TREASURE_KEY, L);
+}
+/* A card's rewards: its split list when it has one, otherwise one toggle for
+   the whole treasure line. */
+function sogRewards(key, hasTreasure) {
+  if (SOG_SPLIT[key]) return SOG_SPLIT[key].map(r => ({ id: `${SOG_PREFIX}:${key}:${r.key}`, label: r.label }));
+  if (hasTreasure && !SOG_SKIP.has(key)) return [{ id: `${SOG_PREFIX}:${key}`, label: null }];
+  return [];
+}
+function sogHandouts(rewards, ro) {
+  if (!game.user.isGM || !rewards?.length) return "";
+  return `<div class="sog-handouts">${rewards.map(r => {
+    const on = sogHanded(r.id);
+    return `<button type="button" class="sog-handout ${on ? "on" : ""}" data-act="sog-handout" data-id="${esc(r.id)}" ${ro ? "disabled" : ""}
+      title="${on ? "Handed out — click to take the tick back" : "Tick once the party has it"}. The same value as the Campaign Status Tracker's Treasure tab.">
+      <i class="fa-${on ? "solid fa-square-check" : "regular fa-square"}"></i>${esc(r.label ?? (on ? "Handed out" : "Not handed out yet"))}</button>`;
+  }).join("")}</div>`;
+}
+const sogCardRewards = (key, hasTreasure, ro) => sogHandouts(sogRewards(key, hasTreasure), ro);
+
+/* The module's playlists, by the ids it ships with. `act.*` means this
+   macro's own act. */
+const SOG_PLAYLISTS = {
+  a1: { amb: "HgqDtdyAVJFT3Dr1", sfx: "PM69203E3Y3UrHfA", loop: "zLGowtHaJW7U2VZM" },
+  a2: { amb: "jXKZ6O8NnYJaazKE", sfx: "kcrfM86DAcpOfBrs", loop: "e2Pf6JGVba202cFB" },
+  a3: { amb: "gTnkl7DUH19mzyJj", sfx: "0GuH1kstxWaqGSJx", loop: "TmxsF1RiQJ0m8o5M", seance: "h82ztCVRXELKQI8K" },
+  a4: { amb: "FGK5jsYreqU1AR5o", sfx: "Mv66f1NNleR53M5o", loop: "xYqkP4IEtZhyaILa" },
+  track: "7AzVaYG1M2yMtzIu", looped: "dbfW0zvQ2tf5VOCx"
+};
+const SOG_PLAYLIST_NAMES = {
+  "a1.amb": "Act 1 · Ambience", "a1.sfx": "Act 1 · SFX", "a1.loop": "Act 1 · Loop",
+  "a2.amb": "Act 2 · Ambiance", "a2.sfx": "Act 2 · SFX", "a2.loop": "Act 2 · Loop",
+  "a3.amb": "Act 3 · Ambiances", "a3.sfx": "Act 3 · SFX", "a3.loop": "Act 3 · Loop", "a3.seance": "Act 3 · Seance",
+  "a4.amb": "Act 4 · Ambience", "a4.sfx": "Act 4 · SFX", "a4.loop": "Act 4 · Loop",
+  "track": "Soundtrack", "looped": "Looped Soundtrack"
+};
+const sogRef = (ref) => String(ref ?? "").replace(/^act\./, `a${SOG_ACT}.`);
+function sogFindSound(ref, name) {
+  ref = sogRef(ref);
+  const [group, kind] = ref.split(".");
+  const id = kind ? SOG_PLAYLISTS[group]?.[kind] : SOG_PLAYLISTS[group];
+  const named = (pl) => pl?.sounds?.getName?.(name) ?? [...(pl?.sounds ?? [])].find(x => x.name === name) ?? null;
+  const byId = id ? game.playlists?.get?.(id) : null;
+  let sound = named(byId);
+  if (sound) return { playlist: byId, sound };
+  const label = (SOG_PLAYLIST_NAMES[ref] ?? "").split(" · ").pop();
+  const lists = [...(game.playlists ?? [])];
+  for (const pl of lists) { if (label && pl.name !== label) continue; sound = named(pl); if (sound) return { playlist: pl, sound }; }
+  for (const pl of lists) { sound = named(pl); if (sound) return { playlist: pl, sound }; }
+  return { playlist: null, sound: null };
+}
+/* Toggle, not play: the button stops what it started. */
+async function sogToggleSound(ref, name) {
+  const { playlist, sound } = sogFindSound(ref, name);
+  if (!sound) return ui.notifications.warn(`No sound named "${name}" in ${SOG_PLAYLIST_NAMES[sogRef(ref)] ?? ref}, or anywhere else in this world's playlists.`);
+  if (sound.playing) await playlist.stopSound(sound); else await playlist.playSound(sound);
+}
+function sogFindMacro(name, folder) {
+  const all = [...(game.macros ?? [])].filter(m => m.name === name);
+  return all.find(m => m.folder?.name === folder) ?? all[0] ?? null;
+}
+async function sogRunMacro(name, folder) {
+  const m = sogFindMacro(name, folder);
+  if (!m) return ui.notifications.warn(`No macro named "${name}" in this world — import the Season of Ghosts module's macro folders.`);
+  return m.execute();
+}
+function sogMedia(media) {
+  if (!game.user.isGM || !media) return "";
+  const tracks = media.tracks ?? [], audio = media.audio ?? [], macros = media.macros ?? [];
+  if (!tracks.length && !audio.length && !macros.length) return "";
+  const play = (ref, n) => {
+    const { sound } = sogFindSound(ref, n), on = !!sound?.playing;
+    return `<button type="button" class="sog-play ${on ? "on" : ""} ${sound ? "" : "gone"}" data-act="sog-sound" data-pl="${esc(ref)}" data-s="${esc(n)}"
+      title="${!sound ? `Not found in this world: ${esc(n)}` : on ? `Stop ${esc(n)}` : `Play ${esc(n)}`}">
+      <i class="fa-solid ${!sound ? "fa-volume-xmark" : on ? "fa-stop" : "fa-play"}"></i>${esc(n)}</button>`;
+  };
+  const run = (name, folder) => {
+    const found = !!sogFindMacro(name, folder);
+    return `<button type="button" class="sog-play sog-macro ${found ? "" : "gone"}" data-act="sog-macro" data-name="${esc(name)}" data-folder="${esc(folder ?? "")}"
+      title="${found ? `Run the module's ${esc(name)} macro` : `Not found in this world: ${esc(name)}`}"><i class="fa-solid fa-bolt"></i>${esc(name)}</button>`;
+  };
+  const row = (icon, buttons, sub) => `<div class="sog-mrow"><i class="fa-solid ${icon}"></i><span class="sog-mbody">
+    <span class="sog-plays">${buttons}</span>${sub ? `<small>${sub}</small>` : ""}</span></div>`;
+  return `<div class="sog-media">
+    ${tracks.map(n => row("fa-music", play("looped", n), "Looped Soundtrack")).join("")}
+    ${audio.map(a => row("fa-volume-high", a.sounds.map(n => play(a.pl, n)).join(""),
+      `${SOG_PLAYLIST_NAMES[sogRef(a.pl)] ?? a.pl}${a.note ? ` · ${a.note}` : ""}${a.guess ? " · placed by guess" : ""}`)).join("")}
+    ${macros.map(m => m.items
+      ? row("fa-bolt", m.items.map(n => run(n, m.folder)).join(""), `${m.group} · ${m.folder} macros${m.note ? ` · ${m.note}` : ""}`)
+      : row("fa-bolt", run(m.name, m.folder), `${m.folder} macro${m.note ? ` · ${m.note}` : ""}`)).join("")}
+  </div>`;
+}
+/* A panel of media for a whole chapter or tab. */
+const sogMediaPanel = (key, title) => {
+  const body = sogMedia(SOG_MEDIA[key]);
+  return body ? `<section class="panel sog-mediapanel" style="--tone:var(--slate)"><h3>Audio and module macros <small>${title}</small></h3>${body}</section>` : "";
+};
+const sogCardMedia = (key) => sogMedia(SOG_MEDIA[`card:${key}`]);
+
+/* The three button kinds above, for the macro's own click handler. */
+function sogClick(a, btn) {
+  if (a === "sog-handout") { sogToggleHanded(btn.dataset.id); return true; }
+  if (a === "sog-sound") { sogToggleSound(btn.dataset.pl, btn.dataset.s); return true; }
+  if (a === "sog-macro") { sogRunMacro(btn.dataset.name, btn.dataset.folder || null); return true; }
+  return false;
+}
+/* Repaint on a treasure tick from anywhere (the tracker included) and on any
+   sound starting or stopping. Re-registered per run, so a reopened window is
+   the one that hears it. */
+function sogWire(engine) {
+  const slot = `__sogShared_${SOG_PREFIX}`, old = globalThis[slot];
+  if (old) for (const [hook, id] of old) Hooks.off(hook, id);
+  const repaint = () => engine.render();
+  globalThis[slot] = [
+    ["updateSetting", Hooks.on("updateSetting", (setting) => { if (setting.key === SOG_TREASURE_ID) repaint(); })],
+    ["updatePlaylistSound", Hooks.on("updatePlaylistSound", repaint)],
+    ["updatePlaylist", Hooks.on("updatePlaylist", repaint)]
+  ];
+}
+const SOG_CSS = (root) => `
+  .${root} .sog-handouts { display:flex; flex-wrap:wrap; gap:.3rem; margin:.1rem 0 .5rem; }
+  .${root} button.sog-handout { display:inline-flex; align-items:center; gap:.35rem; height:auto; width:auto; line-height:1.3;
+    padding:.2rem .55rem; font-size:.74rem; border:1px dashed var(--gold, var(--ember)); border-radius:3px; background:none; color:var(--ink); cursor:pointer; }
+  .${root} button.sog-handout.on { border-style:solid; background:var(--stripe); color:var(--muted); }
+  .${root} button.sog-handout.on i { color:var(--moss); }
+  .${root} button.sog-handout:not(.on) i { color:var(--gold, var(--ember)); }
+  .${root} .sog-media { margin:.3rem 0 .45rem; display:flex; flex-direction:column; gap:.25rem; }
+  .${root} .sog-mrow { display:flex; gap:.45rem; align-items:flex-start; font-size:.76rem; }
+  .${root} .sog-mrow > i { color:var(--muted); width:1rem; text-align:center; margin-top:.3rem; }
+  .${root} .sog-mbody { display:flex; flex-direction:column; gap:.1rem; }
+  .${root} .sog-mbody small { color:var(--muted); font-size:.7rem; }
+  .${root} .sog-plays { display:flex; flex-wrap:wrap; gap:.25rem; }
+  .${root} button.sog-play { display:inline-flex; align-items:center; gap:.3rem; height:auto; width:auto; line-height:1.3;
+    padding:.15rem .5rem; font-size:.74rem; font-weight:600; border:1px solid var(--line); border-radius:3px; background:var(--card); color:var(--ink); cursor:pointer; }
+  .${root} button.sog-play:hover { background:var(--hover); }
+  .${root} button.sog-play.on { background:var(--slate); border-color:var(--slate); color:var(--paper); }
+  .${root} button.sog-play.gone { opacity:.55; font-weight:400; }
+  .${root} button.sog-play i { font-size:.65rem; }
+  .${root} .sog-mediapanel h3 { color:var(--ink); }
+`;
 
 /* ----------------------------------------------------------------- engine */
 class Summer {
@@ -2117,7 +2340,7 @@ class SummerApp extends BaseApp {
   /* ------------------------------------------------------------- the town */
   townTab(ro) {
     const t = this.t;
-    return `
+    return `${sogMediaPanel("landing", "every chapter — the beds, the theme, and the submacros")}
       <section class="panel" style="--tone:var(--ember)">
         <h3>The Eternal Lantern <small>the town's one switch</small>
           ${this.jbtn("ch1", "W10")}
@@ -2171,7 +2394,8 @@ class SummerApp extends BaseApp {
   /* ------------------------------------------------------------- chapters */
   chapterTab(chapter, ro) {
     const sub = this.t.s.ctab[chapter];
-    if (chapter === "ch3" && sub === "duel") return this.duelTab(ro);
+    const media = sogMediaPanel(`chapter:${chapter}`, CHAPTERS[chapter].title);
+    if (chapter === "ch3" && sub === "duel") return media + this.duelTab(ro);
     const M = {
       ch1: { town: CH1_TOWN, lantern: CH1_LANTERN },
       ch2: { downtown: CH2_DOWNTOWN, butcher: CH2_BUTCHER, teahouse: CH2_TEAHOUSE },
@@ -2179,7 +2403,7 @@ class SummerApp extends BaseApp {
       ch4: { camp: CH4_CAMP, ritual: CH4_RITUAL }
     };
     const arr = M[chapter]?.[sub] ?? [];
-    return arr.map(a => this.cardMarkup(a, chapter, ro)).join("");
+    return media + arr.map(a => this.cardMarkup(a, chapter, ro)).join("");
   }
 
   duelTab(ro) {
@@ -2219,6 +2443,7 @@ class SummerApp extends BaseApp {
           <button type="button" class="say" data-act="postarea" data-k="${card.key}" data-ch="${ch}" title="Read to the table"><i class="fa-solid fa-comment"></i></button>
           ${card.checks?.length ? `<button type="button" class="say" data-act="postchecks" data-k="${card.key}" data-ch="${ch}" title="Post the checks"><i class="fa-solid fa-dice-d20"></i></button>` : ""}
         </h3>
+        ${sogCardMedia(card.key)}
         ${card.boxed ? `<p class="boxed">${card.boxed}</p>` : ""}
         ${card.creatures ? `<p class="crea"><b>Creatures</b> ${card.creatures}</p>` : ""}
         ${card.text ? `<p class="text">${card.text}</p>` : ""}
@@ -2230,6 +2455,7 @@ class SummerApp extends BaseApp {
         ${card.phases?.length ? `<ol class="phases">${card.phases.map(p => `<li>${p}</li>`).join("")}</ol>` : ""}
         ${card.hazard ? `<p class="loot"><b>Hazard</b> ${card.hazard}</p>` : ""}
         ${card.treasure ? `<p class="loot"><b>Treasure</b> ${card.treasure}</p>` : ""}
+        ${sogCardRewards(card.key, !!card.treasure, ro)}
         ${card.aside ? `<div class="aside"><b>${card.aside.title}</b><p>${card.aside.text}</p></div>` : ""}
         ${card.influence?.length ? `<div class="sub influence">
           <div class="subhead"><i class="fa-solid fa-scale-balanced"></i> Influence <span>${card.influence.filter(i => (t.s.influence[i.key] ?? 0) >= (i.max ?? 99)).length} of ${card.influence.length} settled</span></div>
@@ -2276,6 +2502,7 @@ class SummerApp extends BaseApp {
       if (!btn) return;
       ev.preventDefault();
       const a = btn.dataset.act;
+      if (sogClick(a, btn)) return;
       if (a === "tab") { t.s.tab = btn.dataset.k; t.touch(); }
       else if (a === "sub") { t.s.ctab[btn.dataset.ch] = btn.dataset.k; t.touch(); }
       else if (a === "journal") openJournal(btn.dataset.ch, btn.dataset.r || null);
@@ -2456,6 +2683,7 @@ class SummerApp extends BaseApp {
         .smr .poolgrid { grid-template-columns:1fr; }
         .smr .tabs, .smr .subtabs { flex-wrap:wrap; }
       }
+      ${SOG_CSS("smr")}
     </style>`;
   }
 }
@@ -2481,6 +2709,7 @@ if (AppV2) {
   }
   const summer = new Summer(state);
   const app = new SummerApp(summer);
+  sogWire(summer);
 
   /* Re-registered on every run: the hook closes over this run's window, so
      keeping the first run's hook would leave a reopened window deaf to updates. */

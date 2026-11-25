@@ -260,11 +260,11 @@ const CH8_EVENTS = [
       { key: "mill-repair", label: "Repair the damaged mill — 2 weeks' work", fx: { security: -4 }, once: true, note: "Damaged only; a collapsed mill can't be repaired." }
     ],
     beats: [
-      { key: "ch8-rescue-3", label: "All 3 civilians rescued", note: "tick exactly one", xp: 120, hope: 3, rep: 1,
+      { key: "ch8-rescue-3", lootId: "myna", label: "All 3 civilians rescued", note: "tick exactly one", xp: 120, hope: 3, rep: 1,
         loot: ["Greater smokestick (Myna)", "8 moderate healing potions (Myna)", "Vial of everlasting adhesive (Myna)", "Potion of quickness (Myna)", "Runestone with a resilient armor rune (Myna)"] },
-      { key: "ch8-rescue-2", label: "2 civilians rescued", note: "tick exactly one · +1 Reputation with ONE faction, the party's choice — record it under Tracked changes", xp: 80, hope: 1,
+      { key: "ch8-rescue-2", lootId: "myna", label: "2 civilians rescued", note: "tick exactly one · +1 Reputation with ONE faction, the party's choice — record it under Tracked changes", xp: 80, hope: 1,
         loot: ["Greater smokestick (Myna)", "8 moderate healing potions (Myna)", "Vial of everlasting adhesive (Myna)"] },
-      { key: "ch8-rescue-1", label: "1 civilian rescued", note: "tick exactly one · no Hope gain or loss", xp: 40,
+      { key: "ch8-rescue-1", lootId: "myna", label: "1 civilian rescued", note: "tick exactly one · no Hope gain or loss", xp: 40,
         loot: ["Greater smokestick (Myna)", "4 moderate healing potions (Myna)"] },
       { key: "ch8-rescue-0", label: "0 civilians rescued", note: "tick exactly one · lose 2 Hope Points and 1 Reputation Point with each faction", hope: -2, rep: -1 },
       { key: "ch8-mill-collapse", label: "Cloud Paper House collapsed", note: "Collapse only: lose 1 Security Point. Collapsed or merely damaged, the mill can no longer be used as a work site or to purchase paper/paper products. If damaged, spending 4 Security Points repairs it after 2 weeks of work.", security: -1 },
@@ -1737,6 +1737,7 @@ function refreshPCs(pcs) {
   });
 }
 function registerSettings() {
+  sogRegisterShared();
   if (!game.settings.settings.has(WNR_ID)) {
     game.settings.register(WNR_NS, WNR_KEY, { scope: "world", config: false, type: Object, default: null });
   }
@@ -1801,6 +1802,235 @@ async function openJournal(ch, ref) {
   const page = journalPage(entry, ch, ref);
   entry.sheet.render(true, page ? { pageId: page.id } : {});
 }
+
+/* ------------------------------------------------- treasure and media
+   Where this macro's rewards and the module's audio and macros sit. Keys:
+   `card:<card>` on a card, `chapter:<ch>` (or another named panel) at the top
+   of a view, `landing` for the beds and submacros that belong to no one
+   scene. SOG_SPLIT gives a card one toggle per reward instead of one for
+   its whole treasure line; SOG_SKIP is treasure that's a shop or a pointer,
+   not something to hand over. The ids are shared with the Campaign Status
+   Tracker's Treasure tab, so don't rename a key without moving it there. */
+const SOG_PREFIX = "winter";
+const SOG_ACT = 3;
+const SOG_SPLIT = {
+  "ch8-manifestation": [{ key: "tome", label: "Heh's journal — now a moderate tome of restorative cleansing" },
+                        { key: "formula", label: "The resurrect formula, in the loose pages" },
+                        { key: "gear", label: "His gear — greater choker of elocution, +1 striking longsword, +1 resilient padded armor, greater sleeves of storage" }],
+  "ch9-spider": [{ key: "chest", label: "Hardwood chest (12+) — six moonstones, greater persona mask, desolation locket" },
+                 { key: "collars", label: "The four silver collars (12+)" },
+                 { key: "msgring", label: "Messenger's ring (12)" },
+                 { key: "dust", label: "Four doses of dust of corpse animation (16)" }],
+  "ch10-c20": [{ key: "codex", label: "Mago Kai's codex — how to disarm the warding bell" }],
+  "ch10-after-peace": [{ key: "topup", label: "Shinzo's gear top-up — about 1,500 gp each, up to 3,000" }]
+};
+const SOG_SKIP = new Set([]);
+const SOG_MEDIA = {
+  landing: { tracks: ["01 Season of Ghosts Loop"],
+    audio: [{ pl: "act.amb", sounds: ["Indoors", "Woods", "Willowshore", "Willowshore Hinterlands"] },
+      { pl: "act.amb", sounds: ["Mist Indoors", "Mist Outdoors"] },
+      { pl: "act.amb", sounds: ["Dense Fog"] }],
+    macros: [{ name: "Change Season", folder: "Submacros" },
+      { name: "Change Dynamic Ring and Turn Marker", folder: "Submacros" },
+      { name: "Landing Picker", folder: "Submacros" },
+      { name: "Roof Control", folder: "Submacros" },
+      { name: "Toggle Party Platter (4 Characters)", folder: "Submacros" },
+      { name: "Toggle Party Platter (6 Characters)", folder: "Submacros" }] },
+  "chapter:ch8": { tracks: ["14 Oblivion of Truth Loop"], audio: [{ pl: "a3.amb", sounds: ["Dark Willowshore"] }] },
+  "card:ch8-event1": { audio: [{ pl: "a3.loop", sounds: ["Buildings Collapsing"] }] },
+  "card:ch8-dream-setting": { tracks: ["17 Worlds Within the Mind Loop"], audio: [{ pl: "a3.sfx", sounds: ["Mindscape Shift"], note: "as the cast takes them" }] },
+  "card:ch8-manor-interior": { audio: [{ pl: "a3.amb", sounds: ["Governor's Manor"] }] },
+  "card:ch8-know-despair": { audio: [{ pl: "a3.loop", sounds: ["Pounding at the Manor Walls", "Howling Crowd"], note: "the crowd at sunset" }] },
+  "card:ch8-end-of-dream": { audio: [{ pl: "a3.sfx", sounds: ["The Manor is Breached"] }] },
+  "chapter:ch9": { tracks: ["15 The Ritual Loop"] },
+  "card:ch9-seance": { audio: [{ pl: "a3.seance", sounds: ["Seance 1", "Seance 2"] }, { pl: "a3.sfx", sounds: ["Ending the Seance"] }] },
+  "card:ch9-blad": { audio: [{ pl: "a3.amb", sounds: ["Borderlands"] }, { pl: "a3.sfx", sounds: ["Portal Opens"] }],
+    macros: [{ name: "Open Portal", folder: "Act 3" }, { name: "Partially Open Portal", folder: "Act 3" }] },
+  "chapter:ch10": { tracks: ["16 Fortress of Karahai Loop"],
+    audio: [{ pl: "a3.amb", sounds: ["Invisible Flames"], guess: true }],
+    macros: [{ name: "Terror in Karahai", folder: "Act 3" },
+             { group: "Terror Macros", folder: "Act 3", items: ["Terror 1", "Terror 2", "Terror 3", "Terror 4", "Terror 5", "Terror 6", "Terror 7", "Terror 8", "Nighttime", "Reinforcements"] }] },
+  "card:ch10-village": { audio: [{ pl: "a3.amb", sounds: ["Karahai Village Day", "Karahai Village Night"] }] },
+  "card:ch10-fortress": { audio: [{ pl: "a3.amb", sounds: ["Karahai Fortress"] }] },
+  "card:ch10-c1": { macros: [{ group: "Terror Macros", folder: "Act 3", items: ["C1 Exorcists fled", "C1 Mercenaries fled"] }] },
+  "card:ch10-c6": { audio: [{ pl: "a3.loop", sounds: ["Dining Hall"] }] },
+  "card:ch10-c11": { audio: [{ pl: "a3.loop", sounds: ["Shrine"] }, { pl: "a3.sfx", sounds: ["Warding Bell"] }],
+    macros: [{ name: "Warding Bell", folder: "Act 3" }] },
+  "card:ch10-c13": { audio: [{ pl: "a3.loop", sounds: ["Baths"] }] },
+  "card:ch10-c14": { macros: [{ name: "Pan Fenfang True Form", folder: "Act 3" }] },
+  "card:ch10-c22": { macros: [{ group: "Terror Macros", folder: "Act 3", items: ["Mago Kai fled"] }] },
+  "card:ch10-after-clock": { macros: [{ name: "Change Season", folder: "Submacros", note: "winter to spring, on both Willowshore scenes" }] }
+};
+
+/* ------------------------------------------ shared across Season of Ghosts
+   This block is the same in every Season of Ghosts chapter macro; only the
+   SOG_* tables above it differ.
+
+   TREASURE. One world setting, `world.sogTreasure`, records what has been
+   handed out: `{ "<macro>:<card>[:<item>]": true }`. Each card's treasure
+   gets a toggle, and the Campaign Status Tracker's Treasure tab shows the
+   same row — it's one value, so ticking either ticks both. Nothing rides on
+   it but the reminder, so it toggles freely.
+
+   MEDIA. The Season of Ghosts module's own playlists and macros, placed on
+   the card or chapter that wants them. A play button starts and stops that
+   sound in the module's playlist (and repaints when it's started from the
+   sidebar instead); a macro button runs the module's macro. Ids are the
+   module's own, and a name match is the fallback.
+
+   Both are GM-only: nothing here reaches a player board. */
+const SOG_TREASURE_KEY = "sogTreasure";
+const SOG_TREASURE_ID = `world.${SOG_TREASURE_KEY}`;
+function sogRegisterShared() {
+  if (!game.settings.settings.has(SOG_TREASURE_ID))
+    game.settings.register("world", SOG_TREASURE_KEY, { scope: "world", config: false, type: Object, default: null });
+}
+const sogLedger = () => game.settings.get("world", SOG_TREASURE_KEY) ?? {};
+const sogHanded = (id) => !!sogLedger()[id];
+async function sogToggleHanded(id) {
+  if (!game.user.isGM || !id) return;
+  const L = sogLedger();
+  if (L[id]) delete L[id]; else L[id] = true;
+  await game.settings.set("world", SOG_TREASURE_KEY, L);
+}
+/* A card's rewards: its split list when it has one, otherwise one toggle for
+   the whole treasure line. */
+function sogRewards(key, hasTreasure) {
+  if (SOG_SPLIT[key]) return SOG_SPLIT[key].map(r => ({ id: `${SOG_PREFIX}:${key}:${r.key}`, label: r.label }));
+  if (hasTreasure && !SOG_SKIP.has(key)) return [{ id: `${SOG_PREFIX}:${key}`, label: null }];
+  return [];
+}
+function sogHandouts(rewards, ro) {
+  if (!game.user.isGM || !rewards?.length) return "";
+  return `<div class="sog-handouts">${rewards.map(r => {
+    const on = sogHanded(r.id);
+    return `<button type="button" class="sog-handout ${on ? "on" : ""}" data-act="sog-handout" data-id="${esc(r.id)}" ${ro ? "disabled" : ""}
+      title="${on ? "Handed out — click to take the tick back" : "Tick once the party has it"}. The same value as the Campaign Status Tracker's Treasure tab.">
+      <i class="fa-${on ? "solid fa-square-check" : "regular fa-square"}"></i>${esc(r.label ?? (on ? "Handed out" : "Not handed out yet"))}</button>`;
+  }).join("")}</div>`;
+}
+const sogCardRewards = (key, hasTreasure, ro) => sogHandouts(sogRewards(key, hasTreasure), ro);
+
+/* The module's playlists, by the ids it ships with. `act.*` means this
+   macro's own act. */
+const SOG_PLAYLISTS = {
+  a1: { amb: "HgqDtdyAVJFT3Dr1", sfx: "PM69203E3Y3UrHfA", loop: "zLGowtHaJW7U2VZM" },
+  a2: { amb: "jXKZ6O8NnYJaazKE", sfx: "kcrfM86DAcpOfBrs", loop: "e2Pf6JGVba202cFB" },
+  a3: { amb: "gTnkl7DUH19mzyJj", sfx: "0GuH1kstxWaqGSJx", loop: "TmxsF1RiQJ0m8o5M", seance: "h82ztCVRXELKQI8K" },
+  a4: { amb: "FGK5jsYreqU1AR5o", sfx: "Mv66f1NNleR53M5o", loop: "xYqkP4IEtZhyaILa" },
+  track: "7AzVaYG1M2yMtzIu", looped: "dbfW0zvQ2tf5VOCx"
+};
+const SOG_PLAYLIST_NAMES = {
+  "a1.amb": "Act 1 · Ambience", "a1.sfx": "Act 1 · SFX", "a1.loop": "Act 1 · Loop",
+  "a2.amb": "Act 2 · Ambiance", "a2.sfx": "Act 2 · SFX", "a2.loop": "Act 2 · Loop",
+  "a3.amb": "Act 3 · Ambiances", "a3.sfx": "Act 3 · SFX", "a3.loop": "Act 3 · Loop", "a3.seance": "Act 3 · Seance",
+  "a4.amb": "Act 4 · Ambience", "a4.sfx": "Act 4 · SFX", "a4.loop": "Act 4 · Loop",
+  "track": "Soundtrack", "looped": "Looped Soundtrack"
+};
+const sogRef = (ref) => String(ref ?? "").replace(/^act\./, `a${SOG_ACT}.`);
+function sogFindSound(ref, name) {
+  ref = sogRef(ref);
+  const [group, kind] = ref.split(".");
+  const id = kind ? SOG_PLAYLISTS[group]?.[kind] : SOG_PLAYLISTS[group];
+  const named = (pl) => pl?.sounds?.getName?.(name) ?? [...(pl?.sounds ?? [])].find(x => x.name === name) ?? null;
+  const byId = id ? game.playlists?.get?.(id) : null;
+  let sound = named(byId);
+  if (sound) return { playlist: byId, sound };
+  const label = (SOG_PLAYLIST_NAMES[ref] ?? "").split(" · ").pop();
+  const lists = [...(game.playlists ?? [])];
+  for (const pl of lists) { if (label && pl.name !== label) continue; sound = named(pl); if (sound) return { playlist: pl, sound }; }
+  for (const pl of lists) { sound = named(pl); if (sound) return { playlist: pl, sound }; }
+  return { playlist: null, sound: null };
+}
+/* Toggle, not play: the button stops what it started. */
+async function sogToggleSound(ref, name) {
+  const { playlist, sound } = sogFindSound(ref, name);
+  if (!sound) return ui.notifications.warn(`No sound named "${name}" in ${SOG_PLAYLIST_NAMES[sogRef(ref)] ?? ref}, or anywhere else in this world's playlists.`);
+  if (sound.playing) await playlist.stopSound(sound); else await playlist.playSound(sound);
+}
+function sogFindMacro(name, folder) {
+  const all = [...(game.macros ?? [])].filter(m => m.name === name);
+  return all.find(m => m.folder?.name === folder) ?? all[0] ?? null;
+}
+async function sogRunMacro(name, folder) {
+  const m = sogFindMacro(name, folder);
+  if (!m) return ui.notifications.warn(`No macro named "${name}" in this world — import the Season of Ghosts module's macro folders.`);
+  return m.execute();
+}
+function sogMedia(media) {
+  if (!game.user.isGM || !media) return "";
+  const tracks = media.tracks ?? [], audio = media.audio ?? [], macros = media.macros ?? [];
+  if (!tracks.length && !audio.length && !macros.length) return "";
+  const play = (ref, n) => {
+    const { sound } = sogFindSound(ref, n), on = !!sound?.playing;
+    return `<button type="button" class="sog-play ${on ? "on" : ""} ${sound ? "" : "gone"}" data-act="sog-sound" data-pl="${esc(ref)}" data-s="${esc(n)}"
+      title="${!sound ? `Not found in this world: ${esc(n)}` : on ? `Stop ${esc(n)}` : `Play ${esc(n)}`}">
+      <i class="fa-solid ${!sound ? "fa-volume-xmark" : on ? "fa-stop" : "fa-play"}"></i>${esc(n)}</button>`;
+  };
+  const run = (name, folder) => {
+    const found = !!sogFindMacro(name, folder);
+    return `<button type="button" class="sog-play sog-macro ${found ? "" : "gone"}" data-act="sog-macro" data-name="${esc(name)}" data-folder="${esc(folder ?? "")}"
+      title="${found ? `Run the module's ${esc(name)} macro` : `Not found in this world: ${esc(name)}`}"><i class="fa-solid fa-bolt"></i>${esc(name)}</button>`;
+  };
+  const row = (icon, buttons, sub) => `<div class="sog-mrow"><i class="fa-solid ${icon}"></i><span class="sog-mbody">
+    <span class="sog-plays">${buttons}</span>${sub ? `<small>${sub}</small>` : ""}</span></div>`;
+  return `<div class="sog-media">
+    ${tracks.map(n => row("fa-music", play("looped", n), "Looped Soundtrack")).join("")}
+    ${audio.map(a => row("fa-volume-high", a.sounds.map(n => play(a.pl, n)).join(""),
+      `${SOG_PLAYLIST_NAMES[sogRef(a.pl)] ?? a.pl}${a.note ? ` · ${a.note}` : ""}${a.guess ? " · placed by guess" : ""}`)).join("")}
+    ${macros.map(m => m.items
+      ? row("fa-bolt", m.items.map(n => run(n, m.folder)).join(""), `${m.group} · ${m.folder} macros${m.note ? ` · ${m.note}` : ""}`)
+      : row("fa-bolt", run(m.name, m.folder), `${m.folder} macro${m.note ? ` · ${m.note}` : ""}`)).join("")}
+  </div>`;
+}
+/* A panel of media for a whole chapter or tab. */
+const sogMediaPanel = (key, title) => {
+  const body = sogMedia(SOG_MEDIA[key]);
+  return body ? `<section class="panel sog-mediapanel" style="--tone:var(--slate)"><h3>Audio and module macros <small>${title}</small></h3>${body}</section>` : "";
+};
+const sogCardMedia = (key) => sogMedia(SOG_MEDIA[`card:${key}`]);
+
+/* The three button kinds above, for the macro's own click handler. */
+function sogClick(a, btn) {
+  if (a === "sog-handout") { sogToggleHanded(btn.dataset.id); return true; }
+  if (a === "sog-sound") { sogToggleSound(btn.dataset.pl, btn.dataset.s); return true; }
+  if (a === "sog-macro") { sogRunMacro(btn.dataset.name, btn.dataset.folder || null); return true; }
+  return false;
+}
+/* Repaint on a treasure tick from anywhere (the tracker included) and on any
+   sound starting or stopping. Re-registered per run, so a reopened window is
+   the one that hears it. */
+function sogWire(engine) {
+  const slot = `__sogShared_${SOG_PREFIX}`, old = globalThis[slot];
+  if (old) for (const [hook, id] of old) Hooks.off(hook, id);
+  const repaint = () => engine.render();
+  globalThis[slot] = [
+    ["updateSetting", Hooks.on("updateSetting", (setting) => { if (setting.key === SOG_TREASURE_ID) repaint(); })],
+    ["updatePlaylistSound", Hooks.on("updatePlaylistSound", repaint)],
+    ["updatePlaylist", Hooks.on("updatePlaylist", repaint)]
+  ];
+}
+const SOG_CSS = (root) => `
+  .${root} .sog-handouts { display:flex; flex-wrap:wrap; gap:.3rem; margin:.1rem 0 .5rem; }
+  .${root} button.sog-handout { display:inline-flex; align-items:center; gap:.35rem; height:auto; width:auto; line-height:1.3;
+    padding:.2rem .55rem; font-size:.74rem; border:1px dashed var(--gold, var(--ember)); border-radius:3px; background:none; color:var(--ink); cursor:pointer; }
+  .${root} button.sog-handout.on { border-style:solid; background:var(--stripe); color:var(--muted); }
+  .${root} button.sog-handout.on i { color:var(--moss); }
+  .${root} button.sog-handout:not(.on) i { color:var(--gold, var(--ember)); }
+  .${root} .sog-media { margin:.3rem 0 .45rem; display:flex; flex-direction:column; gap:.25rem; }
+  .${root} .sog-mrow { display:flex; gap:.45rem; align-items:flex-start; font-size:.76rem; }
+  .${root} .sog-mrow > i { color:var(--muted); width:1rem; text-align:center; margin-top:.3rem; }
+  .${root} .sog-mbody { display:flex; flex-direction:column; gap:.1rem; }
+  .${root} .sog-mbody small { color:var(--muted); font-size:.7rem; }
+  .${root} .sog-plays { display:flex; flex-wrap:wrap; gap:.25rem; }
+  .${root} button.sog-play { display:inline-flex; align-items:center; gap:.3rem; height:auto; width:auto; line-height:1.3;
+    padding:.15rem .5rem; font-size:.74rem; font-weight:600; border:1px solid var(--line); border-radius:3px; background:var(--card); color:var(--ink); cursor:pointer; }
+  .${root} button.sog-play:hover { background:var(--hover); }
+  .${root} button.sog-play.on { background:var(--slate); border-color:var(--slate); color:var(--paper); }
+  .${root} button.sog-play.gone { opacity:.55; font-weight:400; }
+  .${root} button.sog-play i { font-size:.65rem; }
+  .${root} .sog-mediapanel h3 { color:var(--ink); }
+`;
 
 /* ----------------------------------------------------------------- engine */
 class Winter {
@@ -2392,7 +2622,7 @@ class WNRApp extends BaseApp {
         <b class="${(t.pool(key)) <= 0 ? "neg" : ""}">${t.pool(key)}</b>
         <button type="button" class="qbtn" data-act="pool" data-p="${key}" data-d="1" ${ro || !t.hasDowntime ? "disabled" : ""}>+</button>
       </div>`;
-    return `${this.calendarMarkup(ro)}
+    return `${sogMediaPanel("landing", "all winter — the beds, the theme, and the submacros")}${this.calendarMarkup(ro)}
       ${this.weekMarkup(ro)}
       <section class="panel" style="--tone:var(--ice)">
         <h3>The winter clock <small>draws down the town's Preparation Points</small></h3>
@@ -2605,6 +2835,9 @@ class WNRApp extends BaseApp {
   /* ------------------------------------------------------------- chapters */
   chapterTab(chapter, ro) {
     const s = this.t.s, c = CHAPTERS[chapter], sub = s.ctab[chapter];
+    return sogMediaPanel(`chapter:${chapter}`, c.title) + this.chapterBody(chapter, sub, ro);
+  }
+  chapterBody(chapter, sub, ro) {
     if (chapter === "ch8") {
       if (sub === "events") return CH8_EVENTS.map(a => this.cardMarkup(a, "ch8", ro)).join("");
       if (sub === "research") return this.researchMarkup("ch8", CH8_RESEARCH, ro);
@@ -2719,6 +2952,7 @@ class WNRApp extends BaseApp {
           <button type="button" class="say" data-act="postarea" data-k="${card.key}" data-ch="${ch}" title="Read to the table"><i class="fa-solid fa-comment"></i></button>
           ${card.checks?.length ? `<button type="button" class="say" data-act="postchecks" data-k="${card.key}" data-ch="${ch}" title="Post the checks"><i class="fa-solid fa-dice-d20"></i></button>` : ""}
         </h3>
+        ${sogCardMedia(card.key)}
         ${card.boxed ? `<p class="boxed">${card.boxed}</p>` : ""}
         ${card.creatures ? `<p class="crea"><b>Creatures</b> ${card.creatures}</p>` : ""}
         ${card.text ? `<p class="text">${card.text}</p>` : ""}
@@ -2730,6 +2964,7 @@ class WNRApp extends BaseApp {
         ${card.phases?.length ? `<ol class="phases">${card.phases.map(p => `<li>${p}</li>`).join("")}</ol>` : ""}
         ${card.hazard ? `<p class="loot"><b>Hazard</b> ${card.hazard}</p>` : ""}
         ${card.treasure ? `<p class="loot"><b>Treasure</b> ${card.treasure}</p>` : ""}
+        ${sogCardRewards(card.key, !!card.treasure, ro)}
         ${card.aside ? `<div class="aside"><b>${card.aside.title}</b><p>${card.aside.text}</p></div>` : ""}
         ${card.influence?.length ? `<div class="sub influence">
           <div class="subhead"><i class="fa-solid fa-scale-balanced"></i> Influence <span>${card.influence.filter(i => (t.s.influence[i.key] ?? 0) >= (i.max ?? 99)).length} of ${card.influence.length} settled</span></div>
@@ -2752,10 +2987,14 @@ class WNRApp extends BaseApp {
             ${b.note ? `<p class="beatnote">${b.note}</p>` : ""}`).join("")}
         </div>` : ""}
         ${beats.some(b => b.loot) ? (() => {
-          const got = beats.filter(b => b.loot && t.beat(card.key, b.key)).flatMap(b => b.loot);
+          const got = beats.filter(b => b.loot && t.beat(card.key, b.key));
+          /* Each outcome's gifts are one hand-out, shared with the campaign
+             tracker; outcomes that are tiers of one gift share an id. */
           return `<div class="sub gets">
           <div class="subhead"><i class="fa-solid fa-gift"></i> The party receives</div>
-          ${got.length ? `<ul>${got.map(i => `<li>${i}</li>`).join("")}</ul>` : `<p class="hint">Tick the outcomes above and the items appear here.</p>`}
+          ${got.length ? got.map(b => `<ul>${b.loot.map(i => `<li>${i}</li>`).join("")}</ul>
+            ${sogHandouts([{ id: `${SOG_PREFIX}:${card.key}:${b.lootId ?? b.key}`, label: null }], ro)}`).join("")
+            : `<p class="hint">Tick the outcomes above and the items appear here.</p>`}
         </div>`; })() : ""}
         ${card.track?.length ? this.trackMarkup(card, ro) : ""}
         <div class="btnrow">
@@ -2813,6 +3052,7 @@ class WNRApp extends BaseApp {
       if (!btn) return;
       ev.preventDefault();
       const a = btn.dataset.act;
+      if (sogClick(a, btn)) return;
       if (a === "tab") { t.s.tab = btn.dataset.k; t.touch(); }
       else if (a === "sub") { t.s.ctab[btn.dataset.ch] = btn.dataset.k; t.touch(); }
       else if (a === "journal") openJournal(btn.dataset.ch, btn.dataset.r || null);
@@ -3108,6 +3348,7 @@ class WNRApp extends BaseApp {
         .nbt .poolgrid, .nbt .wgrid { grid-template-columns:1fr; }
         .nbt .tabs, .nbt .subtabs { flex-wrap:wrap; }
       }
+      ${SOG_CSS("nbt")}
     </style>`;
   }
 }
@@ -3134,6 +3375,7 @@ if (AppV2) {
   }
   const winter = new Winter(state);
   const app = new WNRApp(winter);
+  sogWire(winter);
 
   /* Re-registered on every run: the hook closes over this run's window, so
      keeping the first run's hook would leave a reopened window deaf to updates. */

@@ -1,5 +1,35 @@
 # Changelog
 
+## 2026-11-24 19:10
+
+### Added
+- **Season of Ghosts chapter macros — a hand-out toggle on every card that carries treasure,
+  shared with the Campaign Status Tracker.** Treasure used to be prose on the card and a private
+  tick on the tracker's Treasure tab, so the party's rewards were only tracked if you remembered
+  to switch windows. Now the Summer, Enlightened Path, Ruins of Wisdom and No Breath to Cry cards
+  each carry a toggle under their treasure (one per reward where a card holds several, one per
+  outcome on winter's *The party receives*), and all of them write one world setting,
+  `world.sogTreasure`, which the tracker's Treasure tab reads too. The tracker's list grew from 42
+  rows to 84 so every card's treasure is on it; each row says which macro's card it shares. The
+  Enlightened Path gained the Bridge and Garden Shrine rewards the tracker always had and the
+  console never listed. The C1 Last Will and Zoudou's ledger decisions are the same tick as their
+  card's hand-out.
+- **Season of Ghosts chapter macros — the module's audio and macros on the cards that use them.**
+  They used to live only on the tracker's chapter overview. Each chapter view in the Summer, No
+  Breath to Cry, Ruins of Wisdom, Enlightened Path, Fall Downtime and First Long Night macros now
+  opens with its looped soundtrack, beds and module macros, and the cards carry their own (the
+  Structural Collapse, the Seance, C11's warding bell, E5's Return Head, week 8's Barn Fire, the
+  Terror macros, and the rest). Play buttons start and stop the sound in the module's playlist
+  and repaint when it's started from the sidebar; macro buttons run the module's macro. The
+  placements follow the tracker's own notes; *Invisible Flames* stays marked as placed by guess.
+  GM-only.
+
+### Changed
+- **Campaign Status Tracker — Treasure tab claims moved into the shared ledger.** A one-time
+  migration carries the tracker's old private ticks (`sogCampaign.loot`) to the matching card's id,
+  or to a `campaign:` id for rows no chapter macro shows (Act 4, the downtime gifts). Nothing rides
+  on a hand-out, so these move as they stand, unlike the decision ticks with points.
+
 ## 2026-11-24 17:48
 
 ### Added

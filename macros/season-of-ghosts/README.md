@@ -320,6 +320,27 @@ The GM's cast cards, the beats, and the level-up flag are GM-only too.
 
 ![The thrown player board: settled rounds and the crowd-whispers meter, no fix leaked](../../screenshots/season-of-ghosts/who-leads-willowshore-console-player-thrown.png)
 
+### Treasure and media in the chapter macros
+
+Every card in the Summer, Enlightened Path, Ruins of Wisdom and No Breath to Cry macros that
+carries treasure has a **hand-out toggle** under it — one per reward where a card holds several
+(E8's rare tea and Kalen's pouch, Ren Mei Li's chest, collars, ring and dust), and one per
+outcome on winter's *The party receives* lists. They write one shared world setting,
+`world.sogTreasure`, which is also what the Campaign Status Tracker's Treasure tab reads: tick
+the boots of bounding on Wrapping Up and the tracker's Chapter 8 row is ticked, and the reverse.
+Nothing rides on a hand-out, so it toggles freely. Two checklist decisions that are an item
+handed over — the Last Will in C1 and Zoudou's ledger — are the same tick as their card.
+
+The Season of Ghosts module's **audio and macros** sit where the scene wants them, not only on
+the tracker's chapter overview: each chapter view opens with its looped soundtrack, its
+chapter-wide beds and its module macros, and the cards carry their own — *Buildings Collapsing*
+on the Structural Collapse, the seance loops on the Seance, *Warding Bell* (sound and macro) on
+C11, *Return Head* on E5, the Terror macros on Chapter 10 and the two C1 "fled" macros on C1,
+*Barn Fire* on the fall tracker's week 8. Play buttons start and stop the sound in the module's
+own playlist and show when it's running; macro buttons run the module's macro. The landing view
+of each macro adds the generic beds, the theme, and the submacros. All of it is GM-only — none
+of it reaches a player board.
+
 ### Campaign Status Tracker
 
 ![The campaign tab, on Act 2 Chapter 5](../../screenshots/season-of-ghosts/campaign-status-tracker.png)
@@ -357,20 +378,23 @@ produced them.
 - The party panel reads the **First Long Night** console too: the titles and keepsakes each PC
   won at the games, so *Iron-Gut* and the gourd flask are still on the table's mind in Act 4.
   Clicking a name opens that character's sheet
-- A **Treasure** tab holding all 42 named pieces of loot in the campaign, grouped into what's
+- A **Treasure** tab holding all 84 pieces of loot in the campaign, grouped into what's
   on the table in the chapter you're running, what earlier chapters were left holding, what's
-  still ahead, and what's been claimed
+  still ahead, and what's been handed out. Every row a chapter macro also shows is **the same
+  tick as that card's hand-out toggle** (see *Treasure and media in the chapter macros* below),
+  so mark it in whichever window is open
 - Scene and cue checklists per chapter — the Foundry playlists and scene swaps from the
   campaign notes, plus the prep that has to happen before session rather than during it
 - **Module macros** per chapter — all 58 macros from the Season of Ghosts Foundry module's
   directory, named exactly as they appear there, with their folder. Reference only: they're
-  run from the macro directory, so there's nothing to tick
+  run from the macro directory, so there's nothing to tick. The chapter macros carry the same
+  macros as run buttons on the cards that call for them
 - **Consoles in this collection** per chapter — the other six macros here, against the
   chapters they're for, so the Summer console is named on every Act 1 chapter, Who Leads
   Willowshore on Chapter 3, and the Enlightened Path console where Chapter 6 is on screen —
   rather than remembered
-- **Journal links** — 120 of the 128 checklist items, all ten Act 1 side quests, and 40 of the
-  42 treasure rows open the page of the Season of Ghosts module's own journal that covers
+- **Journal links** — 120 of the 128 checklist items, all ten Act 1 side quests, and 67 of the
+  84 treasure rows open the page of the Season of Ghosts module's own journal that covers
   them. Xungu opens the Infested
   Grove, the Week 11 curse opens *The Face at the Foot of the Bed*, Yen Rui opens the Hidden
   Library. The eight items with no link are the Two Weavers beats, which aren't in the book.

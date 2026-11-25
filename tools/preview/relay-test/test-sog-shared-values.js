@@ -18,6 +18,9 @@
      5. A macro run a second time keeping the first run's hook, so the new
         window never hears about changes.
      6. The one-time reconciliation of ticks the tracker held privately.
+     7. Treasure: the tracker's Treasure tab and a chapter card's hand-out
+        toggle are one value in `world.sogTreasure`, and the tracker's old
+        private claims move into it.
 
    Run from anywhere:
 
@@ -43,7 +46,7 @@ const app = (i) => globalThis.__apps[i];
   const fall = app(0).tracker;
   await loadMacro(M("enlightened-path-console.js"));
   const pathC = app(1).t;
-  await loadMacro(M("no-breath-to-cry-console.js"), { expose: ["CH8_EVENTS", "CH9_PIECES"] });
+  await loadMacro(M("no-breath-to-cry-console.js"), { expose: ["CH8_EVENTS", "CH9_PIECES", "sogClick"] });
   const winterExports = globalThis.__macro;
   const winter = app(2).t;
   await loadMacro(M("campaign-status-tracker.js"));
@@ -145,6 +148,41 @@ const app = (i) => globalThis.__apps[i];
   const note = globalThis.__chat.find(m => /share one value/.test(m.content ?? ""));
   check("the GM is told about the one the console disagrees with", !!note && /transmigration journal/.test(note.content) && !/Mr Jelly/.test(note.content));
   check("no XP moved by the reconciliation", get("sogWinter").xp === xpBefore);
+
+  console.log("== 10. Treasure: one hand-out value for the tracker and the card ==");
+  const cst2 = globalThis.__apps[globalThis.__apps.length - 1].t;
+  const winter3 = winter2;
+  const T = () => getGame().settings.get("world", "sogTreasure") ?? {};
+  await cst2.toggleLoot(8, "boots");
+  await sleep(5);
+  check("tracker tick lands on the winter card's id", T()["winter:ch8-wrapping-up:ch8-mr-jelly"] === true);
+  winter3.s.beats["ch8-wrapping-up"] = { ...(winter3.s.beats["ch8-wrapping-up"] ?? {}), "ch8-mr-jelly": 1 };
+  winter3.s.tab = "ch8"; winter3.s.ctab.ch8 = "events";
+  const html = winter3.app.markup();
+  check("the winter card renders that hand-out as ticked", /data-id="winter:ch8-wrapping-up:ch8-mr-jelly"/.test(html) && /sog-handout on[^>]*data-id="winter:ch8-wrapping-up:ch8-mr-jelly"/.test(html));
+  check("Red Smoke cards carry the chapter's audio", /data-act="sog-sound"[^>]*data-s="Buildings Collapsing"/.test(html));
+  /* A tick from the console side, through its own click path. */
+  const btn = { dataset: { id: "winter:ch10-c21" } };
+  await (async () => { winterExports.sogClick("sog-handout", btn); await sleep(5); })();
+  check("console tick reads as claimed in the tracker", cst2.claimed(10, "treasury") === true);
+  await cst2.toggleLoot(10, "treasury");
+  await sleep(5);
+  check("and unticking in the tracker clears the card", !T()["winter:ch10-c21"]);
+  await cst2.toggleFlag(4, "ledger");
+  await sleep(5);
+  check("Zoudou's ledger decision is the Summer card's hand-out", T()["summer:ch4-zoudous-rite"] === true);
+
+  console.log("== 11. Old private treasure claims move into the shared ledger ==");
+  const cs3 = get("sogCampaign");
+  cs3.loot = { "7.pouch": true, "12.bombs": true };
+  cs3.flags = { ...(cs3.flags ?? {}), "2.will": true };
+  await getGame().settings.set("world", "sogCampaign", cs3);
+  await loadMacro(M("campaign-status-tracker.js"));
+  await sleep(10);
+  check("a console-backed claim moves to the card's id", T()["ruins:e8:pouch"] === true);
+  check("an Act 4 claim moves to a campaign id", T()["campaign:12.bombs"] === true);
+  check("the Last Will decision moves to its card", T()["summer:ch2-c1"] === true);
+  check("the tracker no longer holds them privately", Object.keys(get("sogCampaign").loot ?? {}).length === 0 && !get("sogCampaign").flags["2.will"]);
 
   console.log(failures ? `\n${failures} CHECK(S) FAILED` : "\nALL CHECKS PASSED");
   process.exit(failures ? 1 : 0);

@@ -110,6 +110,7 @@ const DAYS = {
     ],
     shrineEnc: {
       id: "B3", name: "Bridge Shrine", level: "Moderate 5", tone: "slate",
+      loot: "Six moderate ghost charges — fill the clay vials from the dippers.",
       text: "A twenty-foot rope bridge over the North Sugi River, with a hexagonal pagoda at its centre and a viewing portal onto the water below. Two brood leech swarms surge up as the Arms of the Drowned haunt erupts — hundreds of ghostly arms grabbing at the planks, through the central hole, over the railings. The leeches spell out \"Kugaptee\" as they seethe across the floor.",
       checks: ["DC 18 Religion for the shrine's purpose (automatic for Religion experts and followers of Sangpotshi)",
                "DC 15 Willowshore Lore — the shrine washed away in a flood a decade ago, yet here it stands",
@@ -139,6 +140,7 @@ const DAYS = {
     ],
     shrineEnc: {
       id: "C3", name: "Garden Shrine", level: "Moderate 5", tone: "moss",
+      loot: "Six doses of lesser healing vapor — the blue orchids among the oak's roots.",
       text: "The only shrine that had keepers. Four caretakers stayed on as hermits after the monastery emptied, tried to turn the woodcutters away, and were burned alive when those woodcutters came back that evening as undead. They rise from the ashes crying out as their bodies burn.",
       checks: ["DC 15 Nature or DC 15 Religion — lavender incense stimulates the appetite",
                "DC 20 Perception while Searching to find the silver and oak incense burner"],
@@ -247,6 +249,7 @@ function refreshPCs(pcs) {
   });
 }
 function registerSetting() {
+  sogRegisterShared();
   if (!game.settings.settings.has(EP_ID)) {
     game.settings.register(EP_NS, EP_KEY, { scope: "world", config: false, type: Object, default: null });
   }
@@ -320,6 +323,213 @@ async function openJournal(ref) {
   entry.sheet.render(true, page ? { pageId: page.id } : {});
 }
 
+
+/* ------------------------------------------------- treasure and media
+   Where this macro's rewards and the module's audio and macros sit. Keys:
+   `card:<card>` on a card, `chapter:<ch>` (or another named panel) at the top
+   of a view, `landing` for the beds and submacros that belong to no one
+   scene. SOG_SPLIT gives a card one toggle per reward instead of one for
+   its whole treasure line; SOG_SKIP is treasure that's a shop or a pointer,
+   not something to hand over. The ids are shared with the Campaign Status
+   Tracker's Treasure tab, so don't rename a key without moving it there. */
+const SOG_PREFIX = "path";
+const SOG_ACT = 2;
+const SOG_SPLIT = {
+  "D3": [{ key: "soap", label: "Four bars of invigorating soap — the cave" },
+         { key: "thurible", label: "Lesser thurible of revelation — clean out the mud first" }]
+};
+const SOG_SKIP = new Set([]);
+const SOG_MEDIA = {
+  landing: { tracks: ["01 Season of Ghosts Loop"],
+    audio: [{ pl: "act.amb", sounds: ["Indoors", "Woods", "Willowshore", "Willowshore Hinterlands"] },
+      { pl: "act.amb", sounds: ["Mist Indoors", "Mist Outdoors"] },
+      { pl: "act.amb", sounds: ["Dense Fog"] },
+      { pl: "act.loop", sounds: ["River"] }],
+    macros: [{ name: "Change Season", folder: "Submacros" },
+      { name: "Change Dynamic Ring and Turn Marker", folder: "Submacros" },
+      { name: "Landing Picker", folder: "Submacros" },
+      { name: "Roof Control", folder: "Submacros" },
+      { name: "Toggle Party Platter (4 Characters)", folder: "Submacros" },
+      { name: "Toggle Party Platter (6 Characters)", folder: "Submacros" }] },
+  "chapter": { tracks: ["11 The Pilgrim's Path Loop"],
+    audio: [{ pl: "a2.sfx", sounds: ["Terrifying Roar"] }],
+    macros: [{ name: "Open the Wall of Ghosts", folder: "Act 2" }] },
+  "card:C1": { macros: [{ name: "Reveal Mandragora", folder: "Act 2" }] },
+  "card:B3": { audio: [{ pl: "a2.sfx", sounds: ["Arms of the Drowned"], note: "the haunt" }] },
+  "day:d2": { audio: [{ pl: "a2.amb", sounds: ["Rain", "Thunderstorm"] }] },
+  "day:d3": { audio: [{ pl: "a2.amb", sounds: ["Rain", "Thunderstorm"] }] },
+  "card:D3": { audio: [{ pl: "a2.loop", sounds: ["Waterfall"] }, { pl: "a2.sfx", sounds: ["Lightning Bolt"], note: "Iogaka" }] }
+};
+
+/* ------------------------------------------ shared across Season of Ghosts
+   This block is the same in every Season of Ghosts chapter macro; only the
+   SOG_* tables above it differ.
+
+   TREASURE. One world setting, `world.sogTreasure`, records what has been
+   handed out: `{ "<macro>:<card>[:<item>]": true }`. Each card's treasure
+   gets a toggle, and the Campaign Status Tracker's Treasure tab shows the
+   same row — it's one value, so ticking either ticks both. Nothing rides on
+   it but the reminder, so it toggles freely.
+
+   MEDIA. The Season of Ghosts module's own playlists and macros, placed on
+   the card or chapter that wants them. A play button starts and stops that
+   sound in the module's playlist (and repaints when it's started from the
+   sidebar instead); a macro button runs the module's macro. Ids are the
+   module's own, and a name match is the fallback.
+
+   Both are GM-only: nothing here reaches a player board. */
+const SOG_TREASURE_KEY = "sogTreasure";
+const SOG_TREASURE_ID = `world.${SOG_TREASURE_KEY}`;
+function sogRegisterShared() {
+  if (!game.settings.settings.has(SOG_TREASURE_ID))
+    game.settings.register("world", SOG_TREASURE_KEY, { scope: "world", config: false, type: Object, default: null });
+}
+const sogLedger = () => game.settings.get("world", SOG_TREASURE_KEY) ?? {};
+const sogHanded = (id) => !!sogLedger()[id];
+async function sogToggleHanded(id) {
+  if (!game.user.isGM || !id) return;
+  const L = sogLedger();
+  if (L[id]) delete L[id]; else L[id] = true;
+  await game.settings.set("world", SOG_TREASURE_KEY, L);
+}
+/* A card's rewards: its split list when it has one, otherwise one toggle for
+   the whole treasure line. */
+function sogRewards(key, hasTreasure) {
+  if (SOG_SPLIT[key]) return SOG_SPLIT[key].map(r => ({ id: `${SOG_PREFIX}:${key}:${r.key}`, label: r.label }));
+  if (hasTreasure && !SOG_SKIP.has(key)) return [{ id: `${SOG_PREFIX}:${key}`, label: null }];
+  return [];
+}
+function sogHandouts(rewards, ro) {
+  if (!game.user.isGM || !rewards?.length) return "";
+  return `<div class="sog-handouts">${rewards.map(r => {
+    const on = sogHanded(r.id);
+    return `<button type="button" class="sog-handout ${on ? "on" : ""}" data-act="sog-handout" data-id="${esc(r.id)}" ${ro ? "disabled" : ""}
+      title="${on ? "Handed out — click to take the tick back" : "Tick once the party has it"}. The same value as the Campaign Status Tracker's Treasure tab.">
+      <i class="fa-${on ? "solid fa-square-check" : "regular fa-square"}"></i>${esc(r.label ?? (on ? "Handed out" : "Not handed out yet"))}</button>`;
+  }).join("")}</div>`;
+}
+const sogCardRewards = (key, hasTreasure, ro) => sogHandouts(sogRewards(key, hasTreasure), ro);
+
+/* The module's playlists, by the ids it ships with. `act.*` means this
+   macro's own act. */
+const SOG_PLAYLISTS = {
+  a1: { amb: "HgqDtdyAVJFT3Dr1", sfx: "PM69203E3Y3UrHfA", loop: "zLGowtHaJW7U2VZM" },
+  a2: { amb: "jXKZ6O8NnYJaazKE", sfx: "kcrfM86DAcpOfBrs", loop: "e2Pf6JGVba202cFB" },
+  a3: { amb: "gTnkl7DUH19mzyJj", sfx: "0GuH1kstxWaqGSJx", loop: "TmxsF1RiQJ0m8o5M", seance: "h82ztCVRXELKQI8K" },
+  a4: { amb: "FGK5jsYreqU1AR5o", sfx: "Mv66f1NNleR53M5o", loop: "xYqkP4IEtZhyaILa" },
+  track: "7AzVaYG1M2yMtzIu", looped: "dbfW0zvQ2tf5VOCx"
+};
+const SOG_PLAYLIST_NAMES = {
+  "a1.amb": "Act 1 · Ambience", "a1.sfx": "Act 1 · SFX", "a1.loop": "Act 1 · Loop",
+  "a2.amb": "Act 2 · Ambiance", "a2.sfx": "Act 2 · SFX", "a2.loop": "Act 2 · Loop",
+  "a3.amb": "Act 3 · Ambiances", "a3.sfx": "Act 3 · SFX", "a3.loop": "Act 3 · Loop", "a3.seance": "Act 3 · Seance",
+  "a4.amb": "Act 4 · Ambience", "a4.sfx": "Act 4 · SFX", "a4.loop": "Act 4 · Loop",
+  "track": "Soundtrack", "looped": "Looped Soundtrack"
+};
+const sogRef = (ref) => String(ref ?? "").replace(/^act\./, `a${SOG_ACT}.`);
+function sogFindSound(ref, name) {
+  ref = sogRef(ref);
+  const [group, kind] = ref.split(".");
+  const id = kind ? SOG_PLAYLISTS[group]?.[kind] : SOG_PLAYLISTS[group];
+  const named = (pl) => pl?.sounds?.getName?.(name) ?? [...(pl?.sounds ?? [])].find(x => x.name === name) ?? null;
+  const byId = id ? game.playlists?.get?.(id) : null;
+  let sound = named(byId);
+  if (sound) return { playlist: byId, sound };
+  const label = (SOG_PLAYLIST_NAMES[ref] ?? "").split(" · ").pop();
+  const lists = [...(game.playlists ?? [])];
+  for (const pl of lists) { if (label && pl.name !== label) continue; sound = named(pl); if (sound) return { playlist: pl, sound }; }
+  for (const pl of lists) { sound = named(pl); if (sound) return { playlist: pl, sound }; }
+  return { playlist: null, sound: null };
+}
+/* Toggle, not play: the button stops what it started. */
+async function sogToggleSound(ref, name) {
+  const { playlist, sound } = sogFindSound(ref, name);
+  if (!sound) return ui.notifications.warn(`No sound named "${name}" in ${SOG_PLAYLIST_NAMES[sogRef(ref)] ?? ref}, or anywhere else in this world's playlists.`);
+  if (sound.playing) await playlist.stopSound(sound); else await playlist.playSound(sound);
+}
+function sogFindMacro(name, folder) {
+  const all = [...(game.macros ?? [])].filter(m => m.name === name);
+  return all.find(m => m.folder?.name === folder) ?? all[0] ?? null;
+}
+async function sogRunMacro(name, folder) {
+  const m = sogFindMacro(name, folder);
+  if (!m) return ui.notifications.warn(`No macro named "${name}" in this world — import the Season of Ghosts module's macro folders.`);
+  return m.execute();
+}
+function sogMedia(media) {
+  if (!game.user.isGM || !media) return "";
+  const tracks = media.tracks ?? [], audio = media.audio ?? [], macros = media.macros ?? [];
+  if (!tracks.length && !audio.length && !macros.length) return "";
+  const play = (ref, n) => {
+    const { sound } = sogFindSound(ref, n), on = !!sound?.playing;
+    return `<button type="button" class="sog-play ${on ? "on" : ""} ${sound ? "" : "gone"}" data-act="sog-sound" data-pl="${esc(ref)}" data-s="${esc(n)}"
+      title="${!sound ? `Not found in this world: ${esc(n)}` : on ? `Stop ${esc(n)}` : `Play ${esc(n)}`}">
+      <i class="fa-solid ${!sound ? "fa-volume-xmark" : on ? "fa-stop" : "fa-play"}"></i>${esc(n)}</button>`;
+  };
+  const run = (name, folder) => {
+    const found = !!sogFindMacro(name, folder);
+    return `<button type="button" class="sog-play sog-macro ${found ? "" : "gone"}" data-act="sog-macro" data-name="${esc(name)}" data-folder="${esc(folder ?? "")}"
+      title="${found ? `Run the module's ${esc(name)} macro` : `Not found in this world: ${esc(name)}`}"><i class="fa-solid fa-bolt"></i>${esc(name)}</button>`;
+  };
+  const row = (icon, buttons, sub) => `<div class="sog-mrow"><i class="fa-solid ${icon}"></i><span class="sog-mbody">
+    <span class="sog-plays">${buttons}</span>${sub ? `<small>${sub}</small>` : ""}</span></div>`;
+  return `<div class="sog-media">
+    ${tracks.map(n => row("fa-music", play("looped", n), "Looped Soundtrack")).join("")}
+    ${audio.map(a => row("fa-volume-high", a.sounds.map(n => play(a.pl, n)).join(""),
+      `${SOG_PLAYLIST_NAMES[sogRef(a.pl)] ?? a.pl}${a.note ? ` · ${a.note}` : ""}${a.guess ? " · placed by guess" : ""}`)).join("")}
+    ${macros.map(m => m.items
+      ? row("fa-bolt", m.items.map(n => run(n, m.folder)).join(""), `${m.group} · ${m.folder} macros${m.note ? ` · ${m.note}` : ""}`)
+      : row("fa-bolt", run(m.name, m.folder), `${m.folder} macro${m.note ? ` · ${m.note}` : ""}`)).join("")}
+  </div>`;
+}
+/* A panel of media for a whole chapter or tab. */
+const sogMediaPanel = (key, title) => {
+  const body = sogMedia(SOG_MEDIA[key]);
+  return body ? `<section class="panel sog-mediapanel" style="--tone:var(--slate)"><h3>Audio and module macros <small>${title}</small></h3>${body}</section>` : "";
+};
+const sogCardMedia = (key) => sogMedia(SOG_MEDIA[`card:${key}`]);
+
+/* The three button kinds above, for the macro's own click handler. */
+function sogClick(a, btn) {
+  if (a === "sog-handout") { sogToggleHanded(btn.dataset.id); return true; }
+  if (a === "sog-sound") { sogToggleSound(btn.dataset.pl, btn.dataset.s); return true; }
+  if (a === "sog-macro") { sogRunMacro(btn.dataset.name, btn.dataset.folder || null); return true; }
+  return false;
+}
+/* Repaint on a treasure tick from anywhere (the tracker included) and on any
+   sound starting or stopping. Re-registered per run, so a reopened window is
+   the one that hears it. */
+function sogWire(engine) {
+  const slot = `__sogShared_${SOG_PREFIX}`, old = globalThis[slot];
+  if (old) for (const [hook, id] of old) Hooks.off(hook, id);
+  const repaint = () => engine.render();
+  globalThis[slot] = [
+    ["updateSetting", Hooks.on("updateSetting", (setting) => { if (setting.key === SOG_TREASURE_ID) repaint(); })],
+    ["updatePlaylistSound", Hooks.on("updatePlaylistSound", repaint)],
+    ["updatePlaylist", Hooks.on("updatePlaylist", repaint)]
+  ];
+}
+const SOG_CSS = (root) => `
+  .${root} .sog-handouts { display:flex; flex-wrap:wrap; gap:.3rem; margin:.1rem 0 .5rem; }
+  .${root} button.sog-handout { display:inline-flex; align-items:center; gap:.35rem; height:auto; width:auto; line-height:1.3;
+    padding:.2rem .55rem; font-size:.74rem; border:1px dashed var(--gold, var(--ember)); border-radius:3px; background:none; color:var(--ink); cursor:pointer; }
+  .${root} button.sog-handout.on { border-style:solid; background:var(--stripe); color:var(--muted); }
+  .${root} button.sog-handout.on i { color:var(--moss); }
+  .${root} button.sog-handout:not(.on) i { color:var(--gold, var(--ember)); }
+  .${root} .sog-media { margin:.3rem 0 .45rem; display:flex; flex-direction:column; gap:.25rem; }
+  .${root} .sog-mrow { display:flex; gap:.45rem; align-items:flex-start; font-size:.76rem; }
+  .${root} .sog-mrow > i { color:var(--muted); width:1rem; text-align:center; margin-top:.3rem; }
+  .${root} .sog-mbody { display:flex; flex-direction:column; gap:.1rem; }
+  .${root} .sog-mbody small { color:var(--muted); font-size:.7rem; }
+  .${root} .sog-plays { display:flex; flex-wrap:wrap; gap:.25rem; }
+  .${root} button.sog-play { display:inline-flex; align-items:center; gap:.3rem; height:auto; width:auto; line-height:1.3;
+    padding:.15rem .5rem; font-size:.74rem; font-weight:600; border:1px solid var(--line); border-radius:3px; background:var(--card); color:var(--ink); cursor:pointer; }
+  .${root} button.sog-play:hover { background:var(--hover); }
+  .${root} button.sog-play.on { background:var(--slate); border-color:var(--slate); color:var(--paper); }
+  .${root} button.sog-play.gone { opacity:.55; font-weight:400; }
+  .${root} button.sog-play i { font-size:.65rem; }
+  .${root} .sog-mediapanel h3 { color:var(--ink); }
+`;
 
 /* ----------------------------------------------------------------- engine */
 class PathTracker {
@@ -522,10 +732,12 @@ class EPApp extends BaseApp {
           ${dayKey === "vision" ? "" : this.jbtn(e.id.toLowerCase())}
           <button type="button" class="say" data-act="postenc" data-id="${e.id}" title="Read to the table"><i class="fa-solid fa-comment"></i></button>
         </h3>
+        ${sogCardMedia(e.id)}
         <p class="text">${e.text}</p>
         ${e.checks?.length ? `<ul class="checks">${e.checks.map(c => `<li>${c}</li>`).join("")}</ul>` : ""}
         ${e.note ? `<p class="note">${e.note}</p>` : ""}
         ${e.loot ? `<p class="loot"><b>Treasure</b> ${e.loot}</p>` : ""}
+        ${sogCardRewards(e.id, !!e.loot, ro)}
         <div class="btnrow">
           <button type="button" class="${done ? "ghost" : "primary"}" data-act="toggleenc" data-day="${dayKey}" data-id="${e.id}" data-xp="${e.xp ?? 0}" ${ro ? "disabled" : ""}>
             ${done ? "Reopen" : "Mark cleared"}${e.xp && !done ? ` · ${e.xp} XP` : ""}
@@ -539,7 +751,7 @@ class EPApp extends BaseApp {
   wallTab(ro) {
     const t = this.t, r = t.s.ritual;
     const opt = (k, label) => `<button type="button" class="rit ${r.cast === k ? "on" : ""} ${k}" data-act="ritual" data-r="${k}" ${ro ? "disabled" : ""}>${label}</button>`;
-    return `
+    return `${sogMediaPanel("chapter", "the Enlightened Path")}${sogMediaPanel("landing", "the beds, the theme, and the submacros")}
       <section class="panel" style="--tone:var(--gold)">
         <h3>Performing the ritual <small>${RITUAL.name}</small> ${this.jbtn(JPAGE.ritual)}</h3>
         <label class="check"><input type="checkbox" data-act="components" ${r.components ? "checked" : ""} ${ro ? "disabled" : ""}> Components secured — <span class="soft">${RITUAL.cost}</span></label>
@@ -567,6 +779,7 @@ class EPApp extends BaseApp {
           <button type="button" class="say" data-act="postday" data-k="${dayKey}" title="Read to the table"><i class="fa-solid fa-comment"></i></button>
         </h3>
         <p class="text">${d.travel}</p>
+        ${sogMedia(SOG_MEDIA[`day:${dayKey}`])}
       </section>
 
       <div class="grid">${d.encounters.map(e => this.encCard(dayKey, e, ro)).join("")}</div>
@@ -576,10 +789,12 @@ class EPApp extends BaseApp {
           ${this.jbtn(sh.id.toLowerCase())}
           <button type="button" class="say" data-act="postenc" data-id="${sh.id}" title="Read to the table"><i class="fa-solid fa-comment"></i></button>
         </h3>
+        ${sogCardMedia(sh.id)}
         <p class="text">${sh.text}</p>
         <ul class="checks">${sh.checks.map(c => `<li>${c}</li>`).join("")}</ul>
         ${sh.note ? `<p class="note">${sh.note}</p>` : ""}
         ${sh.loot ? `<p class="loot"><b>Treasure</b> ${sh.loot}</p>` : ""}
+        ${sogCardRewards(sh.id, !!sh.loot, ro)}
         <div class="sub enl">
           <div class="subhead"><i class="fa-solid fa-sun"></i> Enlightenment
             <span>${sh.conditions.filter(c => st[c.key]).length} of ${sh.conditions.length}${lit ? " · achieved" : ""}</span></div>
@@ -644,6 +859,7 @@ class EPApp extends BaseApp {
       if (!btn) return;
       ev.preventDefault();
       const a = btn.dataset.act;
+      if (sogClick(a, btn)) return;
       if (a === "tab") { t.s.tab = btn.dataset.k; t.touch(); }
       else if (a === "journal") openJournal(btn.dataset.r || null);
       else if (a === "toggleenc") t.toggleEncounter(btn.dataset.day, btn.dataset.id, Number(btn.dataset.xp) || 0);
@@ -775,6 +991,7 @@ class EPApp extends BaseApp {
         .ep .grid, .ep .carry { grid-template-columns:1fr; }
         .ep .tabs { flex-wrap:wrap; }
       }
+      ${SOG_CSS("ep")}
     </style>`;
   }
 }
@@ -800,6 +1017,7 @@ if (AppV2) {
   }
   const tracker = new PathTracker(state);
   const app = new EPApp(tracker);
+  sogWire(tracker);
 
   /* Re-registered on every run: the hook closes over this run's window, so
      keeping the first run's hook would leave a reopened window deaf to updates. */

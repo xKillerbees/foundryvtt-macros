@@ -30,12 +30,14 @@ const CONSOLES = {
   festival: "world.sogFirstLongNight",
   path: "world.sogEnlightenedPath",
   ruins: "world.sogRuinsOfWisdom",
-  winter: "world.sogWinter"
+  winter: "world.sogWinter",
+  /* Not a console: the shared hand-out ledger every chapter macro writes. */
+  treasure: "world.sogTreasure"
 };
 const CONSOLE_NAMES = {
   summer: "Summer", duel: "Who Leads Willowshore", downtime: "Fall Downtime Tracker",
   festival: "First Long Night", path: "Enlightened Path", ruins: "Ruins of Wisdom",
-  winter: "No Breath to Cry"
+  winter: "No Breath to Cry", treasure: "chapter"
 };
 const DOWNTIME_KEY = "sogFallDowntime";
 
@@ -154,6 +156,11 @@ const BRIDGE = {
     get: s => !!(s.shrines?.d3?.iogaka && s.shrines?.d3?.bathe && s.shrines?.d3?.slept),
     set: (s, v) => setShrine(s, "d3", SHRINE_CONDS.d3, v),
     chip: { label: "Mountain Shrine", on: "lit", off: "dark", tone: "gold" } },
+
+  /* ---- Decisions that are an item handed over: the same tick as the
+     chapter macro's hand-out toggle on that card. ---- */
+  "2.will": { setting: "treasure", name: "Summer", get: s => !!s["summer:ch2-c1"], set: (s, v) => { if (v) s["summer:ch2-c1"] = true; else delete s["summer:ch2-c1"]; } },
+  "4.ledger": { setting: "treasure", name: "Summer", get: s => !!s["summer:ch4-zoudous-rite"], set: (s, v) => { if (v) s["summer:ch4-zoudous-rite"] = true; else delete s["summer:ch4-zoudous-rite"]; } },
 
   /* ---- Act 1, the Summer console ---- */
   "1.elders": readOnly("summer", s => !!(s.beats?.["ch1-meeting-matsuki"]?.["ch1-contact-matsuki"]
@@ -746,63 +753,110 @@ const CHAPTERS = [
 /* ------------------------------------------------------------ the treasure
    Keyed by chapter rather than folded into CHAPTERS, so the ledger reads as
    one list when you're checking what the party never picked up. Items already
-   tracked as chapter decisions (Zoudou's ledger, the Fang and Key) live there
-   and aren't repeated here. */
+   tracked as chapter decisions (Zoudou's ledger, the Last Will, the Fang and
+   Key) live there and aren't repeated here.
+
+   `src` is the row's id in the shared `world.sogTreasure` ledger — the same id
+   the chapter macro's own card uses for its hand-out toggle, so ticking the
+   row here or the card there is one value. Rows with no chapter macro behind
+   them (Act 4, the downtime gifts) use `campaign:<ch>.<key>`. */
 const LOOT = {
+  1: [
+    { key: "watchtower", label: "Ha Hai-er's supplies — ladder marvelous miniature, a shining crossbow bolt, a cask of lantern oil", where: "The Eastern Watchtower", src: "summer:ch1-eastern-watchtower" },
+    { key: "homes", label: "The home rewards — one set for each PC's home", where: "Returning Home", src: "summer:ch1-returning-home" },
+    { key: "sumika", label: "Sumika's thanks — supplies for two spirit traps and two other snares", where: "A1 — the Trapped Hunter", src: "summer:ch1-a1-trapped-hunter" },
+    { key: "dami", label: "Dami's thanks — two lesser antidotes, and a darkvision elixir if the gecko was spared", where: "A2 — Clash at the Clinic", src: "summer:ch1-a2-clash-clinic" },
+    { key: "gurglegut", label: "Gurglegut's treasures — a silver scepter, a jewelry case with a ring of discretion, the three old coins", where: "Retaking Dawnstep", src: "summer:ch1-retaking-dawnstep" }
+  ],
   2: [
-    { key: "care", label: "Care package — 10 minor healing potions, 8 potency crystals", where: "The favored elder, before downtown" }
+    { key: "care", label: "Care package — 10 minor healing potions, 8 potency crystals", where: "The favored elder, before downtown", src: "summer:ch2-downtown-intro" },
+    { key: "armorykey", label: "The armory key, from Zheng Peng", where: "B4 — the prison", src: "summer:ch2-b4" },
+    { key: "armory", label: "The armory — four lesser frost vials, a cold iron dagger and buckler, a silver shortsword, a +1 spear", where: "B6", src: "summer:ch2-b6", note: "Plus a dozen suits of scale and studded leather, crossbows, bolts and clubs." },
+    { key: "jewelry", label: "The stolen jewelry — 75 gp, and a PC's own cursed family necklace", where: "B11", src: "summer:ch2-b11", note: "The rest belongs to the townsfolk; returning it is worth Northridge Reputation." },
+    { key: "angel", label: "Nadoya's crying angel pendant, and the cucumbers", where: "B12", src: "summer:ch2-b12", note: "A cucumber offered to the B15 kappas improves Make an Impression by one degree." },
+    { key: "pearl", label: "The kappas' 50 gp pearl tip", where: "B15", src: "summer:ch2-b15" },
+    { key: "apron", label: "Gray Butcher's apron — two oils of potency, two mesmerizing opals, two potency crystals, a +1 silver dagger", where: "The Gray Butcher's parade", src: "summer:ch2-butcher-parade" },
+    { key: "flask", label: "Flask of fellowship, and the C2 padlock keys", where: "C3 — Mo Douqiu", src: "summer:ch2-c3" }
   ],
   3: [
-    { key: "cloak", label: "Hongrui's red cloak", where: "Canary Inn D4", note: "Cursed unless her gratitude was earned first." },
-    { key: "pearls", label: "Two pearls", where: "Eyes of Fumeiyoshi D9", note: "They claim the Cerulean Teahouse." },
-    { key: "peachwood", label: "Peachwood", where: "Collecting Peachwood", note: "A critical failure kills the grove for the campaign." }
+    { key: "cloak", label: "Hongrui's red cloak", where: "Canary Inn D4", note: "Cursed unless her gratitude was earned first.", src: "summer:ch3-gov-inn" },
+    { key: "pearls", label: "Two pearls", where: "Eyes of Fumeiyoshi D9", note: "They claim the Cerulean Teahouse.", src: "summer:ch3-d9" },
+    { key: "peachwood", label: "Peachwood", where: "Collecting Peachwood", note: "A critical failure kills the grove for the campaign." },
+    { key: "fulus", label: "Yun Mong-un's rare fulus — 8 gp each, and a formula", where: "Collecting Peachwood", src: "summer:ch3-opp-peachwood" },
+    { key: "twine", label: "Great Willow's parting gift — a lesser twisting twine", where: "Visiting Great Willow", src: "summer:ch3-mists-gw-visit" },
+    { key: "carapace", label: "A piece of Ugly Cute's stony carapace", where: "Rescuing Ugly Cute", src: "summer:ch3-ugly-rescue" }
   ],
   4: [
-    { key: "pendant", label: "Pendant of the occult", where: "E14 — the occultists' bargain" },
-    { key: "gift", label: "Cape of justice, or the noppera-bo hood", where: "Shinzo's gift", note: "Whichever his question chose." },
-    { key: "iron", label: "Invisibility potion and a 100 gp silver ingot", where: "Behind the E11→E12 iron door" }
+    { key: "pendant", label: "Pendant of the occult", where: "E14 — the occultists' bargain", src: "summer:ch4-e14" },
+    { key: "gift", label: "Cape of justice, or the noppera-bo hood", where: "Shinzo's gift", note: "Whichever his question chose.", src: "summer:ch4-merchant-returns" },
+    { key: "iron", label: "Invisibility potion and a 100 gp silver ingot", where: "Behind the E11→E12 iron door", src: "summer:ch4-e12" },
+    { key: "brew", label: "Lesser bravo's brew", where: "E3 — in a hay box", src: "summer:ch4-e3" },
+    { key: "oil", label: "Oil of potency", where: "E4 — by the eastern door", src: "summer:ch4-e4" },
+    { key: "battleaxe", label: "+1 battle axe in the muddy water", where: "E5 — DC 20 Perception, or the rescued kappa points", src: "summer:ch4-e5" },
+    { key: "stone", label: "Moderate blasting stone", where: "E8 — in a dead noppera-bo's hand", src: "summer:ch4-e8" },
+    { key: "mending", label: "15 gp and an oil of mending", where: "E11 — the camp office", src: "summer:ch4-e11" },
+    { key: "baton", label: "Battle medic's baton", where: "E16 — Mugirou's", src: "summer:ch4-e16:baton" },
+    { key: "eyepiece", label: "Crafter's eyepiece", where: "E16 — from the farmers, a day after they're home", src: "summer:ch4-e16:eyepiece" }
   ],
   5: [
     { key: "yami", label: "Yami's weekly gift", where: "DC 11 flat at the end of each week" },
     { key: "shinzo", label: "Shinzo at 10% off", where: "During the First Long Night, week 3" }
   ],
   6: [
-    { key: "feathers", label: "Two gemini trophy feathers", where: "The Soulthief's nest, inside the Wall" },
-    { key: "gems", label: "Two fear gem talismans", where: "C1 — a clot of crystallised blood in each slain mandragora" },
-    { key: "enko", label: "+1 striking silver shortsword, wand of environmental endurance, minor sturdy shield", where: "Enko surfaces with them at Mirror Lake" },
-    { key: "charges", label: "Six moderate ghost charges", where: "Bridge Shrine — fill the clay vials from the dippers" },
-    { key: "orchids", label: "Six doses of lesser healing vapor", where: "Garden Shrine — the blue orchids in the oak's roots" },
-    { key: "soap", label: "Four bars of invigorating soap", where: "The cave at the Mountain Shrine" },
-    { key: "thurible", label: "Lesser thurible of revelation", where: "Mountain Shrine platform", note: "Iogaka filled it with mud and dead fish — clean it before use." }
+    { key: "feathers", label: "Two gemini trophy feathers", where: "The Soulthief's nest, inside the Wall", src: "path:A3" },
+    { key: "gems", label: "Two fear gem talismans", where: "C1 — a clot of crystallised blood in each slain mandragora", src: "path:C1" },
+    { key: "bracelet", label: "Yeri's Bracelet — a charm of resistance", where: "C2 — the girl in the tree", src: "path:C2", note: "Carry it to the monastery: it ends Yuni's ghost without a fight." },
+    { key: "enko", label: "+1 striking silver shortsword, wand of environmental endurance, minor sturdy shield", where: "Enko surfaces with them at Mirror Lake", src: "path:B2" },
+    { key: "charges", label: "Six moderate ghost charges", where: "Bridge Shrine — fill the clay vials from the dippers", src: "path:B3" },
+    { key: "orchids", label: "Six doses of lesser healing vapor", where: "Garden Shrine — the blue orchids in the oak's roots", src: "path:C3" },
+    { key: "soap", label: "Four bars of invigorating soap", where: "The cave at the Mountain Shrine", src: "path:D3:soap" },
+    { key: "thurible", label: "Lesser thurible of revelation", where: "Mountain Shrine platform", note: "Iogaka filled it with mud and dead fish — clean it before use.", src: "path:D3:thurible" }
   ],
   7: [
-    { key: "fulus", label: "An escape fulu and two stumbling fulus", where: "E1 — the shredded gate" },
-    { key: "shield", label: "Spellguard shield", where: "E3 — among the cushions east of the statue" },
-    { key: "healer", label: "Two moderate healing potions, expanded healer's tools, healer's gloves", where: "E4 debris" },
-    { key: "toolkit", label: "Sterling artisan's toolkit for tea, and 5 doses of poison", where: "E7 kitchen, once the haunt is beaten" },
-    { key: "tea", label: "Rare tea worth 150 gp", where: "E8", note: "Using all of it gives +2 to Host Ceremony in E6." },
-    { key: "pouch", label: "Type II spacious pouch — 200 gp of stolen art", where: "E8, under the loose floor stone" },
-    { key: "ring", label: "Spiritsight ring", where: "E9 — under a mattress" },
-    { key: "prayers", label: "Book of warding prayers", where: "E10 rubble" },
-    { key: "scrolls", label: "Lesser tome of restorative cleansing and six scrolls", where: "E11 — Yen Rui's gifts" },
-    { key: "staff", label: "Primeval mistletoe and a verdant staff", where: "E12, after the fungi" },
-    { key: "axe", label: "+1 ghost touch striking silver battle axe", where: "E13 trunk", note: "Frightened-1 quirk on every draw until Xin Yue falls." },
-    { key: "chest", label: "The treasury chest — emerald grasshopper talisman, +1 chain shirt, wand of clear mind", where: "E15" }
+    { key: "fulus", label: "An escape fulu and two stumbling fulus", where: "E1 — the shredded gate", src: "ruins:e1" },
+    { key: "shield", label: "Spellguard shield", where: "E3 — among the cushions east of the statue", src: "ruins:e3" },
+    { key: "healer", label: "Two moderate healing potions, expanded healer's tools, healer's gloves", where: "E4 debris", src: "ruins:e4" },
+    { key: "toolkit", label: "Sterling artisan's toolkit for tea, and 5 doses of poison", where: "E7 kitchen, once the haunt is beaten", src: "ruins:e7" },
+    { key: "tea", label: "Rare tea worth 150 gp", where: "E8", note: "Using all of it gives +2 to Host Ceremony in E6.", src: "ruins:e8:tea" },
+    { key: "pouch", label: "Type II spacious pouch — 200 gp of stolen art", where: "E8, under the loose floor stone", src: "ruins:e8:pouch" },
+    { key: "ring", label: "Spiritsight ring", where: "E9 — under a mattress", src: "ruins:e9" },
+    { key: "prayers", label: "Book of warding prayers", where: "E10 rubble", src: "ruins:e10" },
+    { key: "scrolls", label: "Lesser tome of restorative cleansing and six scrolls", where: "E11 — Yen Rui's gifts", src: "ruins:e11:gifts" },
+    { key: "books", label: "The rare-book collection — 600 gp, 12 Bulk", where: "E11 — the hidden library", src: "ruins:e11:books" },
+    { key: "staff", label: "Primeval mistletoe and a verdant staff", where: "E12, after the fungi", src: "ruins:e12" },
+    { key: "axe", label: "+1 ghost touch striking silver battle axe", where: "E13 trunk", note: "Frightened-1 quirk on every draw until Xin Yue falls.", src: "ruins:e13:axe" },
+    { key: "chest", label: "The treasury chest — emerald grasshopper talisman, +1 chain shirt, wand of clear mind", where: "E15", src: "ruins:e15" }
   ],
   8: [
-    { key: "boots", label: "Boots of bounding", where: "Mr Jelly recovered intact" },
-    { key: "tome", label: "Moderate tome of restorative cleansing", where: "What the transmigration journal becomes" },
-    { key: "formula", label: "The resurrect formula", where: "Loose pages in the journal" }
+    { key: "myna", label: "Myna Kawaka's gifts — by lives saved", where: "Wrapping Up, the day after Red Smoke", src: "winter:ch8-wrapping-up:myna" },
+    { key: "boots", label: "Boots of bounding", where: "Mr Jelly recovered intact", src: "winter:ch8-wrapping-up:ch8-mr-jelly" },
+    { key: "elder", label: "The town elder's reward — leather bands of force and a 150 gp celadon vase", where: "Both waldgeists defeated", src: "winter:ch8-wrapping-up:ch8-waldgeists" },
+    { key: "tome", label: "Moderate tome of restorative cleansing", where: "What the transmigration journal becomes", src: "winter:ch8-manifestation:tome" },
+    { key: "formula", label: "The resurrect formula", where: "Loose pages in the journal", src: "winter:ch8-manifestation:formula" },
+    { key: "hehgear", label: "Heh Shan-Bao's gear — greater choker of elocution, +1 striking longsword, +1 resilient padded armor, greater sleeves of storage", where: "Manifests with the journal", src: "winter:ch8-manifestation:gear" }
   ],
   9: [
-    { key: "legacy", label: "Four heroic-legacy items", where: "Shinzo, at Event 4" },
-    { key: "collars", label: "Silver collars", where: "Ren Mei Li at Influence 12", note: "Legal passes to travel, read, and trade in Act 4." },
-    { key: "msgring", label: "Messenger's ring", where: "Ren Mei Li at Influence 12" },
-    { key: "dust", label: "Dust of corpse animation", where: "Ren Mei Li at Influence 16" }
+    { key: "legacy", label: "Four heroic-legacy items", where: "Shinzo, at Event 4", src: "winter:ch9-e4-shinzo" },
+    { key: "rin", label: "Rin's flaming weapon runestone", where: "Event 7, once she's friendly", src: "winter:ch9-e7-fox" },
+    { key: "shortbow", label: "+1 thundering shortbow", where: "Event 8 — under Tenon's floorboard", src: "winter:ch9-e8-home" },
+    { key: "porch", label: "Moderate healing potions on the teahouse porch — one per PC who succeeded", where: "Event 10, the morning after", src: "winter:ch9-e10-festival" },
+    { key: "nosois", label: "The nosois' payment — gallows tooth, jade bauble, an 800 gp ring, frost weapon runestone", where: "Event 11, at 4+ successes", src: "winter:ch9-e11-nosois" },
+    { key: "hardwood", label: "Ren Mei Li's hardwood chest — six moonstones, greater persona mask, desolation locket", where: "Ren Mei Li at Influence 12", src: "winter:ch9-spider:chest" },
+    { key: "collars", label: "Silver collars", where: "Ren Mei Li at Influence 12", note: "Legal passes to travel, read, and trade in Act 4.", src: "winter:ch9-spider:collars" },
+    { key: "msgring", label: "Messenger's ring", where: "Ren Mei Li at Influence 12", src: "winter:ch9-spider:msgring" },
+    { key: "dust", label: "Dust of corpse animation", where: "Ren Mei Li at Influence 16", src: "winter:ch9-spider:dust" }
   ],
   10: [
-    { key: "codex", label: "The codex explaining the warding bell", where: "C20 — Mago Kai's quarters" },
-    { key: "topup", label: "Shinzo's gear top-up — about 1,500 gp each, up to 3,000", where: "Only on the negotiated peace" }
+    { key: "woks", label: "Magic-tea supplies worth 150 gp, and three cast-iron woks", where: "C7 — the kitchen", src: "winter:ch10-c7" },
+    { key: "lumber", label: "A saurian spike and a +2 striking handaxe", where: "C8 — among the lumber", src: "winter:ch10-c8" },
+    { key: "needle", label: "Needle thousand-pains fulu", where: "C10 — among the shide", src: "winter:ch10-c10" },
+    { key: "maidens", label: "Scrolls — heal (5th), two cleanse affliction, four clear mind, sending", where: "C15 — the shrine maidens' quarters", src: "winter:ch10-c15" },
+    { key: "vampiric", label: "Scroll of vampiric exsanguination", where: "C16 — in Grandmasters of Quain", src: "winter:ch10-c16" },
+    { key: "chenthurible", label: "Moderate thurible of revelation", where: "C17 — Chen's peg", src: "winter:ch10-c17" },
+    { key: "armory", label: "+2 striking jiu huan dao, two greater cheetah's elixirs, three storm arrows", where: "C18 — the armory", src: "winter:ch10-c18" },
+    { key: "treasury", label: "Kai's treasury — 1,400 gp of trade goods and a fire-jump ring", where: "C21", src: "winter:ch10-c21" },
+    { key: "codex", label: "The codex explaining the warding bell", where: "C20 — Mago Kai's quarters", src: "winter:ch10-c20:codex" },
+    { key: "topup", label: "Shinzo's gear top-up — about 1,500 gp each, up to 3,000", where: "Only on the negotiated peace", src: "winter:ch10-after-peace:topup" }
   ],
   11: [
     { key: "lantern", label: "The Eternal Lantern's skill bonus rises to +2", where: "Automatic at the return" },
@@ -1539,7 +1593,7 @@ class Campaign {
     const item = chapter(n)?.items.find(i => i.key === key);
     if (this.bridgeLive(b)) {
       if (b.readOnly) {
-        ui.notifications.info(`Worked out from the ${CONSOLE_NAMES[b.setting]} macro — change it there.`);
+        ui.notifications.info(`Worked out from the ${(b.name ?? CONSOLE_NAMES[b.setting])} macro — change it there.`);
         this.render();
         return;
       }
@@ -1577,15 +1631,23 @@ class Campaign {
     const actOnly = (MODULE_MACROS.acts[act] ?? []).map(m => ({ ...m, actOnly: true }));
     return [...placed, ...actOnly];
   }
-  claimed(n, key) { return !!this.s.loot[`${n}.${key}`]; }
+  /* A row's id in the shared hand-out ledger — the chapter macro's own, or a
+     campaign-only one when no chapter macro carries it. */
+  lootId(n, key) { return this.lootFor(n).find(x => x.key === key)?.src ?? `campaign:${n}.${key}`; }
+  treasure() { return game.settings.get("world", "sogTreasure") ?? {}; }
+  claimed(n, key) { return !!this.treasure()[this.lootId(n, key)]; }
   cued(n, key) { return !!this.s.cues[`${n}.${key}`]; }
 
-  toggleLoot(n, key) {
-    const id = `${n}.${key}`;
-    const on = !!this.s.loot[id];
-    if (on) delete this.s.loot[id]; else this.s.loot[id] = true;
+  /* Read-merge-write of the whole ledger, so a chapter macro's tick made a
+     moment ago in another window is never lost. */
+  async toggleLoot(n, key) {
+    if (!this.editable) return;
+    const id = this.lootId(n, key), L = this.treasure();
+    const on = !!L[id];
+    if (on) delete L[id]; else L[id] = true;
+    await game.settings.set("world", "sogTreasure", L);
     const it = this.lootFor(n).find(x => x.key === key);
-    this.log(`Ch ${n} loot — ${it?.label ?? key}: ${on ? "unclaimed" : "claimed"}.`);
+    this.log(`Ch ${n} loot — ${it?.label ?? key}: ${on ? "not handed out" : "handed out"}.`);
     this.touch();
   }
   toggleCue(n, key) {
@@ -2198,8 +2260,8 @@ class CSApp extends BaseApp {
               <div class="itemrow">
                 <label class="check ${on ? "on" : ""} ${st === "overdue" ? "overdue" : ""} ${st === "skipped" ? "skipped" : ""}">
                   <input type="checkbox" data-act="flag" data-n="${c.n}" data-k="${i.key}" ${on ? "checked" : ""} ${ro || (shared?.readOnly && t.bridgeLive(shared)) ? "disabled" : ""}${shared ? ` title="${shared.readOnly
-                ? (t.bridgeLive(shared) ? `Worked out from the ${CONSOLE_NAMES[shared.setting]} macro — change it there` : `Worked out from the ${CONSOLE_NAMES[shared.setting]} macro once it's run; a plain tick until then`)
-                : `The same value as the ${CONSOLE_NAMES[shared.setting]} macro — tick it here or there`}"` : ""}>
+                ? (t.bridgeLive(shared) ? `Worked out from the ${(shared.name ?? CONSOLE_NAMES[shared.setting])} macro — change it there` : `Worked out from the ${(shared.name ?? CONSOLE_NAMES[shared.setting])} macro once it's run; a plain tick until then`)
+                : `The same value as the ${(shared.name ?? CONSOLE_NAMES[shared.setting])} macro — tick it here or there`}"` : ""}>
                   <span class="lbl">${i.label}
                     ${i.hard ? `<span class="pip hard" title="A later chapter depends on this">required</span>` : ""}
                     ${i.danger ? `<span class="pip danger" title="Permanent or costly consequence">consequence</span>` : ""}
@@ -2307,7 +2369,8 @@ class CSApp extends BaseApp {
               <label class="check ${r.claimed ? "on" : ""} ${r.here && !r.claimed ? "here" : ""}">
                 <input type="checkbox" data-act="loot" data-n="${r.ch}" data-k="${r.key}" ${r.claimed ? "checked" : ""} ${ro ? "disabled" : ""}>
                 <span class="lbl"><span class="chip">Ch ${r.ch}</span> ${r.label}
-                  ${r.where ? `<em class="pays">${r.where}</em>` : ""}</span>
+                  ${r.where ? `<em class="pays">${r.where}</em>` : ""}
+                  ${r.src ? `<span class="pip" title="Ticking it here or on that card is the same value">on the ${CONSOLE_NAMES[r.src.split(":")[0]]} macro's card</span>` : ""}</span>
               </label>
               ${this.journalBtn(targetFor(r.ch, r, { loot: true }), "Open")}
             </div>
@@ -2317,13 +2380,13 @@ class CSApp extends BaseApp {
 
     return `
       <section class="panel" style="--tone:var(--gold)">
-        <h3>The loot ledger <small>${rows.length - open.length} of ${rows.length} claimed</small></h3>
-        <p class="text">Every named piece of treasure in the campaign, chapter by chapter. Things already tracked as chapter decisions — Zoudou's ledger, Watchers of the Cycle, the Fang and Key — live on their act's tab instead of being counted twice here.</p>
+        <h3>The loot ledger <small>${rows.length - open.length} of ${rows.length} handed out</small></h3>
+        <p class="text">Every piece of treasure in the campaign, chapter by chapter. A row marked with a chapter macro is the same tick as the hand-out toggle on that macro's card — mark it in whichever window is open. Things already tracked as chapter decisions — Zoudou's ledger, the Last Will, the Fang and Key — live on their act's tab instead of being counted twice here.</p>
       </section>
       ${block(open.filter(r => r.here), "In the chapter you're running", "ember", "Still on the table right now.")}
       ${block(open.filter(r => r.ch < t.current.n), "Left behind", "rust", "Earlier chapters the party never emptied. Some can still be gone back for; some can't.")}
       ${block(open.filter(r => r.ch > t.current.n), "Still ahead", "slate", "")}
-      ${block(rows.filter(r => r.claimed), "Claimed", "moss", "")}`;
+      ${block(rows.filter(r => r.claimed), "Handed out", "moss", "")}`;
   }
 
   /* ------------------------------------------------------------- threads */
@@ -2732,6 +2795,27 @@ if (AppV2) {
       delete state.flags[id];
       changed = true;
     }
+    /* Treasure claims used to be private to the tracker (`s.loot["<ch>.<key>"]`).
+       They move into the shared ledger as they stand — nothing rides on a
+       hand-out, so carrying a tick over can't double anything. The same goes
+       for the two decisions that are an item handed over. */
+    const L = game.settings.get("world", "sogTreasure") ?? {};
+    let movedLoot = false;
+    for (const id of Object.keys(state.loot ?? {})) {
+      const [n, key] = id.split(".");
+      const row = (LOOT[n] ?? []).find(x => x.key === key);
+      L[row?.src ?? `campaign:${n}.${key}`] = true;
+      delete state.loot[id];
+      movedLoot = changed = true;
+    }
+    for (const [id, b] of Object.entries(BRIDGE)) {
+      if (b.setting !== "treasure" || !state.flags?.[id]) continue;
+      b.set(L, true);
+      delete state.flags[id];
+      movedLoot = changed = true;
+    }
+    if (movedLoot) await game.settings.set("world", "sogTreasure", L);
+
     /* Every other console item became shared later. A tick the tracker held
        privately is NOT pushed into the console — that would grant the beat's
        XP and pool points a second time if they were already applied by hand.
@@ -2744,7 +2828,7 @@ if (AppV2) {
       if (b.readOnly && !cs) continue;      // still a plain tick until that console runs
       if (!b.get(cs ?? {})) {
         const [n, key] = id.split(".");
-        disagree.push(`Ch ${n} — ${chapter(n)?.items.find(i => i.key === key)?.label ?? key} <i>(${CONSOLE_NAMES[b.setting]})</i>`);
+        disagree.push(`Ch ${n} — ${chapter(n)?.items.find(i => i.key === key)?.label ?? key} <i>(${(b.name ?? CONSOLE_NAMES[b.setting])})</i>`);
       }
       delete state.flags[id];
       changed = true;
