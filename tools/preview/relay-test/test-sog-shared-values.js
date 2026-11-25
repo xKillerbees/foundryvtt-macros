@@ -197,7 +197,7 @@ const REWORK_R10 = () => ({ key: "r10", bridge: "13.redeem" });
 
   /* Every tab and sub-tab renders. */
   let threw = null;
-  for (const tab of ["spring", "ch11", "ch12", "ch13"]) {
+  for (const tab of ["spring", "order", "ch11", "ch12", "ch13"]) {
     spring.s.tab = tab;
     const subs = springX.CHAPTERS[tab]?.subs ?? [{ key: null }];
     for (const sub of subs) {
@@ -207,6 +207,10 @@ const REWORK_R10 = () => ({ key: "r10", bridge: "13.redeem" });
     }
   }
   check("every Act 4 tab renders", !threw, threw ?? "");
+  check("the run order starts at step 1 with nothing recorded", spring.currentStep === 0);
+  spring.toggleBeat("ch11-fate", "ch11-fate-told");
+  check("recording the Fate moves the table to step 2", spring.currentStep === 1);
+  spring.toggleBeat("ch11-fate", "ch11-fate-told");
 
   const pools = get("sogFallDowntime").pools;
   check("the Fate reads the downtime pools", spring.fate.base === pools.hope + pools.food + pools.security, `${spring.fate.base}`);

@@ -104,6 +104,7 @@ const CHAPTERS = {
 
 const TABS = [
   { key: "spring", label: "Spring", sub: "what the act inherits", tone: "bloom", icon: "fa-fan" },
+  { key: "order", label: "Run order", sub: "the act, step by step", tone: "gold", icon: "fa-list-ol" },
   { key: "ch11", label: "Return", sub: "Ch 11", tone: CHAPTERS.ch11.tone, icon: CHAPTERS.ch11.icon },
   { key: "ch12", label: "The Web", sub: "Ch 12", tone: CHAPTERS.ch12.tone, icon: CHAPTERS.ch12.icon },
   { key: "ch13", label: "Two Worlds", sub: "Ch 13", tone: CHAPTERS.ch13.tone, icon: CHAPTERS.ch13.icon }
@@ -1027,6 +1028,106 @@ const SOG_CSS = (root) => `
 `;
 
 
+/* ------------------------------------------------------------- run order
+   The act in the order it's played. The chapter tabs group cards by place;
+   this is the sequence, which matters most in Chapter 12, where Ren Mei Li's
+   weekly visits pace the rites and the murders land between them.
+
+   Act 4 isn't pinned to calendar days the way winter is — the book counts in
+   "a few days later" and "a week" — so `when` is relative, and the dates slide
+   to wherever the table is. `kind` follows the campaign timeline's legend:
+   main story, decision or social, side or optional, combat, and rework.
+   A step is done when its own test says so, or when every card it names is
+   marked done; the first step not done is where the table is. Optional
+   steps and `background` ones (the bridge's months of building) never hold
+   that marker — they show as optional or running beside it instead. */
+const STEPS = [
+  { ch: "ch11", when: "Before play", kind: "main", title: "Level to 10, offer the ancestry swap, total the Fate",
+    cards: ["ch11-fate", "ch11-waking"], done: t => t.beat("ch11-fate", "ch11-fate-told") },
+  { ch: "ch11", when: "Day 1", kind: "main", title: "Waking in Willowshore — the lantern, the bell, the roads beyond",
+    cards: ["ch11-waking", "ch11-lantern", "ch11-bell", "ch11-beyond"] },
+  { ch: "ch11", when: "Day 1, before twilight", kind: "combat", title: "The ruined manor and the false governor",
+    note: "The town elder asks them to look before their first day back ends. Get the authorization pass first.",
+    cards: ["ch11-manor", "ch11-a1", "ch11-a2", "ch11-a3", "ch11-a4", "ch11-a5", "ch11-a6", "ch11-a7", "ch11-a8", "ch11-elder"],
+    done: t => t.beat("ch11-a8", "ch11-a8-false") },
+  { ch: "ch11", when: "A few days after waking", kind: "main", title: "Shinzo's farewell — the last chance to shop",
+    cards: ["ch11-farewell"], done: t => t.beat("ch11-farewell", "ch11-farewell") },
+  { ch: "ch11", when: "After the manor", kind: "main", title: "To Karahai — the bell is gifted on the first visit",
+    cards: ["ch11-karahai"] },
+  { ch: "ch11", when: "3 days of downtime", kind: "decision", title: "Rebuild Karahai Bridge — plan it and roll",
+    cards: ["ch11-rebuild"], done: t => !!t.s.bridge.degree },
+  { ch: "ch11", when: "About a week into the work", kind: "combat", rework: true, title: "Silkwasps at the Bridge — pay Lo Kuon, or fight",
+    cards: ["ch11-bridge-fight"], done: t => !!t.s.bridge.outcome },
+  { ch: "ch11", when: "Days (if they fought) or weeks (if they paid)", kind: "side", title: "Bandit trouble, and asking about the Silkwasps in Karahai",
+    cards: ["ch11-dealing"] },
+  { ch: "ch11", when: "When they find it — before Chapter 13", kind: "combat", rework: true, title: "The Silkwasp camp, Hong Meigui, and the three clues",
+    note: "Left alone, Hong Meigui storms the town at the start of Chapter 13 as an Extreme encounter.",
+    cards: ["ch11-camp", "ch11-clues"], done: t => t.beat("ch11-camp", "ch11-camp-cleared") },
+  { ch: "ch11", when: "1–3 months after the roll", kind: "main", background: true, title: "Karahai Bridge finished",
+    note: "A critical success finishes it before Chapter 12; a failure probably not before the Adventure Path ends. This runs alongside Chapter 12 — don't wait for it.",
+    cards: ["ch11-rebuild"], done: t => t.beat("ch11-rebuild", "ch11-bridge-built") },
+
+  { ch: "ch12", week: 0, when: "Week 0", kind: "decision", title: "Amai, the feline emissary — tea in seven days",
+    cards: ["ch12-amai"], done: t => t.beat("ch12-amai", "ch12-amai") },
+  { ch: "ch12", week: 0, when: "The seven days", kind: "side", title: "Preparing for her visit, and asking about her in Karahai",
+    cards: ["ch12-prep"] },
+  { ch: "ch12", week: 1, when: "Week 1 — her first visit", kind: "decision", rework: true, title: "Meeting the Princess — the stewardship offer, and who is coming",
+    cards: ["ch12-meeting", "ch12-requests"], done: t => t.beat("ch12-requests", "ch12-agreed") },
+  { ch: "ch12", week: 2, when: "Week 2 — she returns for the show", kind: "decision", rework: true, title: "Event 1 · Bright Spring Bird — the performance",
+    cards: ["ch12-r-spring"], done: t => t.s.rites.spring.done },
+  { ch: "ch12", week: 3, when: "Week 3 — she returns for the display", kind: "decision", rework: true, title: "Event 2 · Fiery Flowers — Moon Marsh, Isori, the fireworks",
+    cards: ["ch12-r-summer"], done: t => t.s.rites.summer.done },
+  { ch: "ch12", week: 3, when: "Weeks 3–4 — on the way to the grove", kind: "combat", rework: true, title: "Event 3 · Sweet Fruits — the khravgodons and the apple grove",
+    cards: ["ch12-r-autumn"], done: t => t.s.rites.autumn.done },
+  { ch: "ch12", week: 3, when: "While they're at the grove", kind: "main", rework: true, title: "Event 4 · The first murder — Kazuma Oono",
+    note: "Found as they return. Restoring the grove and investigating run side by side.",
+    cards: ["ch12-m1", "ch12-yohoi", "ch12-trouble"], done: t => t.beat("ch12-m1", "ch12-m1-lead") || t.prevented("m1") },
+  { ch: "ch12", week: 4, when: "Week 4 — she returns", kind: "combat", rework: true, title: "Event 5 · Spiced Tea — Whisperweb Shrine and the algrievers",
+    cards: ["ch12-r-winter"], done: t => t.s.rites.winter.done },
+  { ch: "ch12", week: 4, when: "Found on the return from Whisperweb", kind: "main", rework: true, title: "Event 6 · The second murder — Elizeth Candora",
+    note: "The curfew starts: –1 to Earn Income and Gather Information in town.",
+    cards: ["ch12-m2"], done: t => t.beat("ch12-m2", "ch12-m2-flute") || t.prevented("m2") },
+  { ch: "ch12", week: 5, when: "Week 5 — she returns for tea", kind: "decision", rework: true, title: "Event 7 · The Final Season — the oath, and the Gossamer Path",
+    cards: ["ch12-r-beyond"], done: t => t.s.rites.beyond.done },
+  { ch: "ch12", week: 5, when: "After the Path, before her last visit", kind: "main", title: "Event 8 · The third murder — You So-Jin",
+    cards: ["ch12-m3"], done: t => t.beat("ch12-m3", "ch12-m3-bombs") || t.prevented("m3") },
+  { ch: "ch12", week: 6, when: "Week 6 — her last visit", kind: "main", rework: true, title: "The Fang and Key — the party become stewards",
+    cards: ["ch12-fang"], done: t => t.beat("ch12-fang", "ch12-fang") },
+  { ch: "ch12", when: "Any time — optional", kind: "side", title: "The Un-Weavers",
+    cards: ["ch12-unweavers"] },
+
+  { ch: "ch13", when: "Once they're stewards", kind: "main", title: "The restored manor — the four freeing-objects, and Ithiniak at the door",
+    note: "No hard timer from here, but if they dawdle Heh kills again. A month is plenty.",
+    cards: ["ch13-restored", "ch13-c1", "ch13-c2", "ch13-c3", "ch13-c4", "ch13-c5", "ch13-c6", "ch13-c7", "ch13-c8"] },
+  { ch: "ch13", when: "Through the door", kind: "main", rework: true, title: "Kugaptee's Grasp — free the three chained souls, in any order",
+    cards: ["ch13-grasp", "ch13-curios", "ch13-chained", "ch13-oono", "ch13-elizeth", "ch13-sojin"], done: t => t.soulsFreed >= 3 },
+  { ch: "ch13", when: "Toward the claw — in order", kind: "combat", title: "Kugaptee's Grave — D1 summer, D2 fall, D3 winter, D4 spring",
+    cards: ["ch13-grave", "ch13-d1", "ch13-d2", "ch13-d3", "ch13-d4"] },
+  { ch: "ch13", when: "Through D4's door", kind: "combat", title: "The Governor's Den — the shisagishin, then Heh Shan-Bao: redeem or fight",
+    cards: ["ch13-den", "ch13-claw", "ch13-heh"] },
+  { ch: "ch13", when: "The instant his fate resolves", kind: "combat", rework: true, title: "The Breach — the Crimson Weaver, then the marrow wears her",
+    note: "Do not run the book's Kugaptee's Final Death.",
+    cards: ["ch13-breach", "ch13-phase1", "ch13-phase2"], done: t => t.beat("ch13-phase2", "ch13-phase2") },
+  { ch: "ch13", when: "When the vessel falls", kind: "main", rework: true, title: "The Sealing of Five Seasons — five rounds, five anchors",
+    cards: ["ch13-sealing"], done: t => t.beat("ch13-sealing", "ch13-sealing") },
+  { ch: "ch13", when: "The end", kind: "main", title: "A Heroine Passes Her Burden, and the aftermath",
+    cards: ["ch13-heroine", "ch13-aftermath"], done: t => t.beat("ch13-heroine", "ch13-ending") }
+];
+const KINDS = {
+  main: { label: "Story", tone: "moss" }, decision: { label: "Decision", tone: "ember" },
+  side: { label: "Optional", tone: "muted" }, combat: { label: "Combat", tone: "rust" }
+};
+/* The step a card belongs to, for the chip on its header — its first step. */
+const stepOfCard = (key) => { const i = STEPS.findIndex(x => x.cards.includes(key)); return i < 0 ? null : i + 1; };
+const subOfCard = (key) => {
+  const M = { ch11: { return: CH11_RETURN, manor: CH11_MANOR, bandits: CH11_BANDITS },
+    ch12: { princess: CH12_PRINCESS, rites: CH12_RITES, murders: CH12_MURDERS, fang: CH12_FANG },
+    ch13: { manor: CH13_MANOR, grasp: CH13_GRASP, grave: CH13_GRAVE, den: CH13_DEN, finale: CH13_FINALE } };
+  for (const [ch, subs] of Object.entries(M)) for (const [sub, arr] of Object.entries(subs))
+    if (arr.some(c => c.key === key)) return { ch, sub };
+  return null;
+};
+
 /* ------------------------------------------------------------------ state */
 function blankState(pcs) {
   return {
@@ -1282,6 +1383,15 @@ class Spring {
     this.touch();
   }
 
+  stepDone(st) {
+    if (st.done?.(this)) return true;
+    return st.cards.every(k => this.s.cleared[k]);
+  }
+  get currentStep() {
+    const i = STEPS.findIndex(x => !x.background && x.kind !== "side" && !this.stepDone(x));
+    return i < 0 ? STEPS.length : i;
+  }
+
   get totalXp() {
     return this.s.xp + Object.keys(RITES).reduce((n, k) => n + this.riteXp(k), 0) + this.soulXp();
   }
@@ -1358,7 +1468,15 @@ class TBWApp extends BaseApp {
   async _renderInner() {
     const $el = $(`<div class="tbw-root">${this.markup()}</div>`);
     this.wire($el[0]);
+    setTimeout(() => this.scrollToCard(document.getElementById("tbw-console") ?? $el[0]), 30);
     return $el;
+  }
+  /* After a Go from the run order, bring that card into view. */
+  scrollToCard(root) {
+    const k = this.scrollTo;
+    if (!k || !root) return;
+    this.scrollTo = null;
+    setTimeout(() => root.querySelector?.(`[data-card="${k}"]`)?.scrollIntoView?.({ block: "start", behavior: "smooth" }), 30);
   }
   activateListeners(html) {
     super.activateListeners?.(html);
@@ -1385,6 +1503,7 @@ class TBWApp extends BaseApp {
         </nav>
         ${chapter ? this.subtabs(chapter) : ""}
         ${s.tab === "spring" ? this.springTab(ro) : ""}
+        ${s.tab === "order" ? this.orderTab(ro) : ""}
         ${chapter ? this.chapterTab(chapter, ro) : ""}
       </div>`;
   }
@@ -1458,6 +1577,49 @@ class TBWApp extends BaseApp {
       </section>`;
   }
 
+  /* ------------------------------------------------------------ run order */
+  orderTab(ro) {
+    const t = this.t, now = t.currentStep;
+    const doneCount = STEPS.filter(x => t.stepDone(x)).length;
+    let html = `
+      <section class="panel" style="--tone:var(--gold)">
+        <h3>Run order <small>${doneCount} of ${STEPS.length} steps done</small></h3>
+        <p class="text">The chapter tabs group the cards by place. This is the order to play them in. Chapter 11 runs mostly top to bottom; Chapter 12 is paced by Ren Mei Li's weekly visits, with each murder landing between two rites; Chapter 13 has no timer. Act 4 isn't pinned to calendar days — the book counts in "a few days" and "a week" — so the timings are relative and slide to wherever your table is.</p>
+        <p class="hint">A step is done when its key result is recorded, or when every card in it is marked done. The highlighted step is the next one to run; optional steps and the bridge's months of building sit beside it rather than blocking it. <b>Go</b> opens the step's first card, and the gold number on every card says which step it belongs to.</p>
+      </section>`;
+    for (const ch of ["ch11", "ch12", "ch13"]) {
+      const c = CHAPTERS[ch];
+      html += `<section class="panel order" style="--tone:var(--${c.tone})">
+        <h3>${c.act} — ${c.title} <small>level ${c.level}${ch === "ch12" ? " · Ren Mei Li's weekly visits set the pace" : ch === "ch13" ? " · no timer; a month is plenty" : ""}</small></h3>
+        <ol class="steps">`;
+      let lastWeek = null;
+      STEPS.forEach((st, i) => {
+        if (st.ch !== ch) return;
+        if (st.week != null && st.week !== lastWeek) {
+          lastWeek = st.week;
+          html += `<li class="weekrow"><span>Week ${st.week}</span>${st.week === 0 ? "Amai arrives" : st.week === 1 ? "first visit" : "Ren Mei Li returns"}</li>`;
+        }
+        const done = t.stepDone(st), here = i === now, K = KINDS[st.kind];
+        html += `<li class="step ${done ? "done" : ""} ${here ? "here" : ""}" style="--k:var(--${K.tone})">
+          <span class="snum">${i + 1}</span>
+          <span class="sbody">
+            <span class="swhen">${st.when}</span>
+            <b>${st.title}</b>
+            ${st.note ? `<em>${st.note}</em>` : ""}
+          </span>
+          <span class="stags">
+            <span class="kind">${K.label}</span>
+            ${st.rework ? `<i class="fa-solid fa-spider web-ic" title="Two Weavers rework"></i>` : ""}
+            ${done ? `<span class="kind ok">done</span>` : here ? `<span class="kind now">now</span>` : st.background && i < now ? `<span class="kind run">running</span>` : ""}
+            <button type="button" class="ghost go" data-act="goto" data-k="${st.cards[0]}">Go</button>
+          </span>
+        </li>`;
+      });
+      html += `</ol></section>`;
+    }
+    return html;
+  }
+
   /* ------------------------------------------------------------- chapters */
   chapterTab(chapter, ro) {
     const sub = this.t.s.ctab[chapter];
@@ -1476,8 +1638,8 @@ class TBWApp extends BaseApp {
     const beats = card.beats ?? [];
     const jref = card.id ?? card.page;
     return `
-      <section class="panel area ${done ? "done" : ""} ${card.rework && !card.boxed && !card.text ? "web" : ""}" style="--tone:var(--${tone(card.tone)})">
-        <h3>${card.id ? `<span class="eid">${card.id}</span>` : ""}${card.name}
+      <section class="panel area ${done ? "done" : ""} ${card.rework && !card.boxed && !card.text ? "web" : ""}" data-card="${card.key}" style="--tone:var(--${tone(card.tone)})">
+        <h3>${stepOfCard(card.key) ? `<button type="button" class="stepchip" data-act="tab" data-k="order" title="Step ${stepOfCard(card.key)} of the run order">${stepOfCard(card.key)}</button>` : ""}${card.id ? `<span class="eid">${card.id}</span>` : ""}${card.name}
           ${card.rework ? `<i class="fa-solid fa-spider web-ic" title="Two Weavers rework"></i>` : ""}
           ${card.level ? `<span class="lvl">${card.level}</span>` : ""}
           ${card.when ? `<small>${card.when}</small>` : ""}
@@ -1507,6 +1669,7 @@ class TBWApp extends BaseApp {
               ${b.rework ? `<i class="fa-solid fa-spider web-ic" title="Two Weavers rework"></i> ` : ""}${b.label}${b.xp ? ` <span class="tag">${b.xp} XP</span>` : ""}</label>
             ${b.note ? `<p class="beatnote">${b.note}</p>` : ""}`).join("")}
         </div>` : ""}
+        <div class="btnrow"><button type="button" class="${done ? "ghost" : "primary"}" data-act="cleared" data-k="${card.key}" ${ro ? "disabled" : ""}>${done ? "Reopen" : "Mark done"}</button></div>
       </section>`;
   }
 
@@ -1695,11 +1858,19 @@ class TBWApp extends BaseApp {
       ev.preventDefault();
       const a = btn.dataset.act, k = btn.dataset.k, d = btn.dataset.d;
       if (sogClick(a, btn)) return;
-      if (!t.editable && !["tab", "sub", "journal", "postarea", "postchecks"].includes(a)) return;
+      if (!t.editable && !["tab", "sub", "journal", "postarea", "postchecks", "goto"].includes(a)) return;
       if (a === "tab") { t.s.tab = k; t.touch(); }
       else if (a === "sub") { t.s.ctab[btn.dataset.ch] = k; t.touch(); }
       else if (a === "journal") openJournal(btn.dataset.ch, btn.dataset.r || null);
       else if (a === "postarea") t.postArea(cardByKey(k));
+      else if (a === "goto") {
+        const where = subOfCard(k);
+        if (!where) return;
+        t.s.tab = where.ch; t.s.ctab[where.ch] = where.sub;
+        this.scrollTo = k;
+        t.touch();
+      }
+      else if (a === "cleared") t.toggleCleared(k);
       else if (a === "postchecks") t.postChecks(cardByKey(k));
       else if (a === "poststatus") t.postStatus();
       else if (a === "reset") Dialog.confirm({ title: "Reset spring?", content: "<p>Clear every Act 4 tick, tally and roll? The other acts' macros aren't touched.</p>" })
@@ -1864,6 +2035,30 @@ class TBWApp extends BaseApp {
       .tbw .inh .itone { --it:var(--muted); color:var(--it); font-size:.9rem; }
       .tbw .inh em { font-size:.72rem; color:var(--muted); }
       .tbw .area.done h3 .eid { opacity:.6; }
+      .tbw .area.done { opacity:.85; }
+      .tbw .stepchip { font-size:.62rem; font-weight:700; min-width:1.4rem; height:1.25rem; padding:0 .3rem; border-radius:10px;
+                      border-color:var(--gold); color:var(--gold); flex:none; }
+      .tbw .steps { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:3px; }
+      .tbw .step { display:grid; grid-template-columns:1.8rem 1fr auto; gap:.5rem; align-items:start; padding:.35rem .45rem;
+                  border:1px solid var(--line); border-left:4px solid var(--k, var(--line)); border-radius:3px; background:var(--card); }
+      .tbw .step.done { opacity:.55; }
+      .tbw .step.here { box-shadow:0 0 0 2px var(--gold); background:var(--stripe); opacity:1; }
+      .tbw .snum { font-weight:700; font-size:.85rem; color:var(--muted); text-align:right; padding-top:.1rem; }
+      .tbw .step.here .snum { color:var(--gold); }
+      .tbw .sbody { display:flex; flex-direction:column; gap:.1rem; font-size:.8rem; line-height:1.35; }
+      .tbw .swhen { font-size:.62rem; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); }
+      .tbw .sbody em { font-size:.74rem; color:var(--muted); }
+      .tbw .step.done b { text-decoration:line-through; }
+      .tbw .stags { display:flex; align-items:center; gap:.3rem; }
+      .tbw .kind { font-size:.6rem; text-transform:uppercase; letter-spacing:.07em; padding:1px 6px; border-radius:10px;
+                  border:1px solid var(--k, var(--line)); color:var(--k, var(--muted)); }
+      .tbw .kind.ok { border-color:var(--moss); color:var(--moss); }
+      .tbw .kind.now { border-color:var(--gold); background:var(--gold); color:var(--paper); }
+      .tbw .kind.run { border-color:var(--slate); color:var(--slate); border-style:dashed; }
+      .tbw .go { font-size:.68rem; padding:.15rem .5rem; }
+      .tbw .weekrow { display:flex; gap:.5rem; align-items:baseline; font-size:.72rem; color:var(--muted); margin:.45rem 0 .1rem;
+                     padding-left:.3rem; border-bottom:1px dashed var(--line); }
+      .tbw .weekrow span { font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--silver); }
       @media (max-width:800px) {
         .tbw .inhgrid { grid-template-columns:1fr; }
         .tbw .tabs, .tbw .subtabs { flex-wrap:wrap; }
@@ -1883,6 +2078,7 @@ if (AppV2) {
   TBWApp.prototype._replaceHTML = function (result, content) {
     content.innerHTML = result;
     this.wire(content);
+    this.scrollToCard(content);
     return content;
   };
 }

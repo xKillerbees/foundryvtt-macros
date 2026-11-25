@@ -917,6 +917,25 @@ globalThis.FIXTURES = {
     }
   },
 
+  /* The run order mid-Chapter 12: Chapter 11 behind them, three rites done,
+     the first murder found — the table is at Whisperweb. */
+  "spring-order": {
+    "world.sogFallDowntime": { week: 12, pools: { hope: 6, food: 4, security: 5, restoration: 5 } },
+    "world.sogWinter": { population: 198 },
+    "world.sogSpring": {
+      tab: "order",
+      bridge: { degree: "s", hits: 0, outcome: "fought" },
+      rites: { spring: { vp: 4, done: true }, summer: { vp: 3, done: true }, autumn: { vp: 2, done: true },
+               winter: { vp: 0, done: false }, beyond: { vp: 0, done: false } },
+      cleared: { "ch11-waking": true, "ch11-lantern": true, "ch11-bell": true, "ch11-beyond": true,
+                 "ch11-karahai": true, "ch11-dealing": true, "ch12-prep": true },
+      beats: { "ch11-fate": { "ch11-fate-told": 1 }, "ch11-a8": { "ch11-a8-false": 1 },
+               "ch11-farewell": { "ch11-farewell": 1 }, "ch11-camp": { "ch11-camp-cleared": 1 },
+               "ch12-amai": { "ch12-amai": 1 }, "ch12-requests": { "ch12-agreed": 1 },
+               "ch12-m1": { "ch12-m1-lead": 1 } }
+    }
+  },
+
   /* Chapter 12 part way: three rites done, Victory Points tallied. */
   "spring-rites": {
     "world.sogFallDowntime": { week: 12, pools: { hope: 6, food: 4, security: 5, restoration: 5 } },

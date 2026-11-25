@@ -62,6 +62,9 @@ SHOTS = {
     "spring": (
         "season-of-ghosts/to-bloom-below-the-web-console.js", "spring",
         "season-of-ghosts/to-bloom-below-the-web-console.png"),
+    "spring-order": (
+        "season-of-ghosts/to-bloom-below-the-web-console.js", "spring-order",
+        "season-of-ghosts/to-bloom-below-the-web-order.png"),
     "spring-rites": (
         "season-of-ghosts/to-bloom-below-the-web-console.js", "spring-rites",
         "season-of-ghosts/to-bloom-below-the-web-rites.png"),

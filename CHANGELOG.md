@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-11-24 22:40
+
+### Added
+- **To Bloom Below the Web — a Run order tab.** The chapter sub-tabs group cards by place, so
+  nothing said whether to run them left to right or how Chapter 12's rites and murders interleave.
+  The new tab lists the act as 30 numbered steps, taken from the book and the campaign's Two
+  Weavers timeline: Chapter 11 in sequence, Chapter 12 under Ren Mei Li's weekly visits (week 0
+  to week 6) with each murder between the rites it falls between, and Chapter 13's run through
+  the Grasp, the Grave, the Den and the finale. Timings are relative, as the book gives them —
+  Act 4 isn't pinned to calendar days. A step is done when its key result is recorded (the Fate,
+  a rite, a murder's first lead, the souls freed…) or every card in it is marked done; the first
+  open step is highlighted, skipping optional steps and the bridge's background months. **Go**
+  opens the step's card.
+- **Every Act 4 card carries its step number and a Mark done button.** Cards had no done state
+  of their own before, so reference cards could never count as run.
+
 ## 2026-11-24 21:30
 
 ### Added

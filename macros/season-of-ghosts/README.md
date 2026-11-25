@@ -218,6 +218,19 @@ distinguishable from the homebrew.
   the transmigrate was cast and the warding bell spared, the silver collars, Heh Shan-Bao's
   choice in the dream, both rework seeds, Yami, Rin, and Great Willow. Nothing here writes
   another act's state.
+- **Run order** — the act as a numbered sequence of 30 steps, because the chapter tabs group
+  cards by place and don't say what comes first. Chapter 11 runs mostly top to bottom;
+  Chapter 12 is laid out by Ren Mei Li's weekly visits (week 0, Amai, to week 6, the Fang and
+  Key), with each murder placed between the rites it falls between; Chapter 13 has no timer. Act 4
+  isn't pinned to calendar days the way winter is, so the timings are the book's relative ones
+  ("a few days after waking", "while they're at the grove"). Each step shows whether it's done —
+  from its key result, or every card in it marked done — and the first open step is highlighted
+  as *now*; optional steps and the bridge's months of building don't hold that marker. **Go**
+  jumps to the step's first card, and every card carries its step number and a **Mark done**
+  button.
+
+![The run order mid-Chapter 12, with the table at Whisperweb](../../screenshots/season-of-ghosts/to-bloom-below-the-web-order.png)
+
 - **Chapter 11 — Willowshore's Return**: Willowshore's Fate worked out live (the pools, +12 for a
   critical casting, +4 at 100+ people, an adjustment if the pools moved since) with the tier's
   XP granted and taken back exactly; the Eternal Lantern and the warding bell; the ruined manor
