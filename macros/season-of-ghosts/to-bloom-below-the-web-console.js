@@ -1560,7 +1560,7 @@ class TBWApp extends BaseApp {
           ${row("Silver collars", collars ? (collarsOut ? "earned and handed out" : "earned") : "not earned", collars ? "Display them and Ren Mei Li starts friendly" : "Learned of in Karahai instead", "silver")}
           ${row("Heh Shan-Bao, in the dream", seed("ch8-end-of-dream", "ch8-end-help-xp") ? "helped willingly" : "fought or not marked", "", "slate")}
           ${row("Rework seed 1", seed("ch9-seance", "ch9-seance-rework1") ? "planted" : "not planted", "the woman in crimson silks", "bloom")}
-          ${row("Rework seed 2", seed("ch9-spider", "ch9-spider-rework2") ? "planted" : "not planted", "\"burn red roses\" — pays off at the Silkwasp camp", "bloom")}
+          ${row("Rework seed 2", seed("ch9-spider", "ch9-spider-rework2") ? "planted" : "not planted", "\"she and I are owed a quarrel\" — pays off at the Silkwasp camp and the alliance", "bloom")}
           ${row("Yami", yami ? "bonded" : "not bonded", yami ? "She meets Amai first" : "", "plum")}
           ${row("Rin", rin ? "befriended" : "—", rin ? "Restored to life at 13+ Preparation Points" : "", "ember")}
           ${row("Great Willow", willow ? "friendly" : "—", willow ? "Visits at the end of the act" : "", "moss")}

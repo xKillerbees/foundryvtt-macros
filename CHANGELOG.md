@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-24 23:15
+
+### Fixed
+- **To Bloom Below the Web — rework seed 2 quoted correctly on the Spring tab.** It paraphrased
+  Ren Mei Li's Day 71 warning as "burn red roses"; the campaign timeline's line is "she and I are
+  owed a quarrel", which pays off at the Silkwasp camp's roses and the alliance.
+
 ## 2026-11-24 22:40
 
 ### Added
