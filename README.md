@@ -5,7 +5,7 @@ manifest, no install step. Open a macro file, copy it, paste it into Foundry, ru
 
 | Collection | System | Foundry | Macros |
 |---|---|---|---|
-| [Season of Ghosts](macros/season-of-ghosts) | PF2e | v11 – v14 | 6 |
+| [Season of Ghosts](macros/season-of-ghosts) | PF2e | v11 – v14 | 9 |
 | [Pathfinder Beginner Box](macros/beginner-box) | PF2e | v11 – v14 | 2 |
 | [PF2e Downtime](macros/pf2e-downtime) | PF2e | v11 – v14 | 1 |
 | [PF2e Multi-Part Boss](macros/pf2e-multipart-boss) | PF2e | v11 – v14 | 1 |
@@ -32,7 +32,7 @@ macros keep their state in a world setting, so re-pasting doesn't wipe your camp
 
 ## Season of Ghosts
 
-Six GM tools for Paizo's *Season of Ghosts* Adventure Path.
+Nine GM tools for Paizo's *Season of Ghosts* Adventure Path — one per act's worth of play, and a campaign tracker that shares every overlapping tick with them.
 Full details in the [collection README](macros/season-of-ghosts).
 
 ### [Fall Downtime Tracker](macros/season-of-ghosts/fall-downtime-tracker.js)
@@ -84,6 +84,16 @@ and the whole Karahai fortress.
 ![The winter clock, part way through the season](screenshots/season-of-ghosts/no-breath-to-cry-clock.png)
 
 ![The Karahai fortress tab, mid-raid](screenshots/season-of-ghosts/no-breath-to-cry-console.png)
+
+### [To Bloom Below the Web](macros/season-of-ghosts/to-bloom-below-the-web-console.js)
+
+The whole of Act 4 — spring — with the Two Weavers rework layered in: Willowshore's Fate worked
+out from the downtime pools and winter's population, the ruined manor, the bridge and the
+Silkwasps, Ren Mei Li's five rites with their Victory Points, the three murder investigations,
+the chained souls, Heh Shan-Bao's Influence, and the finale — the Crimson Weaver, the marrow,
+and the Sealing of Five Seasons.
+
+![The landing view: what spring inherits from the earlier acts](screenshots/season-of-ghosts/to-bloom-below-the-web-console.png)
 
 ### [Campaign Status Tracker](macros/season-of-ghosts/campaign-status-tracker.js)
 

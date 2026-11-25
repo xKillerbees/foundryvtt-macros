@@ -59,6 +59,15 @@ SHOTS = {
     "monastery-grove": (
         "season-of-ghosts/ruins-of-wisdom-console.js", "monastery-grove",
         "season-of-ghosts/ruins-of-wisdom-grove.png"),
+    "spring": (
+        "season-of-ghosts/to-bloom-below-the-web-console.js", "spring",
+        "season-of-ghosts/to-bloom-below-the-web-console.png"),
+    "spring-rites": (
+        "season-of-ghosts/to-bloom-below-the-web-console.js", "spring-rites",
+        "season-of-ghosts/to-bloom-below-the-web-rites.png"),
+    "spring-finale": (
+        "season-of-ghosts/to-bloom-below-the-web-console.js", "spring-finale",
+        "season-of-ghosts/to-bloom-below-the-web-finale.png"),
     "winter": (
         "season-of-ghosts/no-breath-to-cry-console.js", "winter",
         "season-of-ghosts/no-breath-to-cry-console.png"),

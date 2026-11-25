@@ -31,13 +31,14 @@ const CONSOLES = {
   path: "world.sogEnlightenedPath",
   ruins: "world.sogRuinsOfWisdom",
   winter: "world.sogWinter",
+  spring: "world.sogSpring",
   /* Not a console: the shared hand-out ledger every chapter macro writes. */
   treasure: "world.sogTreasure"
 };
 const CONSOLE_NAMES = {
   summer: "Summer", duel: "Who Leads Willowshore", downtime: "Fall Downtime Tracker",
   festival: "First Long Night", path: "Enlightened Path", ruins: "Ruins of Wisdom",
-  winter: "No Breath to Cry", treasure: "chapter"
+  winter: "No Breath to Cry", spring: "To Bloom Below the Web", treasure: "chapter"
 };
 const DOWNTIME_KEY = "sogFallDowntime";
 
@@ -103,6 +104,10 @@ function clearedBridge(setting, card, { day = false } = {}) {
 }
 const readOnly = (setting, get) => ({ setting, readOnly: true, get });
 const winterBeat = (card, beat, o = {}) => beatBridge("winter", card, beat, { mark: 1, ...o });
+const springBeat = (card, beat, o = {}) => beatBridge("spring", card, beat, { mark: 1, ...o });
+const springRite = (rite) => ({ setting: "spring",
+  get: s => !!s.rites?.[rite]?.done,
+  set: (s, v) => { const R = ((s.rites ??= {})[rite] ??= { vp: 0, done: false }); R.done = v; } });
 const ledgerHas = (s, card, test) => (s.ledger?.[card] ?? []).some(e => test(e.item));
 
 /* The Enlightened Path's shrines: enlightenment is all of a shrine's
@@ -236,7 +241,46 @@ const BRIDGE = {
   "10.uglycute": winterBeat("ch10-village", "ch10-village-uglycute"),
   /* The cash-out happens at the casting, so both items are that one beat. */
   "10.transmigrate": winterBeat("ch10-after-ch11", "ch10-after-cast"),
-  "10.cashout": winterBeat("ch10-after-ch11", "ch10-after-cast")
+  "10.cashout": winterBeat("ch10-after-ch11", "ch10-after-cast"),
+
+  /* ---- Act 4, the To Bloom Below the Web console ---- */
+  "11.fate": springBeat("ch11-fate", "ch11-fate-told"),
+  "11.ancestry": springBeat("ch11-waking", "ch11-ancestry"),
+  "11.pass": springBeat("ch11-manor", "ch11-pass"),
+  "11.false": springBeat("ch11-a8", "ch11-a8-false", { fx: { xp: 80 } }),
+  "11.bridge": springBeat("ch11-rebuild", "ch11-bridge-built", { fx: { xp: 120 } }),
+  "11.herald": springBeat("ch11-bridge-fight", "ch11-herald"),
+  "11.clues": readOnly("spring", s => ["ch11-clue-letters", "ch11-clue-roses", "ch11-clue-count"].every(k => s.beats?.["ch11-clues"]?.[k])),
+  "11.roses": springBeat("ch11-clues", "ch11-roses"),
+  "11.lokuon": springBeat("ch11-camp", "ch11-lokuon"),
+  "11.farewell": springBeat("ch11-farewell", "ch11-farewell"),
+  "12.alliance": springBeat("ch12-meeting", "ch12-alliance"),
+  "12.collars": springBeat("ch12-meeting", "ch12-collars"),
+  "12.anchors": springBeat("ch12-requests", "ch12-anchors"),
+  /* A rite is done when the spring console marks it; its XP follows the
+     Victory Points there, so the tick moves nothing by itself. */
+  "12.spring": springRite("spring"), "12.summer": springRite("summer"), "12.autumn": springRite("autumn"),
+  "12.winter": springRite("winter"), "12.beyond": springRite("beyond"),
+  "12.witness": springBeat("ch12-m2", "ch12-witness"),
+  "12.tokens": readOnly("spring", s => !!((s.beats?.["ch12-m1"]?.["ch12-m1-token"] || s.beats?.["ch12-m1"]?.["ch12-m1-prevented"])
+    && (s.beats?.["ch12-m2"]?.["ch12-m2-flute"] || s.beats?.["ch12-m2"]?.["ch12-m2-prevented"])
+    && (s.beats?.["ch12-m3"]?.["ch12-m3-bombs"] || s.beats?.["ch12-m3"]?.["ch12-m3-prevented"]))),
+  "12.prevented": readOnly("spring", s => ["m1", "m2", "m3"].some(m => s.beats?.[`ch12-${m}`]?.[`ch12-${m}-prevented`])),
+  "12.fang": springBeat("ch12-fang", "ch12-fang", { fx: { xp: 80 } }),
+  "12.door": springBeat("ch12-fang", "ch12-door"),
+  "13.portrait": springBeat("ch13-c2", "ch13-portrait"),
+  "13.sages": springBeat("ch13-c4", "ch13-sages"),
+  "13.letter": springBeat("ch13-c4", "ch13-letter"),
+  "13.camellia": springBeat("ch13-c8", "ch13-camellia"),
+  "13.mantra": springBeat("ch13-c4", "ch13-mantra"),
+  "13.souls": readOnly("spring", s => ["m1", "m2", "m3"].every(m => s.beats?.[`ch12-${m}`]?.[`ch12-${m}-prevented`] || ["cs", "s"].includes(s.souls?.[m]))),
+  "13.redeem": readOnly("spring", s => (s.heh?.influence ?? 0) >= 7),
+  "13.breach": springBeat("ch13-breach", "ch13-breach"),
+  "13.phase1": springBeat("ch13-phase1", "ch13-phase1"),
+  "13.phase2": springBeat("ch13-phase2", "ch13-phase2"),
+  "13.bombs": springBeat("ch13-phase2", "ch13-bombs"),
+  "13.sealing": springBeat("ch13-sealing", "ch13-sealing"),
+  "13.ending": springBeat("ch13-heroine", "ch13-ending")
 };
 /* The bridges that existed before every console item was shared. Their old
    tracker ticks were carried into the consoles long ago; the rest are
@@ -684,7 +728,7 @@ const CHAPTERS = [
         note: "Hope + Food + Security when the ritual fires. Tell the party before they dawdle." }
     ] },
 
-  { n: 11, act: 4, title: "Willowshore's Return", level: 10, console: null, rework: true,
+  { n: 11, act: 4, title: "Willowshore's Return", level: 10, console: "spring", rework: true,
     spine: "Spring. The town returns in proportion to three acts of arithmetic, the manor is cleared, and a woman in red starts counting souls.",
     items: [
       { key: "fate", label: "Willowshore's Fate rolled up before session", danger: true,
@@ -703,7 +747,7 @@ const CHAPTERS = [
       { key: "farewell", label: "Shinzo's farewell — last chance to shop" }
     ] },
 
-  { n: 12, act: 4, title: "The Princess's Web", level: 11, console: null, rework: true,
+  { n: 12, act: 4, title: "The Princess's Web", level: 11, console: "spring", rework: true,
     spine: "Ren Mei Li's five trials in one hand, Heh Shan-Bao's murders in the other. The prize is the Fang and Key.",
     note: "The heaviest rework chapter — structure unchanged, meaning transformed. The treasures are sealing anchors, and she says so.",
     items: [
@@ -724,7 +768,7 @@ const CHAPTERS = [
       { key: "door", label: "The warning line delivered — \"a door opened once is a door my cousin can follow through\"", rework: true }
     ] },
 
-  { n: 13, act: 4, title: "A Fiend in Two Worlds", level: 12, console: null, rework: true,
+  { n: 13, act: 4, title: "A Fiend in Two Worlds", level: 12, console: "spring", rework: true,
     spine: "The restored manor, Kugaptee's Grasp, the four season-rooms, then the governor's fate — and the breach that follows it.",
     note: "Do not run Kugaptee's Final Death as the ending. Beats 1–4 are untouched canon; the breach, the Crimson Weaver, and the Sealing replace the finale.",
     items: [
@@ -859,17 +903,38 @@ const LOOT = {
     { key: "topup", label: "Shinzo's gear top-up — about 1,500 gp each, up to 3,000", where: "Only on the negotiated peace", src: "winter:ch10-after-peace:topup" }
   ],
   11: [
-    { key: "lantern", label: "The Eternal Lantern's skill bonus rises to +2", where: "Automatic at the return" },
-    { key: "bell", label: "The warding bell gifted back — +2 to a deity's divine skill", where: "If it was spared in Ch 10", note: "Installed at a different shrine than the lantern's, it's two skills." },
-    { key: "farewell", label: "Shinzo's parting gifts — phoenix fulu holder with an anathema fulu, a needle thousand-pains fulu, two greater potency crystals", where: "His farewell" }
+    { key: "lantern", label: "The Eternal Lantern's skill bonus rises to +2", where: "Automatic at the return", src: "spring:ch11-lantern:bonus" },
+    { key: "bell", label: "The warding bell gifted back — +2 to a deity's divine skill", where: "If it was spared in Ch 10", note: "Installed at a different shrine than the lantern's, it's two skills.", src: "spring:ch11-bell:bell" },
+    { key: "farewell", label: "Shinzo's parting gifts — phoenix fulu holder with an anathema fulu, a needle thousand-pains fulu, two greater potency crystals", where: "His farewell", src: "spring:ch11-farewell:gifts" },
+    { key: "tassels", label: "Three Taljjae tassels and a duskwood batsbreath cane", where: "A3 — the servants' rooms", src: "spring:ch11-a3" },
+    { key: "axe", label: "The lumber lord's axe", where: "A4 — the meeting area", src: "spring:ch11-a4" },
+    { key: "necklace", label: "A moonsilver necklace, and a destroyed skyfang crystal", where: "A5 — the priests' remains", src: "spring:ch11-a5" },
+    { key: "wine", label: "Ten bottles of 50 gp wine, ascendant dragon spirit, vengeful demon's tears", where: "A6 — the kitchen's high shelf", src: "spring:ch11-a6" },
+    { key: "pills", label: "Six energizing pills", where: "A7 — the storage rooms", src: "spring:ch11-a7:pills" },
+    { key: "drum", label: "A lacquered waist drum", where: "A7 — behind the shelves, DC 28 Perception", src: "spring:ch11-a7:drum" },
+    { key: "suite", label: "The primary suite's valuables — chamber pot, monocle, fan of falling words, a potion holder and its three potions", where: "A8", src: "spring:ch11-a8" },
+    { key: "chest", label: "Hong Meigui's chest — 3,500 sp, 220 gp, 120 gp of jewelry, vanishing coin, wand of soothe", where: "The Silkwasp camp, B10", src: "spring:ch11-camp:chest" },
+    { key: "jsbell", label: "The jiang-shi bell in fine spidersilk", where: "Under the chest's false bottom", src: "spring:ch11-camp:bell" }
   ],
   12: [
-    { key: "rites", label: "Rite bonus items — some at 10+ VP, all of them at 14+", where: "Across the five treasures" },
-    { key: "bombs", label: "You So-Jin's silversoul bombs and formula", where: "Stolen at her murder", note: "They pay off on the vessel in the finale." }
+    { key: "rites", label: "Rite bonus items — some at 10+ VP, all of them at 14+", where: "Across the five treasures", src: "spring:ch12-fang:gift" },
+    { key: "bombs", label: "You So-Jin's silversoul bombs and formula", where: "Stolen at her murder", note: "They pay off on the vessel in the finale.", src: "spring:ch12-m3:bombs" },
+    { key: "dragonroot", label: "Thousand-year dragonroots — one, or all three", where: "Isori's tree hollow, Moon Marsh", src: "spring:ch12-r-summer" },
+    { key: "turtle", label: "Dragon turtle armor and a dragon turtle artillery", where: "The apple grove — a long-dead adventurer", src: "spring:ch12-r-autumn" },
+    { key: "ward", label: "Pilgrim's Ward for up to six PCs", where: "The algrievers, at 3+ VP", src: "spring:ch12-r-winter:ward" },
+    { key: "sash", label: "Gossamer sash and four doses of sanctified beans", where: "Ren Mei Li, if they accept her offer", src: "spring:ch12-r-beyond:sash" },
+    { key: "sending", label: "Scroll of sending", where: "Ren Mei Li, if they refuse", src: "spring:ch12-r-beyond:scroll" }
   ],
   13: [
-    { key: "hoard", label: "Hong Zhinü's hoard — the loom's red silk and court regalia at the level-12 allotment", where: "After phase two", note: "The silk becomes silkweave armour or three potent crafting components." },
-    { key: "folio", label: "Her research folio on Kugaptee", where: "The hoard", note: "Keep it, burn it, or trade it to Ren Mei Li." }
+    { key: "hoard", label: "Hong Zhinü's hoard — the loom's red silk and court regalia at the level-12 allotment", where: "After phase two", note: "The silk becomes silkweave armour or three potent crafting components.", src: "spring:ch13-aftermath:hoard" },
+    { key: "folio", label: "Her research folio on Kugaptee", where: "The hoard", note: "Keep it, burn it, or trade it to Ren Mei Li.", src: "spring:ch13-aftermath:folio" },
+    { key: "safe", label: "The lion safe — ten pouches of 100 gp", where: "C4", src: "spring:ch13-c4:safe" },
+    { key: "skyfang", label: "The skyfang crystal — Tracks spirits in the Grasp", where: "C5", src: "spring:ch13-c5:crystal" },
+    { key: "mandala", label: "The meditation mandala (countering charm, warp mind)", where: "C5", src: "spring:ch13-c5:mandala" },
+    { key: "weapons", label: "A dragonfire halfbow, a four-tiger blade, and a thundering fury dadao", where: "C7 — past the living rune", src: "spring:ch13-c7" },
+    { key: "gurglegut", label: "Gurglegut's magical gear", where: "D1 — if they spare him", src: "spring:ch13-d1:gear" },
+    { key: "silver", label: "The cursed +2 greater striking silver weapon", where: "D3 — the argyrzei's remains", src: "spring:ch13-d3:weapon" },
+    { key: "teacups", label: "Four silver teacups, 50 gp each — cursed", where: "D3", src: "spring:ch13-d3:teacups" }
   ]
 };
 
@@ -1106,6 +1171,18 @@ const OUR_MACROS = {
     { name: "No Breath to Cry", file: "no-breath-to-cry-console.js",
       what: "Act 3's console — the seventy-two-day calendar, each PC's week, the transmigrate research and components, the Seance and Interview with a Spider" }
   ],
+  11: [
+    { name: "To Bloom Below the Web", file: "to-bloom-below-the-web-console.js",
+      what: "the whole of spring — Willowshore's Fate from the downtime pools, the ruined manor and the false governor, the bridge, and the Silkwasps" }
+  ],
+  12: [
+    { name: "To Bloom Below the Web", file: "to-bloom-below-the-web-console.js",
+      what: "Act 4's console — Ren Mei Li's five rites with their Victory Points, the three murder investigations, and the Fang and Key" }
+  ],
+  13: [
+    { name: "To Bloom Below the Web", file: "to-bloom-below-the-web-console.js",
+      what: "Act 4's console — the restored manor's freeing-objects, the chained souls, Heh Shan-Bao's Influence, and the Two Weavers finale and Sealing" }
+  ],
   10: [
     { name: "No Breath to Cry", file: "no-breath-to-cry-console.js",
       what: "Act 3's console — the Terror engine, the Karahai village and fortress, and the aftermath: the bell, the lantern, and the casting" },
@@ -1306,17 +1383,17 @@ const REWORK = {
   ],
   caution: "She is not good. She's a predator whose interests currently align with Willowshore's survival. Don't sand off the fealty tension.",
   checklist: [
-    { key: "r1", ch: 9, label: "Seance — one exorcist mentions a woman in crimson silks", optional: true },
-    { key: "r2", ch: 9, label: "Interview — Ren Mei Li's \"owed a quarrel\" warning", optional: true },
-    { key: "r3", ch: 11, label: "Re-flag Hong Meigui as the Weaver's herald" },
-    { key: "r4", ch: 11, label: "Plant the three clues at the Silkwasp camp" },
-    { key: "r5", ch: 12, label: "Ren Mei Li's alliance reveal at Meeting the Princess" },
-    { key: "r6", ch: 12, label: "Reframe the Five-Season Treasures as sealing anchors" },
-    { key: "r7", ch: 12, label: "Red-clad witness at murder #2 (Elizeth)" },
-    { key: "r8", ch: 12, label: "Fang-and-Key warning about the opened door" },
-    { key: "r9", ch: 13, label: "Stage the breach after Heh Shan-Bao's fate resolves" },
-    { key: "r10", ch: 13, label: "Redeemed governor strips the Weaver's opening shield" },
-    { key: "r11", ch: 13, label: "Swap Kugaptee's Final Death for the Sealing of Five Seasons" }
+    { key: "r1", ch: 9, bridge: "9.seed1", label: "Seance — one exorcist mentions a woman in crimson silks", optional: true },
+    { key: "r2", ch: 9, bridge: "9.seed2", label: "Interview — Ren Mei Li's \"owed a quarrel\" warning", optional: true },
+    { key: "r3", ch: 11, bridge: "11.herald", label: "Re-flag Hong Meigui as the Weaver's herald" },
+    { key: "r4", ch: 11, bridge: "11.clues", label: "Plant the three clues at the Silkwasp camp" },
+    { key: "r5", ch: 12, bridge: "12.alliance", label: "Ren Mei Li's alliance reveal at Meeting the Princess" },
+    { key: "r6", ch: 12, bridge: "12.anchors", label: "Reframe the Five-Season Treasures as sealing anchors" },
+    { key: "r7", ch: 12, bridge: "12.witness", label: "Red-clad witness at murder #2 (Elizeth)" },
+    { key: "r8", ch: 12, bridge: "12.door", label: "Fang-and-Key warning about the opened door" },
+    { key: "r9", ch: 13, bridge: "13.breach", label: "Stage the breach after Heh Shan-Bao's fate resolves" },
+    { key: "r10", ch: 13, bridge: "13.redeem", label: "Redeemed governor strips the Weaver's opening shield" },
+    { key: "r11", ch: 13, bridge: "13.sealing", label: "Swap Kugaptee's Final Death for the Sealing of Five Seasons" }
   ]
 };
 
@@ -1606,7 +1683,21 @@ class Campaign {
     this.log(`Ch ${n} — ${item?.label ?? key}: ${on ? "cleared" : "done"}.`);
     this.touch();
   }
+  /* A continuity item a chapter macro also tracks reads and writes that
+     macro's value, exactly like a checklist item (see BRIDGE). */
+  reworkOn(r) {
+    const b = r.bridge ? BRIDGE[r.bridge] : null;
+    if (this.bridgeLive(b)) return b.get(this.consoleState(b.setting) ?? {});
+    return !!this.s.rework[r.key];
+  }
   toggleRework(key) {
+    const r = REWORK.checklist.find(x => x.key === key);
+    const b = r?.bridge ? BRIDGE[r.bridge] : null;
+    if (this.bridgeLive(b)) {
+      if (b.readOnly) { ui.notifications.info(`Worked out from the ${b.name ?? CONSOLE_NAMES[b.setting]} macro — change it there.`); this.render(); return; }
+      this.toggleConsole(b, r.label);
+      return;
+    }
     const on = !!this.s.rework[key];
     if (on) delete this.s.rework[key]; else this.s.rework[key] = true;
     this.touch();
@@ -1818,6 +1909,13 @@ class Campaign {
       out.push({ label: "Winter", value: `Day ${winter.day} · week ${winter.week ?? Math.ceil(winter.day / 7)}`, tone: "slate" });
       out.push({ label: "Population", value: winter.population ?? 225, tone: "rust" });
       if (winter.terror) out.push({ label: "Terror", value: winter.terror, tone: "plum" });
+    }
+    const spring = this.consoleState("spring");
+    if (spring?.rites) {
+      const vp = Object.values(spring.rites).reduce((n, r) => n + (r?.vp ?? 0), 0);
+      const done = Object.values(spring.rites).filter(r => r?.done).length;
+      out.push({ label: "Rites", value: `${done} of 5 · ${vp} VP`, tone: "gold" });
+      out.push({ label: "Heh Influence", value: spring.heh?.influence ?? 0, tone: "rust" });
     }
     return out;
   }
@@ -2453,10 +2551,11 @@ class CSApp extends BaseApp {
         <h3>Continuity checklist</h3>
         <div class="items">
           ${REWORK.checklist.map(r => {
-            const on = !!t.s.rework[r.key];
+            const on = t.reworkOn(r);
             const past = !on && t.current.n >= r.ch;
+            const b = r.bridge ? BRIDGE[r.bridge] : null, live = t.bridgeLive(b);
             return `<label class="check ${on ? "on" : ""} ${past && !r.optional ? "overdue" : ""} ${past && r.optional ? "skipped" : ""}">
-              <input type="checkbox" data-act="rework" data-k="${r.key}" ${on ? "checked" : ""} ${ro ? "disabled" : ""}>
+              <input type="checkbox" data-act="rework" data-k="${r.key}" ${on ? "checked" : ""} ${ro || (live && b.readOnly) ? "disabled" : ""}${live ? ` title="${b.readOnly ? `Worked out from the ${CONSOLE_NAMES[b.setting]} macro — change it there` : `The same value as the ${CONSOLE_NAMES[b.setting]} macro — tick it here or there`}"` : ""}>
               <span class="lbl"><span class="chip">Ch ${r.ch}</span> ${r.label}
                 ${r.optional ? `<span class="pip">optional</span>` : ""}
                 ${past && r.optional ? `<span class="pip" title="Its chapter has passed and nothing depends on it">skipped</span>` : ""}</span>
@@ -2814,7 +2913,25 @@ if (AppV2) {
       delete state.flags[id];
       movedLoot = changed = true;
     }
+    /* Rows that gained a chapter macro since (Act 4) move their old
+       campaign-only tick to the shared id. */
+    for (const [n, rows] of Object.entries(LOOT)) for (const row of rows) {
+      const old = `campaign:${n}.${row.key}`;
+      if (row.src && L[old]) { L[row.src] = true; delete L[old]; movedLoot = true; }
+    }
     if (movedLoot) await game.settings.set("world", "sogTreasure", L);
+
+    /* Two Weavers continuity ticks the tracker held privately move into the
+       macro that now shares them — none of those beats carry points. */
+    for (const r of REWORK.checklist) {
+      const b = r.bridge ? BRIDGE[r.bridge] : null;
+      if (!b || b.readOnly || !state.rework?.[r.key]) continue;
+      const ckey = CONSOLES[b.setting].split(".")[1];
+      const st = game.settings.get("world", ckey) ?? {};
+      if (!b.get(st)) { b.set(st, true, { dt: () => null }); await game.settings.set("world", ckey, st); }
+      delete state.rework[r.key];
+      changed = true;
+    }
 
     /* Every other console item became shared later. A tick the tracker held
        privately is NOT pushed into the console — that would grant the beat's

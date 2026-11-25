@@ -895,6 +895,60 @@ globalThis.FIXTURES = {
     }
   },
 
+  /* To Bloom Below the Web's landing view: what spring inherits, read from the
+     downtime pools and winter's saved state. */
+  "spring": {
+    "world.sogFallDowntime": {
+      week: 12,
+      pools: { hope: 6, food: 4, security: 5, restoration: 5 },
+      rep: { southbank: 3, northridge: 2 },
+      yami: { bonded: true }
+    },
+    "world.sogWinter": {
+      population: 198,
+      influence: { "ch9-ren-meili": 12 },
+      beats: { "ch10-after-bell": { "ch10-after-bell-spared": 1 }, "ch10-after-ch11": { "ch10-after-cast": 1 },
+               "ch9-seance": { "ch9-seance-rework1": 1 }, "ch9-spider": { "ch9-spider-rework2": 1 },
+               "ch8-end-of-dream": { "ch8-end-help-xp": 1 }, "ch9-e7-fox": { "ch9-e7-friendly": 1 } }
+    },
+    "world.sogSpring": {
+      tab: "spring",
+      fate: { crit: true, pop: null, adjust: 0, granted: 0 }
+    }
+  },
+
+  /* Chapter 12 part way: three rites done, Victory Points tallied. */
+  "spring-rites": {
+    "world.sogFallDowntime": { week: 12, pools: { hope: 6, food: 4, security: 5, restoration: 5 } },
+    "world.sogWinter": { population: 198 },
+    "world.sogSpring": {
+      tab: "ch12", ctab: { ch11: "return", ch12: "rites", ch13: "manor" },
+      rites: { spring: { vp: 4, done: true }, summer: { vp: 3, done: true }, autumn: { vp: 2, done: true },
+               winter: { vp: 1, done: false }, beyond: { vp: 0, done: false } },
+      beats: { "ch12-r-summer": { "ch12-isori": 1 }, "ch12-r-spring": { "ch12-int-spring": 1 } },
+      xp: 260
+    }
+  },
+
+  /* The finale: two souls freed, three freeing-objects, Heh redeemed — the
+     Weaver's loom half cut and the Sealing under way. */
+  "spring-finale": {
+    "world.sogFallDowntime": { week: 12, pools: { hope: 6, food: 4, security: 5, restoration: 5 } },
+    "world.sogWinter": { population: 198 },
+    "world.sogSpring": {
+      tab: "ch13", ctab: { ch11: "return", ch12: "fang", ch13: "finale" },
+      rites: { spring: { vp: 4, done: true }, summer: { vp: 3, done: true }, autumn: { vp: 2, done: true },
+               winter: { vp: 3, done: true }, beyond: { vp: 0, done: true } },
+      beats: { "ch12-m3": { "ch12-m3-bombs": 1 }, "ch13-c2": { "ch13-portrait": 1 },
+               "ch13-c4": { "ch13-sages": 1, "ch13-letter": 1 }, "ch13-breach": { "ch13-breach": 1 } },
+      souls: { m1: "s", m2: "cs", m3: null },
+      heh: { influence: 8, round: 3, fangGiven: false },
+      weaver: { strands: 2, bargain: false },
+      sealing: { 1: "pass", 2: "fail" },
+      xp: 1240
+    }
+  },
+
   /* The landing view: the winter clock, with the pools live from the downtime
      tracker and the attrition/complication tables front and centre. */
   "winter-clock": {

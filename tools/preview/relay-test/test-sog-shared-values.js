@@ -39,6 +39,7 @@ function check(label, cond, detail) {
   else { failures++; console.log("  FAIL  " + label + (detail ? "  [" + detail + "]" : "")); }
 }
 const app = (i) => globalThis.__apps[i];
+const REWORK_R10 = () => ({ key: "r10", bridge: "13.redeem" });
 
 (async () => {
   /* Boot order matches a table mid-campaign: the downtime pools exist first. */
@@ -174,15 +175,73 @@ const app = (i) => globalThis.__apps[i];
 
   console.log("== 11. Old private treasure claims move into the shared ledger ==");
   const cs3 = get("sogCampaign");
-  cs3.loot = { "7.pouch": true, "12.bombs": true };
+  cs3.loot = { "7.pouch": true, "5.yami": true };
   cs3.flags = { ...(cs3.flags ?? {}), "2.will": true };
   await getGame().settings.set("world", "sogCampaign", cs3);
   await loadMacro(M("campaign-status-tracker.js"));
   await sleep(10);
   check("a console-backed claim moves to the card's id", T()["ruins:e8:pouch"] === true);
-  check("an Act 4 claim moves to a campaign id", T()["campaign:12.bombs"] === true);
+  check("a claim with no chapter macro moves to a campaign id", T()["campaign:5.yami"] === true);
   check("the Last Will decision moves to its card", T()["summer:ch2-c1"] === true);
   check("the tracker no longer holds them privately", Object.keys(get("sogCampaign").loot ?? {}).length === 0 && !get("sogCampaign").flags["2.will"]);
+
+  console.log("== 12. Act 4: To Bloom Below the Web shares Chapters 11–13 ==");
+  await getGame().settings.set("world", "sogTreasure", { ...T(), "campaign:11.farewell": true });
+  await loadMacro(M("to-bloom-below-the-web-console.js"), { expose: ["CHAPTERS", "sogClick"] });
+  const springX = globalThis.__macro;
+  const spring = globalThis.__apps[globalThis.__apps.length - 1].t;
+  await loadMacro(M("campaign-status-tracker.js"));
+  await sleep(10);
+  const cst3 = globalThis.__apps[globalThis.__apps.length - 1].t;
+  check("an old campaign-only Act 4 claim moves to the card's id", T()["spring:ch11-farewell:gifts"] === true && !T()["campaign:11.farewell"]);
+
+  /* Every tab and sub-tab renders. */
+  let threw = null;
+  for (const tab of ["spring", "ch11", "ch12", "ch13"]) {
+    spring.s.tab = tab;
+    const subs = springX.CHAPTERS[tab]?.subs ?? [{ key: null }];
+    for (const sub of subs) {
+      if (sub.key) spring.s.ctab[tab] = sub.key;
+      try { const h = spring.app.markup(); if (!h.includes("tbw")) threw = `${tab}/${sub.key}: empty`; }
+      catch (e) { threw = `${tab}/${sub.key}: ${e.message}`; }
+    }
+  }
+  check("every Act 4 tab renders", !threw, threw ?? "");
+
+  const pools = get("sogFallDowntime").pools;
+  check("the Fate reads the downtime pools", spring.fate.base === pools.hope + pools.food + pools.security, `${spring.fate.base}`);
+  check("the Fate reads winter's population", spring.fate.pop === get("sogWinter").population, `${spring.fate.pop}`);
+
+  await cst3.toggleFlag(11, "false");
+  await sleep(5);
+  check("tracker tick → the A8 beat, with its 80 XP", get("sogSpring").beats["ch11-a8"]["ch11-a8-false"] === 1 && get("sogSpring").xp === 80);
+  check("the open spring window adopted it", spring.beat("ch11-a8", "ch11-a8-false"));
+  spring.toggleBeat("ch11-a8", "ch11-a8-false");
+  await sleep(5);
+  check("untick in spring → tracker clear, XP back to 0", cst3.flag(11, "false") === false && get("sogSpring").xp === 0);
+
+  spring.setVp("spring", 1); spring.setVp("spring", 1); spring.setVp("spring", 1); spring.setVp("spring", 1);
+  spring.toggleRite("spring");
+  await sleep(5);
+  check("a rite marked done in spring ticks the tracker", cst3.flag(12, "spring") === true);
+  check("its XP follows the VP (4 VP → 120)", spring.riteXp("spring") === 120);
+  await cst3.toggleFlag(12, "summer");
+  await sleep(5);
+  check("tracker tick marks the summer rite done", spring.s.rites.summer.done === true);
+
+  await cst3.toggleRework("r3");
+  await sleep(5);
+  check("the rework checklist's herald item is the spring beat", spring.beat("ch11-bridge-fight", "ch11-herald"));
+  for (let i = 0; i < 7; i++) spring.setHeh("influence", 1);
+  await sleep(5);
+  check("Influence 7 redeems Heh — the tracker's item and rework item follow", cst3.flag(13, "redeem") === true && cst3.reworkOn(REWORK_R10()) === true);
+
+  await cst3.toggleLoot(11, "chest");
+  await sleep(5);
+  check("tracker treasure tick → the camp card's chest toggle", T()["spring:ch11-camp:chest"] === true);
+  springX.sogClick("sog-handout", { dataset: { id: "spring:ch13-c7" } });
+  await sleep(5);
+  check("spring card tick → the tracker's C7 weapons row", cst3.claimed(13, "weapons") === true);
 
   console.log(failures ? `\n${failures} CHECK(S) FAILED` : "\nALL CHECKS PASSED");
   process.exit(failures ? 1 : 0);

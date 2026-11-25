@@ -1,5 +1,36 @@
 # Changelog
 
+## 2026-11-24 21:30
+
+### Added
+- **To Bloom Below the Web — a GM console for Act 4 (Chapters 11–13), with the Two Weavers
+  rework.** Act 4 had no macro; the campaign tracker's Chapter 11–13 checklist was all there
+  was. The new console runs the whole of spring from the book's text and the user's rework
+  notes: Willowshore's Fate worked out live from the Fall Downtime Tracker's pools and winter's
+  population (with the critical-casting and population bonuses, an adjustment for pools that
+  moved since, and the tier's XP stored so it comes back off exactly); the ruined manor and the
+  false governor; Rebuild Karahai Bridge and the Silkwasps; Ren Mei Li's five rites with Victory
+  Points whose XP follows the tally; the three murders with Search for Clues degrees that reveal
+  each clue level or the false lead; the chained souls, the freeing-objects, Heh Shan-Bao's
+  Influence and the encounters that scale off them; and the rework's finale — the Crimson
+  Weaver's loom and woven ward, the marrow phase, and the five-round Sealing with each pulse
+  negated by its freeing-object. Rework content is marked and kept apart from the book's.
+- **The landing view reads what earlier acts left behind** — the pools, the population, the
+  casting, the warding bell, the silver collars, Heh's choice in the dream, both rework seeds,
+  Yami, Rin and Great Willow — without writing to any of them.
+- **A Node check renders every Act 4 tab**, and checks the Fate, the shared ticks in both
+  directions, the rites, the rework list, and the treasure.
+
+### Changed
+- **Campaign Status Tracker — Chapters 11–13 share their values with the Act 4 console.**
+  Thirty-five checklist items, all eleven Two Weavers continuity items (the two Chapter 9 seeds
+  read No Breath to Cry's beats), and every Act 4 treasure row now read and write the console's
+  value; items worked out from its numbers (all three clues found, the tokens kept, every soul
+  freed, Heh redeemed at Influence 7) follow it read-only. Chapter 11–13 treasure grew from 7 rows
+  to 28, each the same hand-out toggle as its card; old campaign-only claims move to the card's
+  id once. Private continuity ticks move into the console the first time the tracker runs.
+  Chapters 11–13 name the console, and the rollup shows the rites and Heh's Influence.
+
 ## 2026-11-24 19:10
 
 ### Added

@@ -12,6 +12,7 @@ Built for **PF2e** on Foundry **v11–v14**.
 | [`enlightened-path-console.js`](enlightened-path-console.js) | Act 2 Ch. 6 — the Wall of Ghosts and the Pilgrim's Path | Complete |
 | [`ruins-of-wisdom-console.js`](ruins-of-wisdom-console.js) | Act 2 Ch. 7 — the ruined Tan Sugi monastery | Complete |
 | [`no-breath-to-cry-console.js`](no-breath-to-cry-console.js) | Act 3 Ch. 8–10 — the whole of winter | Complete |
+| [`to-bloom-below-the-web-console.js`](to-bloom-below-the-web-console.js) | Act 4 Ch. 11–13 — the whole of spring, with the Two Weavers rework | Complete |
 | [`summer-console.js`](summer-console.js) | Act 1 Ch. 1–4 — the whole of summer | Complete |
 | [`who-leads-willowshore-console.js`](who-leads-willowshore-console.js) | Act 1 Ch. 3 — the champions' duel for the town's leadership | Complete |
 | [`campaign-status-tracker.js`](campaign-status-tracker.js) | All four acts — a checklist for the whole AP | Complete |
@@ -203,6 +204,47 @@ The **Two Weavers rework** seeds in Chapter 9 — the exorcist's murmur about a 
 silks, and Ren Mei Li's "owed a quarrel" warning — are carried as beats flagged *rework-only*, so
 the printed-book content stays distinguishable from the homebrew that pays off in Act 4.
 
+### To Bloom Below the Web
+
+![The landing view: what spring inherits](../../screenshots/season-of-ghosts/to-bloom-below-the-web-console.png)
+
+The whole of Act 4 — spring — in one window, with the **Two Weavers rework** layered over the
+printed book. Rework content (the Crimson Weaver, the sealing anchors, the breach and the
+finale) is marked with a spider and kept in its own panel on each card, so the book stays
+distinguishable from the homebrew.
+
+- **Spring** (the landing tab) shows what the act inherits, read live from the macros that own
+  it: the Preparation Points from the Fall Downtime Tracker's pools, winter's population, whether
+  the transmigrate was cast and the warding bell spared, the silver collars, Heh Shan-Bao's
+  choice in the dream, both rework seeds, Yami, Rin, and Great Willow. Nothing here writes
+  another act's state.
+- **Chapter 11 — Willowshore's Return**: Willowshore's Fate worked out live (the pools, +12 for a
+  critical casting, +4 at 100+ people, an adjustment if the pools moved since) with the tier's
+  XP granted and taken back exactly; the Eternal Lantern and the warding bell; the ruined manor
+  A1–A8 and the false governor; Rebuild Karahai Bridge with its degree and the explosive-arrow
+  hit count; the Silkwasp camp; and the rework's three clues.
+- **Chapter 12 — The Princess's Web**: Amai, the meeting's Victory Points and Ren Mei Li's
+  attitude, the five rites (each with a VP tally, its XP following the VP, and the anchor it
+  yields), the three murders with **Search for Clues** degrees that reveal the minor, moderate
+  and major clues (or the false lead), the tokens each soul needs, and the Fang and Key with the
+  gift worked out from the total VP.
+- **Chapter 13 — A Fiend in Two Worlds**: the restored manor and its four freeing-objects, Free
+  Shackled Soul for each victim (prevented murders count as freed), the shisagishin count and
+  Heh Shan-Bao's losses worked out from the souls freed, his Influence with the rounds the
+  freeing-objects buy, and the finale — the Weaver's loom strands and woven ward (shredded if he
+  was redeemed), the banked edges for phase two, and the five rounds of the Sealing, each pulse
+  negated by its freeing-object.
+
+![Chapter 12's rites, with Victory Points and XP](../../screenshots/season-of-ghosts/to-bloom-below-the-web-rites.png)
+
+Every checklist item the Campaign Status Tracker keeps for Chapters 11–13, and all
+eleven of its Two Weavers continuity items (the two Chapter 9 seeds via No Breath to Cry), are
+the same values as the chapter macros — tick either one.
+Treasure carries a hand-out toggle shared with the tracker's Treasure tab, and the module's
+Act 4 audio and macros sit on the cards that use them.
+
+![The finale: the Weaver's loom, the banked edges, and the Sealing](../../screenshots/season-of-ghosts/to-bloom-below-the-web-finale.png)
+
 ### The Summer That Never Was
 
 ![The summer console's town tab — the lantern, the ringleaders, and reputation](../../screenshots/season-of-ghosts/summer-console.png)
@@ -389,7 +431,7 @@ produced them.
   directory, named exactly as they appear there, with their folder. Reference only: they're
   run from the macro directory, so there's nothing to tick. The chapter macros carry the same
   macros as run buttons on the cards that call for them
-- **Consoles in this collection** per chapter — the other six macros here, against the
+- **Consoles in this collection** per chapter — the other eight macros here, against the
   chapters they're for, so the Summer console is named on every Act 1 chapter, Who Leads
   Willowshore on Chapter 3, and the Enlightened Path console where Chapter 6 is on screen —
   rather than remembered
