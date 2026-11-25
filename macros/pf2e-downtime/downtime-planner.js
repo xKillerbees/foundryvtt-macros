@@ -383,6 +383,18 @@ function weeksish(n) {
   return days2(n);
 }
 
+/* What a roll is called in chat: the activity plus the skill it used, so a
+   card reads "Earn Income (Medicine) · task level 3" rather than just the
+   activity. */
+function rollLabel(def, row, actor) {
+  const slug = row?.cfg?.skill;
+  const sk = slug ? skillsFor(actor).find(s => s.slug === slug) : null;
+  const skill = sk?.label ?? actor?.skills?.[slug]?.label ?? (slug ? titleize(slug) : "");
+  let out = skill ? `${def.label} (${skill})` : def.label;
+  if (row?.act === "income") out += ` · task level ${Number(row.cfg.task) || 0}`;
+  return out;
+}
+
 /* PF2e inline check code, so a posted card is rollable by whoever gets it. */
 function checkCode(slug, dc, label, secret) {
   const traits = ["skill", secret ? "secret" : null].filter(Boolean).join(",");
@@ -751,6 +763,13 @@ const OPS = {
   addRow(s, { actorId, act, id }) {
     const row = blankRow(act, actorId);
     if (id != null) row.id = id;
+    /* Earn Income opens at the settlement's level — the best work in town —
+       capped at the character's own level, which they can't work above. */
+    if (act === "income") {
+      const a = game.actors.get(actorId);
+      const lvl = a?.level ?? a?.system?.details?.level?.value ?? 1;
+      row.cfg.task = Math.max(0, Math.min(s.settlement ?? 0, lvl));
+    }
     planFor(s, actorId).rows.push(row);
   },
   setRow(s, { actorId, rowId, patch }) {
@@ -1871,7 +1890,7 @@ class DowntimeApp extends BaseApp {
 
     if (st?.roll && dc) {
       try {
-        const r = await st.roll({ dc: { value: dc }, label: def.label, rollMode: def.secret ? "blindroll" : undefined });
+        const r = await st.roll({ dc: { value: dc }, label: rollLabel(def, row, actor), rollMode: def.secret ? "blindroll" : undefined });
         const d = r?.degreeOfSuccess ?? r?.options?.degreeOfSuccess;
         if (Number.isInteger(d)) {
           await P.apply("setRow", { actorId: pc.actorId, rowId: row.id, patch: { degree: DEGREES[d] } });
@@ -1892,10 +1911,10 @@ class DowntimeApp extends BaseApp {
     const actor = game.actors.get(pc.actorId);
     const slug = row.cfg.skill || "";
     const body = dc && slug
-      ? checkCode(slug, dc, def.label, def.secret)
+      ? checkCode(slug, dc, rollLabel(def, row, actor), def.secret)
       : `<em>No check for this one — settle it with the GM.</em>`;
     await ChatMessage.create({
-      content: `<p style="margin:0 0 4px"><b>${esc(pc.name)}</b> — ${def.label}
+      content: `<p style="margin:0 0 4px"><b>${esc(pc.name)}</b> — ${esc(rollLabel(def, row, actor))}
         <span style="opacity:.7">· ${days2(row.days)}</span></p>${body}`,
       speaker: actor ? ChatMessage.getSpeaker({ actor }) : { alias: "Downtime" }
     });
